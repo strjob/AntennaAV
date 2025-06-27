@@ -1,0 +1,287 @@
+using AntennaAV.ViewModels;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Threading;
+using ScottPlot;
+using ScottPlot.Avalonia;
+using ScottPlot.Colormaps;
+using ScottPlot.Plottables;
+using System;
+using System.Collections;
+using System.Linq;
+using System.Windows.Markup;
+
+
+namespace AntennaAV.Views
+{
+    public partial class MainWindow : Window
+    {
+        private ScottPlot.Plottables.Polygon? _sectorPolygon;
+        private ScottPlot.Plottables.Arrow? _angleArrow;
+        private Scatter? _dataScatter;
+
+        public MainWindow()
+        {
+            
+            InitializeComponent();
+            var polarAxis = Plots.Initialize(AvaPlot1);
+            NumericUpDownSectorSize.AddHandler(InputElement.KeyDownEvent, NumericUpDown_KeyDown, RoutingStrategies.Tunnel);
+            NumericUpDownSectorCenter.AddHandler(InputElement.KeyDownEvent, NumericUpDown_KeyDown, RoutingStrategies.Tunnel);
+
+            this.DataContextChanged += (s, e) =>
+            {
+                if (this.DataContext is MainWindowViewModel vm)
+                {
+                    vm.OnBuildRadarPlot += (angles, values) =>
+                    {
+                        var points = new Coordinates[angles.Length];
+                        for (int i = 0; i < angles.Length; i++)
+                            points[i] = polarAxis.GetCoordinates(values[i], angles[i]);
+
+                        if (_dataScatter != null)
+                            AvaPlot1.Plot.Remove(_dataScatter);
+
+                        _dataScatter = AvaPlot1.Plot.Add.Scatter(points, color: Colors.Blue);
+                        AvaPlot1.Refresh();
+                    };
+
+                    vm.PropertyChanged += (s, e) =>
+                    {
+                        if (e.PropertyName == nameof(vm.ReceiverAngleDeg))
+                        {
+                            DrawReceiverAngleArrow(vm.ReceiverAngleDeg);
+                        }
+                    };
+                }
+            };
+
+            this.DataContextChanged += (s, e) =>
+            {
+                if (this.DataContext is MainWindowViewModel vm)
+                {
+                    vm.OnBuildRadar += (from, to) =>
+                    {
+                       // AvaPlot1.Plot.Clear();
+                        AvaPlot1.Plot.Axes.AutoScale();
+                        AvaPlot1.Refresh();
+
+                        double[] angles = Plots.GetCircularRange(from, to); 
+                        double[] radii = angles.Select(a => 100.0).ToArray(); //  100 
+
+                        double[] anglesRad = angles.Select(a => (a+90) * Math.PI / 180.0).ToArray();
+
+                        var points = anglesRad
+                            .Select((theta, i) => new ScottPlot.Coordinates(
+                                radii[i] * Math.Cos(theta),
+                                radii[i] * Math.Sin(theta)))
+                            .ToList();
+
+                        points.Insert(0, new ScottPlot.Coordinates(0, 0)); // 
+
+                        // 1.  , 
+                        if (_sectorPolygon != null)
+                        {
+                            AvaPlot1.Plot.Remove(_sectorPolygon);
+                            _sectorPolygon = null;
+                        }
+
+                        // 2.   
+                        _sectorPolygon = AvaPlot1.Plot.Add.Polygon(points.ToArray());
+                        _sectorPolygon.FillColor = Colors.DarkGray.WithAlpha(.7);
+                        _sectorPolygon.LineWidth = 0;
+
+                        // 3.  
+                        AvaPlot1.Refresh();
+
+                    };
+                    
+                    vm.ShowAntennaChanged += (show) =>
+                    {
+                        if (_angleArrow != null)
+                        {
+                            if (show)
+                            {
+                                // Показываем стрелку антенны
+                                _angleArrow.ArrowLineWidth = 3;
+                                _angleArrow.ArrowFillColor = Colors.Black;
+                            }
+                            else
+                            {
+                                // Скрываем стрелку антенны
+                                _angleArrow.ArrowLineWidth = 0;
+                                _angleArrow.ArrowFillColor = Colors.Transparent;
+                            }
+                            AvaPlot1.Refresh();
+                        }
+                    };
+                    
+                    vm.ShowSectorChanged += (show) =>
+                    {
+                        if (_sectorPolygon != null)
+                        {
+                            if (show)
+                            {
+                                // Показываем сектор
+                                _sectorPolygon.FillColor = Colors.DarkGray.WithAlpha(.7);
+                                _sectorPolygon.LineWidth = 0;
+                            }
+                            else
+                            {
+                                // Скрываем сектор
+                                _sectorPolygon.FillColor = Colors.Transparent;
+                                _sectorPolygon.LineWidth = 0;
+                            }
+                            AvaPlot1.Refresh();
+                        }
+                    };
+                    
+                    vm.BuildRadar();
+                }
+            };
+
+            // �������� �� ��������� ������� ����
+            this.GetObservable(Window.ClientSizeProperty).Subscribe(_ => ResetPlotAxes());
+
+            ExportButton.Click += async (_, _) =>
+            {
+                if (DataContext is MainWindowViewModel vm)
+                    await vm.ExportSelectedTabAsync(this);
+            };
+
+
+        }
+
+        private void DrawReceiverAngleArrow(double angleDeg)
+        {
+            double radius = 100;
+            double theta = (angleDeg + 90) * Math.PI / 180.0;
+            double x = radius * Math.Cos(theta);
+            double y = radius * Math.Sin(theta);
+
+            if (_angleArrow == null)
+            {
+                _angleArrow = AvaPlot1.Plot.Add.Arrow(0, 0, x, y);
+                _angleArrow.ArrowLineWidth = 3;
+                _angleArrow.ArrowFillColor = Colors.Black;
+            }
+            else
+            {
+                _angleArrow.Base = new Coordinates(0, 0);
+                _angleArrow.Tip = new Coordinates(x, y);
+                _angleArrow.ArrowLineWidth = 3;
+                _angleArrow.ArrowFillColor = Colors.Black;
+            }
+            
+            // Учитываем состояние чекбокса ShowAntenna
+            if (DataContext is MainWindowViewModel vm)
+            {
+                if (!vm.ShowAntenna)
+                {
+                    _angleArrow.ArrowLineWidth = 0;
+                    _angleArrow.ArrowFillColor = Colors.Transparent;
+                }
+            }
+            
+            AvaPlot1.Refresh();
+        }
+
+        private void Header_DoubleTapped(object sender, RoutedEventArgs e)
+        {
+            if (sender is TextBlock tb && tb.DataContext is TabViewModel vm)
+                vm.IsEditingHeader = true;
+        }
+
+        private void HeaderEdit_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (sender is TextBox tb && tb.DataContext is TabViewModel vm)
+                vm.IsEditingHeader = false;
+        }
+
+        private void HeaderEdit_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && sender is TextBox tb && tb.DataContext is TabViewModel vm)
+                vm.IsEditingHeader = false;
+        }
+
+
+
+        private void NumericUpDown_KeyDown(object? sender, KeyEventArgs e)
+        {
+            //   , Backspace, Delete,, Tab, Enter
+            if (!(e.Key >= Key.D0 && e.Key <= Key.D9) &&
+                !(e.Key >= Key.NumPad0 && e.Key <= Key.NumPad9) &&
+                e.Key != Key.Back && e.Key != Key.Delete &&
+                e.Key != Key.Left && e.Key != Key.Right &&
+                e.Key != Key.Tab && e.Key != Key.Enter)
+            {
+                e.Handled = true;
+            }
+        }
+
+
+
+        private DataGrid? _currentTabDataGrid;
+
+        private void DataGrid_AttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
+        {
+            _currentTabDataGrid = sender as DataGrid;
+            // Подпишемся на изменение ItemsSource (это важно!)
+            if (_currentTabDataGrid != null)
+                _currentTabDataGrid.PropertyChanged += DataGrid_PropertyChanged;
+        }
+
+        private void DataGrid_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+        {
+            if (e.Property.Name == "ItemsSource")
+            {
+                ScrollActiveDataGridToEnd();
+            }
+        }
+
+        public void ScrollActiveDataGridToEnd()
+        {
+            if (_currentTabDataGrid?.ItemsSource is IList items && items.Count > 0)
+            {
+                // ScrollIntoView может не сработать сразу после смены ItemsSource, поэтому используем Dispatcher
+                Dispatcher.UIThread.Post(() =>
+                {
+                    var lastItem = items[items.Count - 1];
+                    _currentTabDataGrid.ScrollIntoView(lastItem, null);
+                });
+            }
+        }
+
+        private void NumericUpDown_LostFocus(object? sender, RoutedEventArgs e)
+        {
+            if (sender is NumericUpDown numericUpDown && DataContext is MainWindowViewModel vm)
+            {
+                // Проверяем, что значение не пустое и корректное
+                if (numericUpDown.Value == null || numericUpDown.Value < numericUpDown.Minimum || numericUpDown.Value > numericUpDown.Maximum)
+                {
+                    // Устанавливаем значение по умолчанию в зависимости от поля
+                    if (numericUpDown.Name == "NumericUpDownSectorSize")
+                    {
+                        numericUpDown.Value = 10;
+                        vm.SectorSize = "10";
+                    }
+                    else if (numericUpDown.Name == "NumericUpDownSectorCenter")
+                    {
+                        numericUpDown.Value = 0;
+                        vm.SectorCenter = "0";
+                    }
+                }
+            }
+        }
+
+        private void ResetPlotAxes()
+        {
+            if (AvaPlot1 != null)
+            {
+                AvaPlot1.Plot.Axes.AutoScale();
+                AvaPlot1.Refresh();
+            }
+        }
+    }
+}
