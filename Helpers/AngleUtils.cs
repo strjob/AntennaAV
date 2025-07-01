@@ -21,7 +21,7 @@ namespace AntennaAV.Helpers
             return diffFromAngle <= diffFromTo;
         }
 
-        public static (double startAngleOvershoot, double stopAngleOvershoot, string direction, bool isFullCircle) DetermineStartEndDir(double currentAngle, double from, double to, int currentCounter)
+        public static (double startAngleOvershoot, double stopAngleOvershoot, string direction, bool isFullCircle) DetermineStartEndDir(double currentAngle, double from, double to, double currentCounter)
         {
             double startAngle, stopAngle, startAngleOvershoot, stopAngleOvershoot;
             string direction;

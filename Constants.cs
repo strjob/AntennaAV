@@ -13,7 +13,7 @@ namespace AntennaAV
         public const double MaxAngleInput = 359.9;
         public const double Overshoot = 2.0;
         public const string AngleErrorStr = "Введите число от 0 до 359.9";
-        public const int MaxAntennaCounter = 5400;
+        public const double MaxAntennaCounter = 540.0;
 
         public const double DefaultPlotRadius = 100.0;
         public const double PlotRadiusFactor = 0.6;

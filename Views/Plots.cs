@@ -69,7 +69,11 @@ namespace AntennaAV.Views
         {
             var polarAxis = avaPlot.Plot.Add.PolarAxis(radius: 100);
             polarAxis.Rotation = Angle.FromDegrees(rotation);
-            string[] labels = { "0", "90", "", "270"};
+            string[] labels = { "0", "90", "180", "270"};
+            if (rotation == 90)
+                labels[0] = "";
+            else
+                labels[2] = "";
             polarAxis.SetSpokes(labels, 100, true);
 
             // Цвета для темной и светлой темы

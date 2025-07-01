@@ -36,6 +36,7 @@
         <StreamGeometry x:Key="settings_regular">M14 9.50006C11.5147 9.50006 9.5 11.5148 9.5 14.0001C9.5 16.4853 11.5147 18.5001 14 18.5001C15.3488 18.5001 16.559 17.9066 17.3838 16.9666C18.0787 16.1746 18.5 15.1365 18.5 14.0001C18.5 13.5401 18.431 13.0963 18.3028 12.6784C17.7382 10.8381 16.0253 9.50006 14 9.50006ZM11 14.0001C11 12.3432 12.3431 11.0001 14 11.0001C15.6569 11.0001 17 12.3432 17 14.0001C17 15.6569 15.6569 17.0001 14 17.0001C12.3431 17.0001 11 15.6569 11 14.0001Z M21.7093 22.3948L19.9818 21.6364C19.4876 21.4197 18.9071 21.4515 18.44 21.7219C17.9729 21.9924 17.675 22.4693 17.6157 23.0066L17.408 24.8855C17.3651 25.273 17.084 25.5917 16.7055 25.682C14.9263 26.1061 13.0725 26.1061 11.2933 25.682C10.9148 25.5917 10.6336 25.273 10.5908 24.8855L10.3834 23.0093C10.3225 22.4731 10.0112 21.9976 9.54452 21.7281C9.07783 21.4586 8.51117 21.4269 8.01859 21.6424L6.29071 22.4009C5.93281 22.558 5.51493 22.4718 5.24806 22.1859C4.00474 20.8536 3.07924 19.2561 2.54122 17.5137C2.42533 17.1384 2.55922 16.7307 2.8749 16.4977L4.40219 15.3703C4.83721 15.0501 5.09414 14.5415 5.09414 14.0007C5.09414 13.4598 4.83721 12.9512 4.40162 12.6306L2.87529 11.5051C2.55914 11.272 2.42513 10.8638 2.54142 10.4882C3.08038 8.74734 4.00637 7.15163 5.24971 5.82114C5.51684 5.53528 5.93492 5.44941 6.29276 5.60691L8.01296 6.36404C8.50793 6.58168 9.07696 6.54881 9.54617 6.27415C10.0133 6.00264 10.3244 5.52527 10.3844 4.98794L10.5933 3.11017C10.637 2.71803 10.9245 2.39704 11.3089 2.31138C12.19 2.11504 13.0891 2.01071 14.0131 2.00006C14.9147 2.01047 15.8128 2.11485 16.6928 2.31149C17.077 2.39734 17.3643 2.71823 17.4079 3.11017L17.617 4.98937C17.7116 5.85221 18.4387 6.50572 19.3055 6.50663C19.5385 6.507 19.769 6.45838 19.9843 6.36294L21.7048 5.60568C22.0626 5.44818 22.4807 5.53405 22.7478 5.81991C23.9912 7.1504 24.9172 8.74611 25.4561 10.487C25.5723 10.8623 25.4386 11.2703 25.1228 11.5035L23.5978 12.6297C23.1628 12.95 22.9 13.4586 22.9 13.9994C22.9 14.5403 23.1628 15.0489 23.5988 15.3698L25.1251 16.4965C25.441 16.7296 25.5748 17.1376 25.4586 17.5131C24.9198 19.2536 23.9944 20.8492 22.7517 22.1799C22.4849 22.4657 22.0671 22.5518 21.7093 22.3948ZM16.263 22.1966C16.4982 21.4685 16.9889 20.8288 17.6884 20.4238C18.5702 19.9132 19.6536 19.8547 20.5841 20.2627L21.9281 20.8526C22.791 19.8538 23.4593 18.7013 23.8981 17.4552L22.7095 16.5778L22.7086 16.5771C21.898 15.98 21.4 15.0277 21.4 13.9994C21.4 12.9719 21.8974 12.0195 22.7073 11.4227L22.7085 11.4218L23.8957 10.545C23.4567 9.2988 22.7881 8.14636 21.9248 7.1477L20.5922 7.73425L20.5899 7.73527C20.1844 7.91463 19.7472 8.00722 19.3039 8.00663C17.6715 8.00453 16.3046 6.77431 16.1261 5.15465L16.1259 5.15291L15.9635 3.69304C15.3202 3.57328 14.6677 3.50872 14.013 3.50017C13.3389 3.50891 12.6821 3.57367 12.0377 3.69328L11.8751 5.15452C11.7625 6.16272 11.1793 7.05909 10.3019 7.56986C9.41937 8.0856 8.34453 8.14844 7.40869 7.73694L6.07273 7.14893C5.20949 8.14751 4.54092 9.29983 4.10196 10.5459L5.29181 11.4233C6.11115 12.0269 6.59414 12.9837 6.59414 14.0007C6.59414 15.0173 6.11142 15.9742 5.29237 16.5776L4.10161 17.4566C4.54002 18.7044 5.2085 19.8585 6.07205 20.8587L7.41742 20.2682C8.34745 19.8613 9.41573 19.9215 10.2947 20.4292C11.174 20.937 11.7593 21.832 11.8738 22.84L11.8744 22.8445L12.0362 24.3088C13.3326 24.5638 14.6662 24.5638 15.9626 24.3088L16.1247 22.8418C16.1491 22.6217 16.1955 22.4055 16.263 22.1966Z</StreamGeometry>
         <StreamGeometry x:Key="document_autosave_regular">M6.5,12 C9.53756612,12 12,14.4624339 12,17.5 C12,20.5375661 9.53756612,23 6.5,23 C3.46243388,23 1,20.5375661 1,17.5 C1,14.4624339 3.46243388,12 6.5,12 Z M12.1289096,2 C12.7254427,2 13.2975605,2.23689125 13.7194834,2.6585934 L16.531355,5.46899352 L19.3390003,8.28086677 C19.7602248,8.70272584 19.996813,9.2745088 19.996813,9.8706591 L19.996813,19.75 C19.996813,20.9926407 18.9894537,22 17.746813,22 L11.1896412,22.0008195 C11.6160435,21.5566422 11.9799518,21.0520148 12.2672297,20.5010736 L17.746813,20.5 C18.1610266,20.5 18.496813,20.1642136 18.496813,19.75 L18.496,10.003 L14.25,10.0038905 C13.059136,10.0038905 12.0843551,9.07872894 12.0051908,7.90793935 L12,7.75389054 L11.999,3.5 L6.25,3.5 C5.83578644,3.5 5.5,3.83578644 5.5,4.25 L5.49909108,11.0765886 C4.97586224,11.157457 4.47324006,11.3007258 3.99906694,11.4985525 L4,4.25 C4,3.00735931 5.00735931,2 6.25,2 L12.1289096,2 Z M9.5,17.5 L7.5,17.5 L7.41012437,17.5080557 C7.17687516,17.5503916 7,17.7545401 7,18 C7,18.2454599 7.17687516,18.4496084 7.41012437,18.4919443 L7.5,18.5 L8.37050377,18.5006122 C8.01032916,19.1741569 7.29973837,19.6235886 6.49648802,19.6235886 C5.88270332,19.6235886 5.31221362,19.3624278 4.91135565,18.9131866 C4.85559244,18.8506928 4.80355063,18.7849808 4.75553163,18.7164124 C4.59712759,18.4902205 4.28535099,18.4352676 4.0591591,18.5936717 C3.8329672,18.7520757 3.77801428,19.0638523 3.93641832,19.2900442 C4.00694884,19.3907577 4.08335839,19.4872383 4.16521157,19.5789711 C4.75385665,20.2386651 5.59469827,20.6235886 6.49648802,20.6235886 C7.44467256,20.6235886 8.30481161,20.1981198 8.88142795,19.5177367 L9.00057773,19.3681007 L9,20 L9.00805567,20.0898756 C9.05039163,20.3231248 9.25454011,20.5 9.5,20.5 C9.74545989,20.5 9.94960837,20.3231248 9.99194433,20.0898756 L10,20 L10,18 L9.99194433,17.9101244 C9.94960837,17.6768752 9.74545989,17.5 9.5,17.5 Z M6.49648802,14.3764114 C5.55080006,14.3764114 4.69274709,14.7996324 4.11618094,15.4768116 L3.99701016,15.6257468 L3.99871227,15 L3.9906566,14.9101244 C3.94832064,14.6768752 3.74417215,14.5 3.49871227,14.5 C3.25325238,14.5 3.04910389,14.6768752 3.00676793,14.9101244 L2.99871227,15 L2.99871227,17 L3.00676793,17.0898756 C3.0438119,17.2939687 3.20474358,17.4549004 3.40883663,17.4919443 L3.49871227,17.5 L5.5,17.5 L5.58987563,17.4919443 C5.82312484,17.4496084 6,17.2454599 6,17 C6,16.7545401 5.82312484,16.5503916 5.58987563,16.5080557 L5.5,16.5 L4.62227181,16.4997633 C4.98236805,15.8260447 5.69304839,15.3764114 6.49648802,15.3764114 C7.10851954,15.3764114 7.67752678,15.6360683 8.07827816,16.0830766 C8.13699297,16.1485686 8.19161005,16.2176171 8.24178059,16.2898029 C8.39937897,16.5165568 8.71095812,16.5726185 8.93771208,16.4150201 C9.16446604,16.2574217 9.22052772,15.9458426 9.06292933,15.7190886 C8.98923636,15.6130585 8.90904519,15.5116785 8.82285974,15.4155451 C8.23436623,14.7591245 7.39569596,14.3764114 6.49648802,14.3764114 Z M13.499,4.559 L13.5,7.75389054 C13.5,8.1335863 13.7821539,8.4473815 14.1482294,8.49704392 L14.25,8.50389054 L17.441,8.503 L13.499,4.559 Z</StreamGeometry>
         <StreamGeometry x:Key="save_regular">M3 5.75C3 4.23122 4.23122 3 5.75 3H15.7145C16.5764 3 17.4031 3.34241 18.0126 3.9519L20.0481 5.98744C20.6576 6.59693 21 7.42358 21 8.28553V18.25C21 19.7688 19.7688 21 18.25 21H5.75C4.23122 21 3 19.7688 3 18.25V5.75ZM5.75 4.5C5.05964 4.5 4.5 5.05964 4.5 5.75V18.25C4.5 18.9404 5.05964 19.5 5.75 19.5H6V14.25C6 13.0074 7.00736 12 8.25 12H15.75C16.9926 12 18 13.0074 18 14.25V19.5H18.25C18.9404 19.5 19.5 18.9404 19.5 18.25V8.28553C19.5 7.8214 19.3156 7.37629 18.9874 7.0481L16.9519 5.01256C16.6918 4.75246 16.3582 4.58269 16 4.52344V7.25C16 8.49264 14.9926 9.5 13.75 9.5H9.25C8.00736 9.5 7 8.49264 7 7.25V4.5H5.75ZM16.5 19.5V14.25C16.5 13.8358 16.1642 13.5 15.75 13.5H8.25C7.83579 13.5 7.5 13.8358 7.5 14.25V19.5H16.5ZM8.5 4.5V7.25C8.5 7.66421 8.83579 8 9.25 8H13.75C14.1642 8 14.5 7.66421 14.5 7.25V4.5H8.5Z</StreamGeometry>
+        <StreamGeometry x:Key="dismiss_circle_regular">M24,4 C35.045695,4 44,12.954305 44,24 C44,35.045695 35.045695,44 24,44 C12.954305,44 4,35.045695 4,24 C4,12.954305 12.954305,4 24,4 Z M24,6.5 C14.3350169,6.5 6.5,14.3350169 6.5,24 C6.5,33.6649831 14.3350169,41.5 24,41.5 C33.6649831,41.5 41.5,33.6649831 41.5,24 C41.5,14.3350169 33.6649831,6.5 24,6.5 Z M17.7823881,16.0249942 L17.8838835,16.1161165 L24,22.233 L30.1161165,16.1161165 C30.5717282,15.6605048 31.2915486,15.6301307 31.7823881,16.0249942 L31.8838835,16.1161165 C32.3394952,16.5717282 32.3698693,17.2915486 31.9750058,17.7823881 L31.8838835,17.8838835 L25.767,24 L31.8838835,30.1161165 C32.3394952,30.5717282 32.3698693,31.2915486 31.9750058,31.7823881 L31.8838835,31.8838835 C31.4282718,32.3394952 30.7084514,32.3698693 30.2176119,31.9750058 L30.1161165,31.8838835 L24,25.767 L17.8838835,31.8838835 C17.4282718,32.3394952 16.7084514,32.3698693 16.2176119,31.9750058 L16.1161165,31.8838835 C15.6605048,31.4282718 15.6301307,30.7084514 16.0249942,30.2176119 L16.1161165,30.1161165 L22.233,24 L16.1161165,17.8838835 C15.6605048,17.4282718 15.6301307,16.7084514 16.0249942,16.2176119 L16.1161165,16.1161165 C16.5717282,15.6605048 17.2915486,15.6301307 17.7823881,16.0249942 Z</StreamGeometry>
 
 
         <StreamGeometry x:Key="add_square_regular">M12 7C12.4142 7 12.75 7.33579 12.75 7.75V11.25H16.25C16.6642 11.25 17 11.5858 17 12C17 12.4142 16.6642 12.75 16.25 12.75H12.75V16.25C12.75 16.6642 12.4142 17 12 17C11.5858 17 11.25 16.6642 11.25 16.25V12.75H7.75C7.33579 12.75 7 12.4142 7 12C7 11.5858 7.33579 11.25 7.75 11.25H11.25V7.75C11.25 7.33579 11.5858 7 12 7Z M3 6.25C3 4.45507 4.45507 3 6.25 3H17.75C19.5449 3 21 4.45507 21 6.25V17.75C21 19.5449 19.5449 21 17.75 21H6.25C4.45507 21 3 19.5449 3 17.75V6.25ZM6.25 4.5C5.2835 4.5 4.5 5.2835 4.5 6.25V17.75C4.5 18.7165 5.2835 19.5 6.25 19.5H17.75C18.7165 19.5 19.5 18.7165 19.5 17.75V6.25C19.5 5.2835 18.7165 4.5 17.75 4.5H6.25Z</StreamGeometry>
@@ -52,35 +53,45 @@
     </Design.DataContext>
 
     <Grid ShowGridLines="False">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition
-                Width="0.2*"
-                MinWidth="250"
-                MaxWidth="280" />
-            <ColumnDefinition Width="0.62*" MinWidth="300" />
-            <ColumnDefinition Width="0.38*" MinWidth="200" />
-        </Grid.ColumnDefinitions>
+
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
+            <RowDefinition Height="25" />
         </Grid.RowDefinitions>
 
-        <ScottPlot:AvaPlot
-            x:Name="AvaPlotMain"
-            Grid.Row="0"
-            Grid.Column="1"
-            Margin="0,0,0,0" />
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition
+                    Width="0.2*"
+                    MinWidth="255"
+                    MaxWidth="280" />
+                <ColumnDefinition Width="1" />
+                <ColumnDefinition Width="0.62*" MinWidth="300" />
+                <ColumnDefinition Width="1" />
+                <ColumnDefinition Width="0.38*" MinWidth="200" />
+            </Grid.ColumnDefinitions>
+            <Rectangle
+                Grid.Column="1"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Fill="{DynamicResource SystemChromeMediumColor}" />
+            <Rectangle
+                Grid.Column="3"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Fill="{DynamicResource SystemChromeMediumColor}" />
+            <!--<GridSplitter Grid.Column="3" HorizontalAlignment="Stretch" Background="{DynamicResource SystemBaseLowColor}" />-->
+            <ScottPlot:AvaPlot
+                x:Name="AvaPlotMain"
+                Grid.Row="0"
+                Grid.Column="2"
+                Margin="0,0,0,0" />
 
 
-        <TextBlock
-            Grid.Row="0"
-            Grid.Column="1"
-            Margin="5"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Bottom"
-            FontSize="14"
-            Text="{CompiledBinding DataFlowStatus}" />
 
-        <!--<ToggleSwitch
+
+            <!--<ToggleSwitch
             Grid.Row="0"
             Grid.Column="1"
             Margin="0,10,10,0"
@@ -94,398 +105,695 @@
             OnContent="Вкл"
             ZIndex="2" />-->
 
-        <Button
-            x:Name="SavePngButton"
-            Grid.Row="0"
-            Grid.Column="1"
-            Margin="10"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            Click="SavePngButton_Click"
-            IsEnabled="{CompiledBinding CanUseWhenHasTabs}"
-            ToolTip.Tip="Сохранить график PNG"
-            ZIndex="2">
-            <PathIcon Data="{StaticResource save_regular}" />
-        </Button>
-
-        <StackPanel
-            Grid.Row="0"
-            Grid.Column="1"
-            Margin="10,10,0,0"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-            Orientation="Vertical"
-            ZIndex="2">
-            <TextBlock
-                Margin="0,0,10,0"
-                VerticalAlignment="Center"
-                Text="Тип графика:" />
-            <RadioButton
-                Margin="0,0,10,0"
-                Content="дБ"
-                GroupName="GraphType"
-                IsChecked="{CompiledBinding IsPowerNormSelected,
-                                            Mode=TwoWay}"
-                IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
-            <RadioButton
-                Content="Линейный"
-                GroupName="GraphType"
-                IsChecked="{x:Null}"
-                IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
-        </StackPanel>
-
-        <Grid
-            Grid.Row="0"
-            Grid.Column="0"
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"
-            ShowGridLines="False">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="0.2*" MinHeight="160" />
-                <RowDefinition
-                    Height="0.15*"
-                    MinHeight="120"
-                    MaxHeight="140" />
-                <RowDefinition Height="100" />
-                <RowDefinition Height="0.2*" MinHeight="160" />
-                <RowDefinition
-                    Height="0.2*"
-                    MinHeight="120"
-                    MaxHeight="140" />
-                <RowDefinition Height="20" MinHeight="20" />
-            </Grid.RowDefinitions>
-
-            <!--  Верхний ряд - Передающая антенна  -->
-
-            <ScottPlot:AvaPlot
-                x:Name="AvaPlotTx"
+            <Button
+                x:Name="SavePngButton"
                 Grid.Row="0"
-                MinHeight="150"
+                Grid.Column="2"
                 Margin="10"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch" />
-            <TextBlock
-                Grid.Row="0"
-                Margin="1"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                FontSize="24"
-                Text="{CompiledBinding TransmitterAngleDeg, StringFormat={}{0:0.0}}}" />
-            <TextBlock
-                Grid.Row="0"
-                Margin="2"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Bottom"
-                FontSize="12"
-                Foreground="Red"
-                Text="{CompiledBinding TxAntennaCounterErrorStr}" />
-            <TextBlock
-                Grid.Row="0"
-                Margin="0,5,0,10"
-                HorizontalAlignment="Center"
-                FontSize="16"
-                Text="Передающая антенна" />
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Click="SavePngButton_Click"
+                IsEnabled="{CompiledBinding CanUseWhenHasTabs}"
+                ToolTip.Tip="Сохранить график PNG"
+                ZIndex="2">
+                <PathIcon Data="{StaticResource save_regular}" />
+            </Button>
 
             <StackPanel
-                Grid.Row="1"
-                Margin="10"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Top">
-                <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
-                    <TextBlock
-                        Margin="10,0,0,0"
-                        VerticalAlignment="Center"
-                        Text="Угол:" />
-
-                    <TextBlock
-                        Margin="5,0,0,0"
-                        VerticalAlignment="Bottom"
-                        FontSize="12"
-                        Foreground="Red"
-                        Text="{CompiledBinding TransmitterAngleError}" />
-                </StackPanel>
-
-                <StackPanel
-                    Margin="0,0,0,5"
-                    HorizontalAlignment="Center"
-                    Orientation="Horizontal">
-
-                    <NumericUpDown
-                        Width="125"
-                        Margin="5,0,5,0"
-                        VerticalAlignment="Center"
-                        FormatString="0.0"
-                        Increment="1"
-                        KeyDown="NumericUpDown_KeyDown"
-                        Maximum="359"
-                        Minimum="0"
-                        Watermark="0-359"
-                        Value="{CompiledBinding TransmitterAngle,
-                                                Mode=TwoWay,
-                                                UpdateSourceTrigger=PropertyChanged}" />
-                    <Button
-                        Margin="2"
-                        HorizontalAlignment="Left"
-                        Command="{CompiledBinding MoveTransmitterToAngleCommand}"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
-                        ToolTip.Tip="Переместить">
-                        <PathIcon Data="{StaticResource arrow_right_regular}" />
-                    </Button>
-                    <Button
-                        Margin="2"
-                        HorizontalAlignment="Left"
-                        Command="{CompiledBinding SetTransmitterAngleCommand}"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
-                        ToolTip.Tip="Задать угол (без перемещения)">
-                        <PathIcon Data="{StaticResource arrow_download_regular}" />
-                    </Button>
-                </StackPanel>
-                <StackPanel
-                    Margin="2,0,0,5"
-                    HorizontalAlignment="Center"
-                    Orientation="Horizontal">
-                    <Button
-                        Margin="2"
-                        HorizontalAlignment="Left"
-                        Command="{CompiledBinding MoveTxAntennaToRelativeAngleCommand}"
-                        CommandParameter="{CompiledBinding MoveMinus1}"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
-                        ToolTip.Tip="Переместить на -1°">
-                        <Svg Path="{CompiledBinding ChevronsLeftIconPath}" />
-                    </Button>
-                    <Button
-                        Margin="1"
-                        HorizontalAlignment="Left"
-                        Command="{CompiledBinding MoveTxAntennaToRelativeAngleCommand}"
-                        CommandParameter="{CompiledBinding MoveMinus01}"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
-                        ToolTip.Tip="Переместить на -0.1°">
-                        <Svg Path="{CompiledBinding ChevronLeftIconPath}" />
-
-                    </Button>
-                    <Button
-                        Margin="1"
-                        HorizontalAlignment="Left"
-                        Command="{CompiledBinding MoveTxAntennaToRelativeAngleCommand}"
-                        CommandParameter="{CompiledBinding MovePlus01}"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
-                        ToolTip.Tip="Переместить на +0.1°">
-                        <Svg Path="{CompiledBinding ChevronRightIconPath}" />
-                    </Button>
-                    <Button
-                        Margin="1"
-                        HorizontalAlignment="Left"
-                        Command="{CompiledBinding MoveTxAntennaToRelativeAngleCommand}"
-                        CommandParameter="{CompiledBinding MovePlus1}"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
-                        ToolTip.Tip="Переместить на +1°">
-                        <Svg Path="{CompiledBinding ChevronsRightIconPath}" />
-                    </Button>
-                    <Button
-                        Margin="1"
-                        HorizontalAlignment="Left"
-                        Command="{CompiledBinding StopAntennaCommand}"
-                        CommandParameter="T"
-                        Content="Стоп"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
-                        <Button.Styles>
-                            <Style>
-                                <Style.Resources>
-                                    <SolidColorBrush x:Key="ThemeBorderMidBrush">Red</SolidColorBrush>
-                                    <SolidColorBrush x:Key="ThemeControlHighBrush">DarkRed</SolidColorBrush>
-                                    <SolidColorBrush x:Key="ButtonBorderBrush">Red</SolidColorBrush>
-                                    <SolidColorBrush x:Key="ButtonBackground">OrangeRed</SolidColorBrush>
-                                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver">Red</SolidColorBrush>
-                                    <SolidColorBrush x:Key="ButtonBackgroundPressed">OrangeRed</SolidColorBrush>
-                                </Style.Resources>
-                            </Style>
-                        </Button.Styles>
-                        <!--<PathIcon Data="{StaticResource stop_regular}" />-->
-                    </Button>
-                </StackPanel>
+                Grid.Row="0"
+                Grid.Column="2"
+                Margin="10,10,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Orientation="Vertical"
+                ZIndex="2">
+                <TextBlock
+                    Margin="0,0,10,0"
+                    VerticalAlignment="Center"
+                    Text="Тип графика:" />
+                <RadioButton
+                    Margin="0,0,10,0"
+                    Content="дБ"
+                    GroupName="GraphType"
+                    IsChecked="{CompiledBinding IsPowerNormSelected,
+                                                Mode=TwoWay}"
+                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
+                <RadioButton
+                    Content="Линейный"
+                    GroupName="GraphType"
+                    IsChecked="{x:Null}"
+                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
             </StackPanel>
 
+            <Grid
+                Grid.Row="0"
+                Grid.Column="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Background="{DynamicResource SystemBackgroundColor}"
+                ShowGridLines="False">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="0.2*" MinHeight="160" />
+                    <RowDefinition
+                        Height="0.15*"
+                        MinHeight="120"
+                        MaxHeight="140" />
+                    <RowDefinition Height="100" />
+                    <RowDefinition Height="0.2*" MinHeight="160" />
+                    <RowDefinition
+                        Height="0.2*"
+                        MinHeight="120"
+                        MaxHeight="140" />
+                    <RowDefinition Height="20" MinHeight="20" />
+                </Grid.RowDefinitions>
 
-            <!--  Средний ряд - Существующие текстовые блоки  -->
-            <StackPanel
-                Grid.Row="2"
-                Margin="5"
-                VerticalAlignment="Top">
-                <StackPanel
-                    Grid.Row="2"
-                    Margin="2"
+                <!--  Верхний ряд - Передающая антенна  -->
+
+                <ScottPlot:AvaPlot
+                    x:Name="AvaPlotTx"
+                    MinHeight="150"
+                    Margin="10,10,10,10"
                     HorizontalAlignment="Stretch"
-                    VerticalAlignment="Top"
-                    Orientation="Horizontal">
+                    VerticalAlignment="Stretch" />
+                <TextBlock
+                    Margin="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontSize="24"
+                    Text="{CompiledBinding TransmitterAngleDeg, StringFormat={}{0:0.0}}}" />
+                <TextBlock
+                    Margin="2"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Bottom"
+                    FontSize="12"
+                    Foreground="Red"
+                    Text="{CompiledBinding TxAntennaCounterErrorStr}" />
+                <TextBlock
+                    Margin="0,5,0,10"
+                    HorizontalAlignment="Center"
+                    FontSize="18"
+                    Text="Передающая антенна" />
 
-                    <TextBlock FontSize="16" Text="Режим: " />
-                    <TextBlock
-                        Margin="1"
-                        FontSize="16"
-                        Text="{CompiledBinding DeviceModeStr}" />
+                <StackPanel
+                    Grid.Row="1"
+                    Margin="10"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top">
+                    <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
+                        <TextBlock
+                            Margin="10,0,0,0"
+                            VerticalAlignment="Center"
+                            Text="Угол:" />
+
+                        <TextBlock
+                            Margin="5,0,0,0"
+                            VerticalAlignment="Bottom"
+                            FontSize="12"
+                            Foreground="Red"
+                            Text="{CompiledBinding TransmitterAngleError}" />
+                    </StackPanel>
+
+                    <StackPanel
+                        Margin="0,0,0,5"
+                        HorizontalAlignment="Center"
+                        Orientation="Horizontal">
+
+                        <NumericUpDown
+                            Width="125"
+                            Margin="5,0,5,0"
+                            VerticalAlignment="Center"
+                            FormatString="0.0"
+                            Increment="1"
+                            KeyDown="NumericUpDown_KeyDown"
+                            Maximum="359"
+                            Minimum="0"
+                            Watermark="0-359"
+                            Value="{CompiledBinding TransmitterAngle,
+                                                    Mode=TwoWay,
+                                                    UpdateSourceTrigger=PropertyChanged}" />
+                        <Button
+                            Margin="2"
+                            HorizontalAlignment="Left"
+                            Command="{CompiledBinding MoveTransmitterToAngleCommand}"
+                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                            ToolTip.Tip="Переместить">
+                            <PathIcon Data="{StaticResource arrow_right_regular}" />
+                        </Button>
+                        <Button
+                            Margin="2"
+                            HorizontalAlignment="Left"
+                            Command="{CompiledBinding SetTransmitterAngleCommand}"
+                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                            ToolTip.Tip="Задать угол (без перемещения)">
+                            <PathIcon Data="{StaticResource arrow_download_regular}" />
+                        </Button>
+                    </StackPanel>
+                    <StackPanel
+                        Margin="2,0,0,5"
+                        HorizontalAlignment="Center"
+                        Orientation="Horizontal">
+                        <Button
+                            Margin="2"
+                            HorizontalAlignment="Left"
+                            Command="{CompiledBinding MoveTxAntennaToRelativeAngleCommand}"
+                            CommandParameter="{CompiledBinding MoveMinus1}"
+                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                            ToolTip.Tip="Переместить на -1°">
+                            <Svg Path="{CompiledBinding ChevronsLeftIconPath}" />
+                        </Button>
+                        <Button
+                            Margin="1"
+                            HorizontalAlignment="Left"
+                            Command="{CompiledBinding MoveTxAntennaToRelativeAngleCommand}"
+                            CommandParameter="{CompiledBinding MoveMinus01}"
+                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                            ToolTip.Tip="Переместить на -0.1°">
+                            <Svg Path="{CompiledBinding ChevronLeftIconPath}" />
+
+                        </Button>
+                        <Button
+                            Margin="1"
+                            HorizontalAlignment="Left"
+                            Command="{CompiledBinding MoveTxAntennaToRelativeAngleCommand}"
+                            CommandParameter="{CompiledBinding MovePlus01}"
+                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                            ToolTip.Tip="Переместить на +0.1°">
+                            <Svg Path="{CompiledBinding ChevronRightIconPath}" />
+                        </Button>
+                        <Button
+                            Margin="1"
+                            HorizontalAlignment="Left"
+                            Command="{CompiledBinding MoveTxAntennaToRelativeAngleCommand}"
+                            CommandParameter="{CompiledBinding MovePlus1}"
+                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                            ToolTip.Tip="Переместить на +1°">
+                            <Svg Path="{CompiledBinding ChevronsRightIconPath}" />
+                        </Button>
+                        <Button
+                            Margin="1"
+                            HorizontalAlignment="Left"
+                            Command="{CompiledBinding StopAntennaCommand}"
+                            CommandParameter="T"
+                            Content="Стоп"
+                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
+                            <Button.Styles>
+                                <Style>
+                                    <Style.Resources>
+                                        <SolidColorBrush x:Key="ThemeBorderMidBrush">Red</SolidColorBrush>
+                                        <SolidColorBrush x:Key="ThemeControlHighBrush">DarkRed</SolidColorBrush>
+                                        <SolidColorBrush x:Key="ButtonBorderBrush">Red</SolidColorBrush>
+                                        <SolidColorBrush x:Key="ButtonBackground">OrangeRed</SolidColorBrush>
+                                        <SolidColorBrush x:Key="ButtonBackgroundPointerOver">Red</SolidColorBrush>
+                                        <SolidColorBrush x:Key="ButtonBackgroundPressed">OrangeRed</SolidColorBrush>
+                                    </Style.Resources>
+                                </Style>
+                            </Button.Styles>
+                            <!--<PathIcon Data="{StaticResource stop_regular}" />-->
+                        </Button>
+                    </StackPanel>
                 </StackPanel>
+
+
+                <!--  Средний ряд - Существующие текстовые блоки  -->
+
                 <StackPanel
                     Grid.Row="2"
-                    Margin="2"
-                    VerticalAlignment="Top"
-                    Orientation="Horizontal">
-                    <TextBlock FontSize="16" Text="Мощность, дБм: " />
-                    <TextBlock
-                        Margin="1"
-                        FontSize="16"
-                        Text="{CompiledBinding PowerDbm, StringFormat={}{0:0.0}}}" />
-                </StackPanel>
-                <StackPanel
-                    Grid.Row="2"
-                    Margin="2"
-                    VerticalAlignment="Top"
-                    Orientation="Horizontal">
-                    <TextBlock FontSize="16" Text="Напряжение, мкВ: " />
-                    <TextBlock
-                        Margin="1"
-                        FontSize="16"
-                        Text="dfd" />
-                </StackPanel>
+                    Margin="5"
+                    VerticalAlignment="Top">
+                    <StackPanel
+                        Grid.Row="2"
+                        Margin="10,2,2,2"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Top"
+                        Orientation="Horizontal">
 
-                <!--<TextBlock Text="Tx Antenna Counter:" />
+                        <TextBlock FontSize="16" Text="Режим: " />
+                        <TextBlock
+                            Margin="1,1,1,1"
+                            FontSize="16"
+                            Text="{CompiledBinding DeviceModeStr}" />
+                    </StackPanel>
+                    <StackPanel
+                        Grid.Row="2"
+                        Margin="10,2,2,2"
+                        VerticalAlignment="Top"
+                        Orientation="Horizontal">
+                        <TextBlock FontSize="16" Text="Мощность, дБм: " />
+                        <TextBlock
+                            Margin="1"
+                            FontSize="16"
+                            Text="{CompiledBinding PowerDbm, StringFormat={}{0:0.0}}}" />
+                    </StackPanel>
+                    <StackPanel
+                        Grid.Row="2"
+                        Margin="10,2,2,2"
+                        VerticalAlignment="Top"
+                        Orientation="Horizontal">
+                        <TextBlock FontSize="16" Text="Напряжение, мкВ: " />
+                        <TextBlock
+                            Margin="1"
+                            FontSize="16"
+                            Text="dfd" />
+                    </StackPanel>
+
+                    <!--<TextBlock Text="Tx Antenna Counter:" />
                 <TextBlock Margin="1" Text="{CompiledBinding TxAntennaCounterStr}" />-->
 
 
-            </StackPanel>
+                </StackPanel>
 
-            <!--  Нижний ряд - Приемная антенна  -->
-            <ScottPlot:AvaPlot
-                x:Name="AvaPlotRx"
-                Grid.Row="3"
-                MinHeight="150"
-                Margin="10"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch" />
-            <TextBlock
-                Grid.Row="3"
-                Margin="1"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                FontSize="24"
-                Text="{CompiledBinding ReceiverAngleDeg, StringFormat={}{0:0.0}}}" />
-            <TextBlock
-                Grid.Row="3"
-                Margin="2"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Bottom"
-                FontSize="12"
-                Foreground="Red"
-                Text="{CompiledBinding RxAntennaCounterErrorStr}" />
-            <TextBlock
-                Grid.Row="3"
-                Margin="0,5,0,10"
-                HorizontalAlignment="Center"
-                FontSize="16"
-                Text="Приемная антенна" />
+                <!--  Нижний ряд - Приемная антенна  -->
+                <ScottPlot:AvaPlot
+                    x:Name="AvaPlotRx"
+                    Grid.Row="3"
+                    MinHeight="150"
+                    Margin="10"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch" />
+                <TextBlock
+                    Grid.Row="3"
+                    Margin="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontSize="24"
+                    Text="{CompiledBinding ReceiverAngleDeg, StringFormat={}{0:0.0}}}" />
+                <TextBlock
+                    Grid.Row="3"
+                    Margin="2"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Bottom"
+                    FontSize="12"
+                    Foreground="Red"
+                    Text="{CompiledBinding RxAntennaCounterErrorStr}" />
+                <TextBlock
+                    Grid.Row="3"
+                    Margin="0,5,0,10"
+                    HorizontalAlignment="Center"
+                    FontSize="18"
+                    Text="Приемная антенна" />
 
-            <StackPanel
-                Grid.Row="4"
-                Margin="10"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Top">
-                <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
+                <StackPanel
+                    Grid.Row="4"
+                    Margin="10"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top">
+                    <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
+                        <TextBlock
+                            Margin="10,0,0,0"
+                            VerticalAlignment="Center"
+                            Text="Угол:" />
+
+                        <TextBlock
+                            Margin="5,0,0,0"
+                            VerticalAlignment="Bottom"
+                            FontSize="12"
+                            Foreground="Red"
+                            Text="{CompiledBinding ReceiverAngleError}" />
+
+                    </StackPanel>
+
+                    <StackPanel
+                        Margin="0,0,0,5"
+                        HorizontalAlignment="Center"
+                        Orientation="Horizontal">
+
+                        <NumericUpDown
+                            Width="125"
+                            Margin="5,0,5,0"
+                            VerticalAlignment="Center"
+                            FormatString="0.0"
+                            Increment="1"
+                            KeyDown="NumericUpDown_KeyDown"
+                            Maximum="359"
+                            Minimum="0"
+                            Watermark="0-359"
+                            Value="{CompiledBinding ReceiverAngle,
+                                                    Mode=TwoWay,
+                                                    UpdateSourceTrigger=PropertyChanged}" />
+                        <Button
+                            Margin="2"
+                            HorizontalAlignment="Left"
+                            Command="{CompiledBinding MoveReceiverToAngleCommand}"
+                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                            ToolTip.Tip="Переместить">
+                            <PathIcon Data="{StaticResource arrow_right_regular}" />
+                        </Button>
+                        <Button
+                            Margin="2"
+                            HorizontalAlignment="Left"
+                            Command="{CompiledBinding SetReceiverAngleCommand}"
+                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                            ToolTip.Tip="Задать угол (без перемещения)">
+                            <PathIcon Data="{StaticResource arrow_download_regular}" />
+                        </Button>
+                    </StackPanel>
+                    <StackPanel
+                        Margin="2,0,0,5"
+                        HorizontalAlignment="Center"
+                        Orientation="Horizontal">
+                        <Button
+                            Margin="2"
+                            HorizontalAlignment="Left"
+                            Command="{CompiledBinding MoveRxAntennaToRelativeAngleCommand}"
+                            CommandParameter="{CompiledBinding MoveMinus1}"
+                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                            ToolTip.Tip="Переместить на -1°">
+                            <Svg Path="{CompiledBinding ChevronsLeftIconPath}" />
+                        </Button>
+                        <Button
+                            Margin="1"
+                            HorizontalAlignment="Left"
+                            Command="{CompiledBinding MoveRxAntennaToRelativeAngleCommand}"
+                            CommandParameter="{CompiledBinding MoveMinus01}"
+                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                            ToolTip.Tip="Переместить на -0.1°">
+                            <Svg Path="{CompiledBinding ChevronLeftIconPath}" />
+
+                        </Button>
+                        <Button
+                            Margin="1"
+                            HorizontalAlignment="Left"
+                            Command="{CompiledBinding MoveRxAntennaToRelativeAngleCommand}"
+                            CommandParameter="{CompiledBinding MovePlus01}"
+                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                            ToolTip.Tip="Переместить на +0.1°">
+                            <Svg Path="{CompiledBinding ChevronRightIconPath}" />
+                        </Button>
+                        <Button
+                            Margin="1"
+                            HorizontalAlignment="Left"
+                            Command="{CompiledBinding MoveRxAntennaToRelativeAngleCommand}"
+                            CommandParameter="{CompiledBinding MovePlus1}"
+                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                            ToolTip.Tip="Переместить на +1°">
+                            <Svg Path="{CompiledBinding ChevronsRightIconPath}" />
+                        </Button>
+                        <Button
+                            Margin="1"
+                            HorizontalAlignment="Left"
+                            Command="{CompiledBinding StopAntennaCommand}"
+                            CommandParameter="R"
+                            Content="Стоп"
+                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
+                            <Button.Styles>
+                                <Style>
+                                    <Style.Resources>
+                                        <SolidColorBrush x:Key="ThemeBorderMidBrush">Red</SolidColorBrush>
+                                        <SolidColorBrush x:Key="ThemeControlHighBrush">DarkRed</SolidColorBrush>
+                                        <SolidColorBrush x:Key="ButtonBorderBrush">Red</SolidColorBrush>
+                                        <SolidColorBrush x:Key="ButtonBackground">OrangeRed</SolidColorBrush>
+                                        <SolidColorBrush x:Key="ButtonBackgroundPointerOver">Red</SolidColorBrush>
+                                        <SolidColorBrush x:Key="ButtonBackgroundPressed">OrangeRed</SolidColorBrush>
+                                    </Style.Resources>
+                                </Style>
+                            </Button.Styles>
+                            <!--<PathIcon Data="{StaticResource stop_regular}" />-->
+                        </Button>
+                    </StackPanel>
+
+                    <!--<Button
+                    Width="215"
+                    Margin="5,0,0,0"
+                    HorizontalAlignment="Left"
+					Command="{CompiledBinding ResetRxAntennaCounterCommand}">
+
                     <TextBlock
-                        Margin="10,0,0,0"
-                        VerticalAlignment="Center"
-                        Text="Угол:" />
-
-                    <TextBlock
-                        Margin="5,0,0,0"
-                        VerticalAlignment="Bottom"
-                        FontSize="12"
-                        Foreground="Red"
-                        Text="{CompiledBinding ReceiverAngleError}" />
+                        Margin="0,2,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="14"
+                        Text="{CompiledBinding RxAntennaCounter,
+                                               StringFormat='Счетчик: {0:0.0}° | Сброс'}" />
+                </Button>-->
 
                 </StackPanel>
 
-                <StackPanel
-                    Margin="0,0,0,5"
-                    HorizontalAlignment="Center"
-                    Orientation="Horizontal">
+            </Grid>
 
+            <Grid
+                Grid.Row="0"
+                Grid.Column="4"
+                Margin="5"
+                ShowGridLines="False">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="200" />
+                </Grid.RowDefinitions>
+
+                <StackPanel
+                    Grid.Row="0"
+                    Margin="0,0,0,8"
+                    HorizontalAlignment="Left"
+                    Orientation="Horizontal">
+                    <Button
+                        Margin="5"
+                        Command="{CompiledBinding AddTabCommand}"
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                        ToolTip.Tip="Добавить таблицу">
+                        <PathIcon Data="{StaticResource add_square_regular}" />
+                    </Button>
+
+                    <Button
+                        Margin="5"
+                        Command="{CompiledBinding RemoveTabCommand}"
+                        IsEnabled="{CompiledBinding CanRemoveTabWhenPortOpen}"
+                        ToolTip.Tip="Удалить таблицу">
+                        <PathIcon Data="{StaticResource delete_forever_regular}" />
+                    </Button>
+                    <Button
+                        Margin="5"
+                        Command="{CompiledBinding ClearTableCommand}"
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                        ToolTip.Tip="Очистить таблицу">
+                        <PathIcon Data="{StaticResource paint_brush_arrow_down_regular}" />
+                    </Button>
+                    <Button
+                        x:Name="ImportButton"
+                        Margin="5"
+                        Click="ImportButton_Click"
+                        IsEnabled="{CompiledBinding CanUseWhenHasTabs}"
+                        ToolTip.Tip="Загрузить из файла">
+                        <PathIcon Data="{StaticResource folder_open_regular}" />
+                    </Button>
+                    <Button
+                        x:Name="ExportButton"
+                        Margin="5"
+                        Click="ExportButton_Click"
+                        IsEnabled="{CompiledBinding CanUseWhenHasTabs}"
+                        ToolTip.Tip="Сохранить в файл">
+                        <PathIcon Data="{StaticResource save_as_regular}" />
+                    </Button>
+
+                    <Button
+                        x:Name="TogglePlotVisibilityButton"
+                        Margin="5"
+                        Click="TogglePlotVisibility_Click"
+                        IsEnabled="{CompiledBinding CanUseWhenHasTabs}"
+                        ToolTip.Tip="Показать/скрыть график">
+                        <Button.Content>
+                            <Grid>
+                                <PathIcon Data="{StaticResource eye_show_regular}" IsVisible="{CompiledBinding SelectedTab.Plot.IsVisible}" />
+                                <PathIcon Data="{StaticResource eye_hide_regular}" IsVisible="{CompiledBinding !SelectedTab.Plot.IsVisible}" />
+                            </Grid>
+                        </Button.Content>
+                    </Button>
+                    <ColorPicker
+                        Width="70"
+                        Height="32"
+                        Margin="5"
+                        Color="{Binding SelectedTab.Plot.ColorHex, Mode=TwoWay, Converter={StaticResource HexToColorConverter}}" />
+
+                </StackPanel>
+                <TabControl
+                    Grid.Row="1"
+                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}"
+                    ItemsSource="{CompiledBinding Tabs}"
+                    SelectedIndex="{CompiledBinding SelectedTabIndex}">
+                    <TabControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox
+                                    MinWidth="100"
+                                    IsVisible="{CompiledBinding IsEditingHeader}"
+                                    KeyDown="HeaderEdit_KeyDown"
+                                    LostFocus="HeaderEdit_LostFocus"
+                                    Text="{CompiledBinding Header,
+                                                           Mode=TwoWay}" />
+                                <TextBlock
+                                    MinWidth="100"
+                                    DoubleTapped="Header_DoubleTapped"
+                                    IsVisible="{CompiledBinding !IsEditingHeader}}"
+                                    Text="{CompiledBinding Header}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </TabControl.ItemTemplate>
+
+                    <TabControl.ContentTemplate>
+                        <DataTemplate DataType="{x:Type vm:TabViewModel}">
+                            <treegrid:TreeDataGrid
+                                MinHeight="100"
+                                Margin="0"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Top"
+                                Source="{Binding AntennaSource}" />
+                        </DataTemplate>
+                    </TabControl.ContentTemplate>
+                </TabControl>
+
+                <Grid
+                    Grid.Row="2"
+                    Margin="0,8,0,0"
+                    ShowGridLines="False">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="55" />
+                        <ColumnDefinition Width="130" />
+                        <ColumnDefinition Width="80" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!--  Размер сектора  -->
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Margin="10,0,4,0"
+                        VerticalAlignment="Center"
+                        Text="Размер:" />
                     <NumericUpDown
-                        Width="125"
-                        Margin="5,0,5,0"
+                        Name="NumericUpDownSectorSize"
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Width="115"
+                        HorizontalAlignment="Left"
                         VerticalAlignment="Center"
-                        FormatString="0.0"
-                        Increment="1"
-                        KeyDown="NumericUpDown_KeyDown"
-                        Maximum="359"
-                        Minimum="0"
-                        Watermark="0-359"
-                        Value="{CompiledBinding ReceiverAngle,
-                                                Mode=TwoWay,
-                                                UpdateSourceTrigger=PropertyChanged}" />
-                    <Button
-                        Margin="2"
-                        HorizontalAlignment="Left"
-                        Command="{CompiledBinding MoveReceiverToAngleCommand}"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
-                        ToolTip.Tip="Переместить">
-                        <PathIcon Data="{StaticResource arrow_right_regular}" />
-                    </Button>
-                    <Button
-                        Margin="2"
-                        HorizontalAlignment="Left"
-                        Command="{CompiledBinding SetReceiverAngleCommand}"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
-                        ToolTip.Tip="Задать угол (без перемещения)">
-                        <PathIcon Data="{StaticResource arrow_download_regular}" />
-                    </Button>
-                </StackPanel>
-                <StackPanel
-                    Margin="2,0,0,5"
-                    HorizontalAlignment="Center"
-                    Orientation="Horizontal">
-                    <Button
-                        Margin="2"
-                        HorizontalAlignment="Left"
-                        Command="{CompiledBinding MoveRxAntennaToRelativeAngleCommand}"
-                        CommandParameter="{CompiledBinding MoveMinus1}"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
-                        ToolTip.Tip="Переместить на -1°">
-                        <Svg Path="{CompiledBinding ChevronsLeftIconPath}" />
-                    </Button>
-                    <Button
-                        Margin="1"
-                        HorizontalAlignment="Left"
-                        Command="{CompiledBinding MoveRxAntennaToRelativeAngleCommand}"
-                        CommandParameter="{CompiledBinding MoveMinus01}"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
-                        ToolTip.Tip="Переместить на -0.1°">
-                        <Svg Path="{CompiledBinding ChevronLeftIconPath}" />
+                        Increment="5"
+                        IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}"
+                        LostFocus="NumericUpDown_LostFocus"
+                        Maximum="360"
+                        Minimum="10"
+                        Watermark="Размер сектора"
+                        Value="{CompiledBinding SectorSize,
+                                                Mode=TwoWay}" />
 
+                    <!--  Центр сектора  -->
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Margin="10,0,4,0"
+                        VerticalAlignment="Center"
+                        Text="Центр:" />
+                    <NumericUpDown
+                        Name="NumericUpDownSectorCenter"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Width="115"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Increment="5"
+                        IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}"
+                        KeyDown="NumericUpDown_KeyDown"
+                        LostFocus="NumericUpDown_LostFocus"
+                        Maximum="360"
+                        Minimum="-1"
+                        Watermark="Центр сектора"
+                        Value="{CompiledBinding SectorCenter,
+                                                Mode=TwoWay}" />
+
+                    <StackPanel
+                        Grid.Row="0"
+                        Grid.RowSpan="2"
+                        Grid.Column="2"
+                        Margin="8,4,0,0"
+                        VerticalAlignment="Center"
+                        Orientation="Vertical">
+                        <Button
+                            Width="60"
+                            Height="28"
+                            Margin="0,0,0,6"
+                            Command="{CompiledBinding Set120DegreesCommand}"
+                            Content="120°"
+                            IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
+                        <Button
+                            Width="60"
+                            Height="28"
+                            Margin="0,0,0,6"
+                            Command="{CompiledBinding Set180DegreesCommand}"
+                            Content="180°"
+                            IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
+                        <Button
+                            Width="60"
+                            Height="28"
+                            Margin="0,0,0,6"
+                            Command="{CompiledBinding Set360DegreesCommand}"
+                            Content="360°"
+                            IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
+                    </StackPanel>
+                    <StackPanel
+                        Grid.Row="0"
+                        Grid.RowSpan="2"
+                        Grid.Column="3"
+                        Margin="0,8,0,0"
+                        VerticalAlignment="Top"
+                        Orientation="Vertical">
+                        <CheckBox
+                            MinWidth="130"
+                            Margin="0,0,8,0"
+                            Content="Отображать антенну"
+                            IsChecked="{CompiledBinding ShowAntenna,
+                                                        Mode=TwoWay}" />
+                        <CheckBox
+                            MinWidth="130"
+                            Content="Отображать сектор"
+                            IsChecked="{CompiledBinding ShowSector,
+                                                        Mode=TwoWay}" />
+                    </StackPanel>
+
+
+
+                    <!--  Кнопки построения и прерывания диаграммы  -->
+                    <Button
+                        x:Name="StartButton"
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="3"
+                        Height="32"
+                        Margin="10,8,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Bottom"
+                        Command="{CompiledBinding StartDiagramAcquisitionCommand}"
+                        Content="Начать построение диаграммы"
+                        IsEnabled="{CompiledBinding IsPortOpen}"
+                        IsVisible="{CompiledBinding !IsDiagramAcquisitionRunning}">
+                        <Button.Styles>
+                            <Style>
+                                <Style.Resources>
+                                    <SolidColorBrush x:Key="ThemeBorderMidBrush">LimeGreen</SolidColorBrush>
+                                    <SolidColorBrush x:Key="ThemeControlHighBrush">LightGreen</SolidColorBrush>
+                                    <SolidColorBrush x:Key="ButtonBorderBrush">LimeGreen</SolidColorBrush>
+                                    <SolidColorBrush x:Key="ButtonBackground">LimeGreen</SolidColorBrush>
+                                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver">Lime</SolidColorBrush>
+                                    <SolidColorBrush x:Key="ButtonBackgroundPressed">LightGreen</SolidColorBrush>
+                                </Style.Resources>
+                            </Style>
+                        </Button.Styles>
                     </Button>
                     <Button
-                        Margin="1"
+                        x:Name="StopButton"
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="3"
+                        Height="32"
+                        Margin="01,8,0,0"
                         HorizontalAlignment="Left"
-                        Command="{CompiledBinding MoveRxAntennaToRelativeAngleCommand}"
-                        CommandParameter="{CompiledBinding MovePlus01}"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
-                        ToolTip.Tip="Переместить на +0.1°">
-                        <Svg Path="{CompiledBinding ChevronRightIconPath}" />
-                    </Button>
-                    <Button
-                        Margin="1"
-                        HorizontalAlignment="Left"
-                        Command="{CompiledBinding MoveRxAntennaToRelativeAngleCommand}"
-                        CommandParameter="{CompiledBinding MovePlus1}"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
-                        ToolTip.Tip="Переместить на +1°">
-                        <Svg Path="{CompiledBinding ChevronsRightIconPath}" />
-                    </Button>
-                    <Button
-                        Margin="1"
-                        HorizontalAlignment="Left"
-                        Command="{CompiledBinding StopAntennaCommand}"
-                        CommandParameter="R"
-                        Content="Стоп"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
+                        VerticalAlignment="Bottom"
+                        Command="{CompiledBinding CancelDiagramAcquisitionCommand}"
+                        Content="              Прервать             "
+                        IsEnabled="{CompiledBinding IsPortOpen}"
+                        IsVisible="{CompiledBinding IsDiagramAcquisitionRunning}">
                         <Button.Styles>
                             <Style>
                                 <Style.Resources>
@@ -498,372 +806,113 @@
                                 </Style.Resources>
                             </Style>
                         </Button.Styles>
-                        <!--<PathIcon Data="{StaticResource stop_regular}" />-->
                     </Button>
-                </StackPanel>
-            </StackPanel>
-            <TextBlock
-                Grid.Row="5"
-                Margin="5"
-                VerticalAlignment="Bottom"
-                FontSize="14"
-                Text="{CompiledBinding ConnectionStatus}" />
-        </Grid>
 
-        <Grid
-            Grid.Row="0"
-            Grid.Column="2"
-            Margin="5"
-            ShowGridLines="False">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="200" />
-            </Grid.RowDefinitions>
-
-
-
-
-
-            <StackPanel
-                Grid.Row="0"
-                Margin="0,0,0,8"
-                HorizontalAlignment="Left"
-                Orientation="Horizontal">
-                <Button
-                    Margin="5"
-                    Command="{CompiledBinding AddTabCommand}"
-                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
-                    ToolTip.Tip="Добавить таблицу">
-                    <PathIcon Data="{StaticResource add_square_regular}" />
-                </Button>
-
-                <Button
-                    Margin="5"
-                    Command="{CompiledBinding RemoveTabCommand}"
-                    IsEnabled="{CompiledBinding CanRemoveTabWhenPortOpen}"
-                    ToolTip.Tip="Удалить таблицу">
-                    <PathIcon Data="{StaticResource delete_forever_regular}" />
-                </Button>
-                <Button
-                    Margin="5"
-                    Command="{CompiledBinding ClearTableCommand}"
-                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
-                    ToolTip.Tip="Очистить таблицу">
-                    <PathIcon Data="{StaticResource paint_brush_arrow_down_regular}" />
-                </Button>
-                <Button
-                    x:Name="ImportButton"
-                    Margin="5"
-                    Click="ImportButton_Click"
-                    IsEnabled="{CompiledBinding CanUseWhenHasTabs}"
-                    ToolTip.Tip="Загрузить из файла">
-                    <PathIcon Data="{StaticResource folder_open_regular}" />
-                </Button>
-                <Button
-                    x:Name="ExportButton"
-                    Margin="5"
-                    Click="ExportButton_Click"
-                    IsEnabled="{CompiledBinding CanUseWhenHasTabs}"
-                    ToolTip.Tip="Сохранить в файл">
-                    <PathIcon Data="{StaticResource save_as_regular}" />
-                </Button>
-
-                <Button
-                    x:Name="TogglePlotVisibilityButton"
-                    Margin="5"
-                    Click="TogglePlotVisibility_Click"
-                    IsEnabled="{CompiledBinding CanUseWhenHasTabs}"
-                    ToolTip.Tip="Показать/скрыть график">
-                    <Button.Content>
-                        <Grid>
-                            <PathIcon Data="{StaticResource eye_show_regular}" IsVisible="{CompiledBinding SelectedTab.Plot.IsVisible}" />
-                            <PathIcon Data="{StaticResource eye_hide_regular}" IsVisible="{CompiledBinding !SelectedTab.Plot.IsVisible}" />
-                        </Grid>
-                    </Button.Content>
-                </Button>
-                <ColorPicker
-                    Width="70"
-                    Height="32"
-                    Margin="5"
-                    Color="{Binding SelectedTab.Plot.ColorHex, Mode=TwoWay, Converter={StaticResource HexToColorConverter}}" />
-
-            </StackPanel>
-            <TabControl
-                Grid.Row="1"
-                IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}"
-                ItemsSource="{CompiledBinding Tabs}"
-                SelectedIndex="{CompiledBinding SelectedTabIndex}">
-                <TabControl.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBox
-                                MinWidth="100"
-                                IsVisible="{CompiledBinding IsEditingHeader}"
-                                KeyDown="HeaderEdit_KeyDown"
-                                LostFocus="HeaderEdit_LostFocus"
-                                Text="{CompiledBinding Header,
-                                                       Mode=TwoWay}" />
-                            <TextBlock
-                                MinWidth="100"
-                                DoubleTapped="Header_DoubleTapped"
-                                IsVisible="{CompiledBinding !IsEditingHeader}}"
-                                Text="{CompiledBinding Header}" />
-                        </StackPanel>
-                    </DataTemplate>
-                </TabControl.ItemTemplate>
-
-                <TabControl.ContentTemplate>
-                    <DataTemplate DataType="{x:Type vm:TabViewModel}">
-                        <treegrid:TreeDataGrid
-                            MinHeight="100"
-                            Margin="0"
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Top"
-                            Source="{Binding AntennaSource}" />
-                    </DataTemplate>
-                </TabControl.ContentTemplate>
-            </TabControl>
-
-            <Grid
-                Grid.Row="2"
-                Margin="0,8,0,0"
-                ShowGridLines="False">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="55" />
-                    <ColumnDefinition Width="130" />
-                    <ColumnDefinition Width="80" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <!--  Размер сектора  -->
-                <TextBlock
-                    Grid.Row="0"
-                    Grid.Column="0"
-                    Margin="0,0,4,0"
-                    VerticalAlignment="Center"
-                    Text="Размер:" />
-                <NumericUpDown
-                    Name="NumericUpDownSectorSize"
-                    Grid.Row="0"
-                    Grid.Column="1"
-                    Width="115"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Center"
-                    Increment="5"
-                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}"
-                    LostFocus="NumericUpDown_LostFocus"
-                    Maximum="360"
-                    Minimum="10"
-                    Watermark="Размер сектора"
-                    Value="{CompiledBinding SectorSize,
-                                            Mode=TwoWay}" />
-
-                <!--  Центр сектора  -->
-                <TextBlock
-                    Grid.Row="1"
-                    Grid.Column="0"
-                    Margin="0,0,4,0"
-                    VerticalAlignment="Center"
-                    Text="Центр:" />
-                <NumericUpDown
-                    Name="NumericUpDownSectorCenter"
-                    Grid.Row="1"
-                    Grid.Column="1"
-                    Width="115"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Center"
-                    Increment="5"
-                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}"
-                    KeyDown="NumericUpDown_KeyDown"
-                    LostFocus="NumericUpDown_LostFocus"
-                    Maximum="360"
-                    Minimum="-1"
-                    Watermark="Центр сектора"
-                    Value="{CompiledBinding SectorCenter,
-                                            Mode=TwoWay}" />
-
-                <StackPanel
-                    Grid.Row="0"
-                    Grid.RowSpan="2"
-                    Grid.Column="2"
-                    Margin="8,4,0,0"
-                    VerticalAlignment="Center"
-                    Orientation="Vertical">
-                    <Button
-                        Width="60"
-                        Height="28"
-                        Margin="0,0,0,6"
-                        Command="{CompiledBinding Set120DegreesCommand}"
-                        Content="120°"
-                        IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
-                    <Button
-                        Width="60"
-                        Height="28"
-                        Margin="0,0,0,6"
-                        Command="{CompiledBinding Set180DegreesCommand}"
-                        Content="180°"
-                        IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
-                    <Button
-                        Width="60"
-                        Height="28"
-                        Margin="0,0,0,6"
-                        Command="{CompiledBinding Set360DegreesCommand}"
-                        Content="360°"
-                        IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
-                </StackPanel>
-                <StackPanel
-                    Grid.Row="0"
-                    Grid.RowSpan="2"
-                    Grid.Column="3"
-                    Margin="0,8,0,0"
-                    VerticalAlignment="Top"
-                    Orientation="Vertical">
-                    <CheckBox
-                        MinWidth="130"
-                        Margin="0,0,8,0"
-                        Content="отображать антенну"
-                        IsChecked="{CompiledBinding ShowAntenna,
-                                                    Mode=TwoWay}" />
-                    <CheckBox
-                        MinWidth="130"
-                        Content="отображать сектор"
-                        IsChecked="{CompiledBinding ShowSector,
-                                                    Mode=TwoWay}" />
-                </StackPanel>
-
-
-
-                <!--  Кнопки построения и прерывания диаграммы  -->
-                <Button
-                    x:Name="StartButton"
-                    Grid.Row="2"
-                    Grid.Column="0"
-                    Grid.ColumnSpan="3"
-                    Height="32"
-                    Margin="0,8,0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Bottom"
-                    Command="{CompiledBinding StartDiagramAcquisitionCommand}"
-                    Content="Начать построение диаграммы"
-                    IsEnabled="{CompiledBinding IsPortOpen}"
-                    IsVisible="{CompiledBinding !IsDiagramAcquisitionRunning}">
-                    <Button.Styles>
-                        <Style>
-                            <Style.Resources>
-                                <SolidColorBrush x:Key="ThemeBorderMidBrush">LimeGreen</SolidColorBrush>
-                                <SolidColorBrush x:Key="ThemeControlHighBrush">LightGreen</SolidColorBrush>
-                                <SolidColorBrush x:Key="ButtonBorderBrush">LimeGreen</SolidColorBrush>
-                                <SolidColorBrush x:Key="ButtonBackground">LimeGreen</SolidColorBrush>
-                                <SolidColorBrush x:Key="ButtonBackgroundPointerOver">Lime</SolidColorBrush>
-                                <SolidColorBrush x:Key="ButtonBackgroundPressed">LightGreen</SolidColorBrush>
-                            </Style.Resources>
-                        </Style>
-                    </Button.Styles>
-                </Button>
-                <Button
-                    x:Name="StopButton"
-                    Grid.Row="2"
-                    Grid.Column="0"
-                    Grid.ColumnSpan="3"
-                    Height="32"
-                    Margin="0,8,0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Bottom"
-                    Command="{CompiledBinding CancelDiagramAcquisitionCommand}"
-                    Content="              Прервать             "
-                    IsEnabled="{CompiledBinding IsPortOpen}"
-                    IsVisible="{CompiledBinding IsDiagramAcquisitionRunning}">
-                    <Button.Styles>
-                        <Style>
-                            <Style.Resources>
-                                <SolidColorBrush x:Key="ThemeBorderMidBrush">Red</SolidColorBrush>
-                                <SolidColorBrush x:Key="ThemeControlHighBrush">DarkRed</SolidColorBrush>
-                                <SolidColorBrush x:Key="ButtonBorderBrush">Red</SolidColorBrush>
-                                <SolidColorBrush x:Key="ButtonBackground">OrangeRed</SolidColorBrush>
-                                <SolidColorBrush x:Key="ButtonBackgroundPointerOver">Red</SolidColorBrush>
-                                <SolidColorBrush x:Key="ButtonBackgroundPressed">OrangeRed</SolidColorBrush>
-                            </Style.Resources>
-                        </Style>
-                    </Button.Styles>
-                </Button>
+                </Grid>
 
             </Grid>
 
-        </Grid>
-
-        <TextBlock
-            Grid.Row="2"
-            Grid.Column="3"
-            Margin="5"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Bottom"
-            FontSize="14"
-            Text="{CompiledBinding LastEvent}" />
-        <StackPanel Grid.Column="2">
-            <Button
-                Margin="10"
-                HorizontalAlignment="Right"
-                Click="OnSettingsClick"
-                Content="Настройки">
-                <PathIcon Data="{StaticResource settings_regular}" />
-            </Button>
-
-            <Border
-                x:Name="SettingsOverlay"
-                Width="300"
+            <TextBlock
+                Grid.Row="2"
+                Grid.Column="4"
                 Margin="5"
                 HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                Background="{DynamicResource SystemChromeMediumColor}"
-                BorderBrush="{DynamicResource SystemBaseLowColor}"
-                BorderThickness="1"
-                CornerRadius="8"
-                IsVisible="False"
-                ZIndex="100">
+                VerticalAlignment="Bottom"
+                FontSize="14"
+                Text="{CompiledBinding LastEvent}" />
+            <StackPanel Grid.Column="5">
+                <Button
+                    Margin="10"
+                    HorizontalAlignment="Right"
+                    Click="OnSettingsClick"
+                    Content="Настройки">
+                    <PathIcon Data="{StaticResource settings_regular}" />
+                </Button>
 
-                <StackPanel>
+                <Border
+                    x:Name="SettingsOverlay"
+                    Width="300"
+                    Margin="5"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Background="{DynamicResource SystemChromeMediumColor}"
+                    BorderBrush="{DynamicResource SystemBaseLowColor}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    IsVisible="False"
+                    ZIndex="100">
+
+                    <StackPanel>
+                        <TextBlock
+                            Margin="10"
+                            FontWeight="Bold"
+                            Text="Настройки" />
+                        <ToggleSwitch
+                            Grid.Row="2"
+                            Grid.Column="3"
+                            Margin="0,0,10,0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Content="Тёмная тема"
+                            IsChecked="{CompiledBinding IsDarkTheme,
+                                                        Mode=TwoWay}" />
+                        <CheckBox
+                            Margin="10"
+                            Content="Показывать легенду"
+                            IsChecked="{CompiledBinding ShowLegend,
+                                                        Mode=TwoWay}" />
+                        <CheckBox
+                            Margin="10"
+                            Content="Показывать маркеры"
+                            IsChecked="{CompiledBinding ShowMarkers,
+                                                        Mode=TwoWay}" />
+                        <ComboBox Margin="0,0,0,8">
+                            <ComboBoxItem Content="Вариант 1" />
+                            <ComboBoxItem Content="Вариант 2" />
+                            <ComboBoxItem Content="Вариант 3" />
+                        </ComboBox>
+                        <Button
+                            HorizontalAlignment="Right"
+                            Click="OnSettingsClick"
+                            Content="Скрыть" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <Border
+            Grid.Row="1"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Background="{DynamicResource SystemChromeLowColor}"
+            BorderBrush="{DynamicResource SystemBaseLowColor}"
+            BorderThickness="0">
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.2*" />
+                    <ColumnDefinition Width="0.8*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Orientation="Horizontal">
                     <TextBlock
-                        Margin="10"
-                        FontWeight="Bold"
-                        Text="Настройки" />
-                    <ToggleSwitch
-                        Grid.Row="2"
-                        Grid.Column="3"
-                        Margin="0,0,10,0"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        Content="Тёмная тема"
-                        IsChecked="{CompiledBinding IsDarkTheme,
-                                                    Mode=TwoWay}" />
-                    <CheckBox
-                        Margin="10"
-                        Content="Показывать легенду"
-                        IsChecked="{CompiledBinding ShowLegend,
-                                                    Mode=TwoWay}" />
-                    <CheckBox
-                        Margin="10"
-                        Content="Показывать маркеры"
-                        IsChecked="{CompiledBinding ShowMarkers,
-                                                    Mode=TwoWay}" />                    
-                    <ComboBox Margin="0,0,0,8">
-                        <ComboBoxItem Content="Вариант 1" />
-                        <ComboBoxItem Content="Вариант 2" />
-                        <ComboBoxItem Content="Вариант 3" />
-                    </ComboBox>
-                    <Button
-                        HorizontalAlignment="Right"
-                        Click="OnSettingsClick"
-                        Content="Скрыть" />
-                </StackPanel>
-            </Border>
-        </StackPanel>
+                        Margin="3"
+                        FontSize="14"
+                        Text="{CompiledBinding ConnectionStatus}" />
+                    <TextBlock
+                        Margin="3"
+                        FontSize="14"
+                        Text="{CompiledBinding DataFlowStatus}" />
 
+
+                </StackPanel>
+            </Grid>
+
+        </Border>
     </Grid>
 
 </Window>

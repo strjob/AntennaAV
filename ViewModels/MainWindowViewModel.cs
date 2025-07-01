@@ -25,7 +25,6 @@ namespace AntennaAV.ViewModels
     {
         // 1. приватные поля
         private readonly IComPortService _comPortService;
-        private int rxAntennaCounter;
         private int? _firstSystick = null;
         private DateTime _lastDataReceivedTime = DateTime.MinValue;
         private readonly DispatcherTimer _uiTimer = new();
@@ -48,8 +47,8 @@ namespace AntennaAV.ViewModels
         [ObservableProperty] private double powerDbm;
         [ObservableProperty] private int deviceMode;
         [ObservableProperty] private string deviceModeStr = "-"; 
-        [ObservableProperty] private string rxAntennaCounterStr = string.Empty;
-        [ObservableProperty] private string txAntennaCounterStr = string.Empty;
+        [ObservableProperty] private double rxAntennaCounter = 0;
+        [ObservableProperty] private double txAntennaCounter = 0;
         [ObservableProperty] private bool isDiagramAcquisitionRunning;
         [ObservableProperty] private bool isPortOpen;
         [ObservableProperty] private string sectorSize = "180";
@@ -79,8 +78,6 @@ namespace AntennaAV.ViewModels
         public bool HasTabs => TabManager.HasTabs;
         public bool CanRemoveTab => TabManager.CanRemoveTab;
         public bool CanRemoveTabWhenPortOpen => CanRemoveTab && CanUseWhenPortOpen;
-        public int RxAntennaCounter { get => rxAntennaCounter; set => rxAntennaCounter = value; }
-        public int TxAntennaCounter { get => rxAntennaCounter; set => rxAntennaCounter = value; }
         public bool CanUseWhenPortOpen => !IsDiagramAcquisitionRunning && IsPortOpen;
         public bool CanUseWhenHasTabs => !IsDiagramAcquisitionRunning && HasTabs;
         public string ChevronRightIconPath => IsDarkTheme ? "/Assets/chevron-right-dark.svg" : "/Assets/chevron-right-light.svg";
@@ -98,7 +95,6 @@ namespace AntennaAV.ViewModels
         public Action<double>? OnTransmitterAngleSelected;
         public Action<double>? OnReceiverAngleSelected;
         public event Action<bool>? ShowAntennaChanged;
-        public event Action<int>? DeviceModeChanged;
         public event Action<bool>? ShowSectorChanged;
         public event Action? RequestPlotRedraw;
         public event Action? RequestClearCurrentPlot;
@@ -181,6 +177,7 @@ namespace AntennaAV.ViewModels
                 LastEvent = $"Ошибка импорта: {ex.Message}";
             }
         }
+        [RelayCommand] public void ResetRxAntennaCounter() => SetAntennaAngle("0", "R", "Z");
         [RelayCommand] public void MoveTransmitterToAngle() => SetAntennaAngle(TransmitterAngle, "T", "G");
         [RelayCommand] public void SetTransmitterAngle() => SetAntennaAngle(TransmitterAngle, "T", "S");
         [RelayCommand] public void MoveReceiverToAngle() => SetAntennaAngle(ReceiverAngle, "R", "G");
@@ -224,8 +221,9 @@ namespace AntennaAV.ViewModels
             _acquisitionCts?.Dispose();
             _acquisitionCts = null;
             _isDiagramDataCollecting = false;
-            _collector.FinalizeData();
-            //UpdatePlotWithNormalizedData();
+            lock (_dataLock)
+                _collector.FinalizeData();
+                //UpdatePlotWithNormalizedData();
             _comPortService.StopAntenna("R");
         }
 
@@ -267,7 +265,7 @@ namespace AntennaAV.ViewModels
                     SelectedTab.Plot.IsVisible = true;
 
                 double currentAngle = ReceiverAngleDeg;
-                int currentCounter = RxAntennaCounter;
+                double currentCounter = RxAntennaCounter;
                 Debug.WriteLine($"Текущее положение: угол={currentAngle:F1}°, counter={currentCounter}");
 
                 // Определяем углы и параметры
@@ -357,7 +355,7 @@ namespace AntennaAV.ViewModels
 
         private async Task WaitForMovementStartAsync(double initialAngle, CancellationToken cancellationToken)
         {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var stopwatch = Stopwatch.StartNew();
             while (AngleUtils.AngleDiff(initialAngle, ReceiverAngleDeg) < 0.5)
             {
                 await Task.Delay(10, cancellationToken);
@@ -454,29 +452,26 @@ namespace AntennaAV.ViewModels
         {
             _tableUpdateTimer?.Stop();
         }
+
         private void UpdateTable()
         {
             lock (_dataLock)
             {
-                if (_isFinalizingDiagram)
+                if (_isFinalizingDiagram || !IsRealtimeMode || SelectedTab == null)
                     return;
-                if (SelectedTab != null && IsRealtimeMode)
-                {
-                    var newData = _collector.GetTableData();
-                    SelectedTab.AntennaDataCollection.ReplaceRange(newData);
-                    _collector.FinalizeData();  //
 
-                }
-                if (RequestPlotRedraw != null && IsRealtimeMode)
+                _collector.FinalizeData();
+
+                var plotSw = System.Diagnostics.Stopwatch.StartNew();
+                if (RequestPlotRedraw != null)
                 {
-                    if (SelectedTab != null)
-                    {
-                        SelectedTab.Plot.Angles = _collector.GetGraphAngles().ToArray();
-                        SelectedTab.Plot.PowerNormValues = _collector.GetGraphValues(d => d.PowerNorm).ToArray();
-                        SelectedTab.Plot.VoltageNormValues = _collector.GetGraphValues(d => d.VoltageNorm).ToArray();
-                    }
+                    SelectedTab.Plot.Angles = _collector.GetGraphAngles();
+                    SelectedTab.Plot.PowerNormValues = _collector.GetGraphValues(d => d.PowerNorm);
+                    SelectedTab.Plot.VoltageNormValues = _collector.GetGraphValues(d => d.VoltageNorm);
                     RequestPlotRedraw.Invoke();
                 }
+                var newData = _collector.GetTableData();
+                SelectedTab.AntennaDataCollection.ReplaceRange(newData);
             }
         }
 
@@ -526,15 +521,11 @@ namespace AntennaAV.ViewModels
                 if (lastData != null)
                 {
                     ReceiverAngleDeg = lastData.ReceiverAngleDeg;
-                    //ReceiverAngleDegStr = ReceiverAngleDeg.ToString("F1");
                     TransmitterAngleDeg = lastData.TransmitterAngleDeg;
-                    //TransmitterAngleDegStr = TransmitterAngleDeg.ToString("F1") + "°";
                     PowerDbm = lastData.PowerDbm;
-                    //PowerDbmStr = PowerDbm.ToString("F2");
                     DeviceMode = lastData.AntennaType;
-                    RxAntennaCounter = lastData.RxAntennaCounter;
-                    TxAntennaCounter = lastData.TxAntennaCounter;
-                    //TxAntennaCounterStr = TxAntennaCounter.ToString();
+                    RxAntennaCounter = Math.Round(lastData.RxAntennaCounter / 10.0, 1);
+                    TxAntennaCounter = Math.Round(lastData.TxAntennaCounter/10.0, 1);
                 }
                 if (dataReceived)
                 {
@@ -543,7 +534,7 @@ namespace AntennaAV.ViewModels
             }
         }
 
-        private string CheckAntennaCounter(int antennaCounter)
+        private string CheckAntennaCounter(double antennaCounter)
         {
             return Math.Abs(antennaCounter) >= Constants.MaxAntennaCounter
                 ? "Защита от перекручивания кабеля"
@@ -554,7 +545,7 @@ namespace AntennaAV.ViewModels
         {
             if (dataReceived)
             {
-                DataFlowStatus = "🟢 Данные идут";
+                DataFlowStatus = "🟢 Обмен данными";
             }
             else
             {

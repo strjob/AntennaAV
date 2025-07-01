@@ -1,15 +1,12 @@
-using AntennaAV.ViewModels;
+﻿using AntennaAV.ViewModels;
 using AntennaAV.Views;
 using Avalonia.Threading;
-using CommunityToolkit.Mvvm.ComponentModel;
 using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Plottables;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Windows.Markup;
 namespace AntennaAV.Services
 {
 
@@ -27,39 +24,18 @@ namespace AntennaAV.Services
             CoordinatesArray = new ScottPlot.Coordinates[maxCapacity];
         }
     }
-
-    // Updated PlotData class with segments
-
-
-
-    public class PlotManager
+    public class PlotManagerMain
     {
         private readonly object _plotMainLock = new();
-        private readonly object _plotTxLock = new();
-        private readonly object _plotRxLock = new();
         private DispatcherTimer? _avaPlotRefreshTimer;
         private AvaPlot? _avaPlotMain;
-        private AvaPlot? _avaPlotTx;
-        private AvaPlot? _avaPlotRx;
         private double? _globalMin = null;
         private double? _globalMax = null;
         private bool _avaPlotMainNeedsRefresh = false;
-        private bool _avaPlotTxNeedsRefresh = false;
-        private bool _avaPlotRxNeedsRefresh = false;
-
 
         private ScottPlot.Plottables.Polygon? _sectorPolygon;
         private ScottPlot.Plottables.PolarAxis? _polarAxisMain;
-        private ScottPlot.Plottables.PolarAxis? _polarAxisTx;
-        private ScottPlot.Plottables.PolarAxis? _polarAxisRx;
-
         private ScottPlot.Plottables.Arrow? _angleArrow;
-        private ScottPlot.Plottables.Marker? _hoverMarkerTx;
-        private ScottPlot.Plottables.Marker? _hoverMarkerRx;
-        private ScottPlot.Plottables.Marker? _transmitterMarker;
-        private ScottPlot.Plottables.Marker? _receiverMarker;
-
-
         private double? _pendingSectorStart = null;
         private double? _pendingSectorEnd = null;
         private bool? _pendingSectorVisible = null;
@@ -67,6 +43,8 @@ namespace AntennaAV.Services
 
 
         private readonly List<TabViewModel> _activePlotTabs = new();
+
+
 
         public void DrawPolarPlot(IEnumerable<TabViewModel> tabs,
             TabViewModel currentTab,
@@ -124,7 +102,6 @@ namespace AntennaAV.Services
             // Get values and create segments - optimized for frequent updates
             double[] values = isLogScale ? plotData.PowerNormValues : plotData.VoltageNormValues;
             var segments = CreateSegmentsOptimized(plotData.Angles, values);
-
             var color = ScottPlot.Color.FromHex(plotData.ColorHex);
             bool first = true;
 
@@ -137,24 +114,35 @@ namespace AntennaAV.Services
                 PlotSegmentData segmentData = GetOrCreateSegmentData(plotData, segIndex);
 
                 // Only update arrays if they're different (avoid unnecessary allocations)
-                if (!ArraysEqual(segmentData.SegmentAngles, segAngles) ||
-                    !ArraysEqual(segmentData.SegmentValues, segValues))
+                if (NeedsDataUpdate(segmentData, segAngles, segValues))
                 {
-                    segmentData.SegmentAngles = segAngles.ToArray();
-                    segmentData.SegmentValues = segValues.ToArray();
+                    if (segmentData.SegmentAngles?.Length != segAngles.Count)
+                    {
+                        segmentData.SegmentAngles = new double[segAngles.Count];
+                    }
+                    if (segmentData.SegmentValues?.Length != segValues.Count)
+                    {
+                        segmentData.SegmentValues = new double[segValues.Count];
+                    }
+
+                    // Копируем данные без создания новых массивов
+                    segAngles.CopyTo(segmentData.SegmentAngles, 0);
+                    segValues.CopyTo(segmentData.SegmentValues, 0);
                 }
+
 
                 // Update coordinates in the fixed array
                 UpdateSegmentCoordinates(segmentData, isLogScale, min, max);
 
                 // Create or update scatter plot
                 CreateOrUpdateScatterPlot(segmentData, color, first, segIndex == 0 ? label : null);
-                first = false; 
+                first = false;
             }
 
             // Remove excess segments
             RemoveExcessSegments(plotData, segments.Count);
         }
+
 
         private List<(List<double> segAngles, List<double> segValues)> CreateSegmentsOptimized(double[] angles, double[] values)
         {
@@ -184,14 +172,25 @@ namespace AntennaAV.Services
             return segments;
         }
 
-        private bool ArraysEqual(double[] arr1, List<double> arr2)
+        private bool ArraysEqualOptimized(double[] arr1, IReadOnlyList<double> arr2)
         {
             if (arr1.Length != arr2.Count) return false;
+
             for (int i = 0; i < arr1.Length; i++)
             {
                 if (Math.Abs(arr1[i] - arr2[i]) > 1e-10) return false;
             }
             return true;
+        }
+
+        private bool NeedsDataUpdate(PlotSegmentData segmentData, List<double> newAngles, List<double> newValues)
+        {
+            if (segmentData.SegmentAngles?.Length != newAngles.Count ||
+                segmentData.SegmentValues?.Length != newValues.Count)
+                return true;
+
+            return !ArraysEqualOptimized(segmentData.SegmentAngles, newAngles) ||
+                   !ArraysEqualOptimized(segmentData.SegmentValues, newValues);
         }
 
         private PlotSegmentData GetOrCreateSegmentData(PlotData plotData, int segIndex)
@@ -237,8 +236,8 @@ namespace AntennaAV.Services
                 {
                     _avaPlotMain!.Plot.Remove(lastSegment.ScatterPlot);
                     lastSegment.ScatterPlot = null; // Обнуление ссылки
-                }    
-                    
+                }
+
                 plotData.PlotSegments.RemoveAt(plotData.PlotSegments.Count - 1);
             }
         }
@@ -451,42 +450,7 @@ namespace AntennaAV.Services
                 }
             }
         }
-        public void ClearAllPlots(IEnumerable<TabViewModel> tabs, AvaPlot? plot = null)
-        {
-            plot ??= _avaPlotMain;
-            if (plot == null)
-                return;
 
-            lock (_plotMainLock)
-            {
-                try
-                {
-                    foreach (var tab in tabs)
-                    {
-                        if (tab.Plot?.PlotSegments != null)
-                        {
-                            foreach (var segmentData in tab.Plot.PlotSegments)
-                            {
-                                if (segmentData.ScatterPlot != null)
-                                    plot.Plot.Remove(segmentData.ScatterPlot);
-                            }
-                            tab.Plot.PlotSegments.Clear();
-                        }
-                        //tab.DataScatters?.Clear();
-                    }
-
-                    // Reset global min/max for next acquisition
-                    _globalMin = null;
-                    _globalMax = null;
-                    _activePlotTabs.Clear();
-                    _avaPlotMainNeedsRefresh = true;
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[ClearAllPlots] Exception: {ex}");
-                }
-            }
-        }
         // Method to reset global range when starting new acquisition series
         public void ResetGlobalRange()
         {
@@ -497,96 +461,22 @@ namespace AntennaAV.Services
             }
         }
 
-
         public void ResetPlotAxes()
         {
             lock (_plotMainLock)
             {
-                if(_avaPlotMain != null)
+                if (_avaPlotMain != null)
                     _avaPlotMain.Plot.Axes.AutoScale();
                 _avaPlotMainNeedsRefresh = true;
             }
-            lock (_plotTxLock)
-            {
-                if (_avaPlotTx != null)
-                    _avaPlotTx.Plot.Axes.AutoScale();
-                _avaPlotTxNeedsRefresh = true;
-            }
-            lock (_plotRxLock)
-            {
-                if (_avaPlotRx != null)
-                    _avaPlotRx.Plot.Axes.AutoScale();
-                _avaPlotRxNeedsRefresh = true;
-            }
         }
 
-        public void DrawTransmitterAnglePoint(AvaPlot? plot, double angleDeg)
-        {
-            
-            if (plot == null || plot?.Plot == null)
-                return;
-            DrawAnglePoint(
-                plot,
-                angleDeg,
-                _plotTxLock,
-                ref _transmitterMarker,
-                ref _avaPlotTxNeedsRefresh,
-                270
-            );
-        }
-
-        public void DrawReceiverAnglePoint(AvaPlot? plot, double angleDeg)
-        {
-
-            if (plot == null || plot.Plot == null)
-                return;
-            DrawAnglePoint(
-                plot,
-                angleDeg,
-                _plotRxLock,
-                ref _receiverMarker,
-                ref _avaPlotRxNeedsRefresh,
-                90
-            );
-        }
-        public void DrawAnglePoint(
-            AvaPlot? plot,
-            double angleDeg,
-            object plotLock,
-            ref ScottPlot.Plottables.Marker? marker,
-            ref bool needsRefreshFlag,
-            double rotation = 0)
-        {
-            if (plot == null || plot?.Plot == null)
-                return;
-            lock (plotLock)
-            {
-                double radius = Constants.DefaultPlotRadius;
-                double angleRad = (-angleDeg + rotation) * Math.PI / 180.0;
-                double x = radius * Math.Cos(angleRad);
-                double y = radius * Math.Sin(angleRad);
-                if (marker == null)
-                {
-                    marker = plot.Plot.Add.Marker(
-                        x: x,
-                        y: y,
-                        color: ScottPlot.Color.FromHex("#0073cf"),
-                        size: Constants.MarkerSize
-                    );
-                }
-                else
-                {
-                    marker.X = x;
-                    marker.Y = y;
-                }
-                needsRefreshFlag = true;
-            }
-        }
+       
         public void CreateOrUpdateSectorPolygon(AvaPlot? plot, double start, double end, bool isVisible)
         {
             if (plot == null)
                 return;
-            lock(_plotMainLock)
+            lock (_plotMainLock)
             {
                 _pendingSectorStart = start;
                 _pendingSectorEnd = end;
@@ -659,122 +549,6 @@ namespace AntennaAV.Services
             }
         }
 
-        public void UpdateHoverMarkerTx(
-            AvaPlot? plot,
-            double mouseX,
-            double mouseY,
-            double plotRadiusPix,
-            double threshold,
-            out double snappedAngle)
-        {
-            double localSnappedAngle;
-            UpdateHoverMarker(
-                plot,
-                _polarAxisTx,
-                _plotTxLock,
-                ref _hoverMarkerTx,
-                ref _avaPlotTxNeedsRefresh,
-                mouseX,
-                mouseY,
-                plotRadiusPix,
-                threshold,
-                out localSnappedAngle
-            );
-            snappedAngle = localSnappedAngle;
-        }
-
-        public void UpdateHoverMarkerRx(
-            AvaPlot? plot,
-            double mouseX,
-            double mouseY,
-            double plotRadiusPix,
-            double threshold,
-            out double snappedAngle)
-        {
-            double localSnappedAngle;
-            UpdateHoverMarker(
-                plot,
-                _polarAxisRx,
-                _plotRxLock,
-                ref _hoverMarkerRx,
-                ref _avaPlotRxNeedsRefresh,
-                mouseX,
-                mouseY,
-                plotRadiusPix,
-                threshold,
-                out localSnappedAngle,
-                180
-            );
-            snappedAngle = localSnappedAngle;
-        }
-
-        private void UpdateHoverMarker(
-            AvaPlot? plot,
-            ScottPlot.Plottables.PolarAxis? polarAxis,
-            object plotLock,
-            ref ScottPlot.Plottables.Marker? hoverMarker,
-            ref bool needsRefreshFlag,
-            double mouseX,
-            double mouseY,
-            double plotRadiusPix,
-            double threshold,
-            out double snappedAngle,
-            double rotation = 0)
-        {
-            snappedAngle = double.NaN;
-            if (plot == null || polarAxis == null || plot.Plot == null)
-                return;
-            lock (plotLock)
-            {
-                double centerX = plot.Bounds.Width / 2.0;
-                double centerY = plot.Bounds.Height / 2.0;
-                double dx = mouseX - centerX;
-                double dy = mouseY - centerY;
-                double rPix = Math.Sqrt(dx * dx + dy * dy);
-                if (Math.Abs(rPix - plotRadiusPix) > threshold)
-                {
-                    if (hoverMarker != null && plot.Plot != null && plot.Plot.GetPlottables().Contains(hoverMarker))
-                        hoverMarker.IsVisible = false;
-                    return;
-                }
-                double angleRad = Math.Atan2(dx, -dy);
-                double angleDeg = (angleRad * 180.0 / Math.PI + 360) % 360;
-                double mirroredAngle = (360 - angleDeg + 180 + rotation) % 360;
-                double snapStep = Constants.PointerSnapStep;
-                snappedAngle = Math.Round(mirroredAngle / snapStep) * snapStep;
-                snappedAngle = snappedAngle % 360;
-                double r = Constants.DefaultPlotRadius;
-                var coord = polarAxis.GetCoordinates(r, snappedAngle);
-                if (hoverMarker == null)
-                    hoverMarker = plot.Plot.Add.Marker(coord.X, coord.Y, color: ScottPlot.Color.FromHex("#FF0000"), size: Constants.HoverMarkerSize);
-                else
-                {
-                    hoverMarker.X = coord.X;
-                    hoverMarker.Y = coord.Y;
-                    hoverMarker.IsVisible = true;
-                }
-                needsRefreshFlag = true;
-            }
-        }
-
-        public void SetTxHoverMarkerVisibility(bool isVisible)
-        {
-            lock (_plotTxLock)
-            {
-                if (_hoverMarkerTx != null)
-                    _hoverMarkerTx.IsVisible = isVisible;
-            }
-            _avaPlotTxNeedsRefresh = true;
-        }
-        public void SetRxHoverMarkerVisibility(bool isVisible)
-        {
-            lock (_plotRxLock)
-            {
-                if (_hoverMarkerRx != null)
-                    _hoverMarkerRx.IsVisible = isVisible;
-            }
-            _avaPlotRxNeedsRefresh = true;
-        }
 
         public void UpdatePolarAxisCircles(AvaPlot plot, bool isLog, double min, double max, bool isDark)
         {
@@ -782,7 +556,7 @@ namespace AntennaAV.Services
                 return;
             lock (_plotMainLock)
             {
-                 Plots.AutoUpdatePolarAxisCircles(plot, _polarAxisMain, isLog, min, max, isDark);
+                Plots.AutoUpdatePolarAxisCircles(plot, _polarAxisMain, isLog, min, max, isDark);
             }
             _avaPlotMainNeedsRefresh = true;
         }
@@ -815,51 +589,15 @@ namespace AntennaAV.Services
             _avaPlotMainNeedsRefresh = true;
         }
 
-
-        public void ApplyThemeToPlotSmall(
-            bool isDark,
-            AvaPlot? plot,
-            object plotLock,
-            ScottPlot.Plottables.PolarAxis? polarAxis,
-            ref bool needsRefreshFlag)
-        {
-            lock (plotLock)
-            {
-                if (plot != null && polarAxis != null)
-                {
-                    Plots.UpdatePolarAxisThemeSmall(polarAxis, plot, isDark);
-                    Plots.SetScottPlotTheme(isDark, false, plot);
-                }
-            }
-            needsRefreshFlag = true;
-        }
-
         public void InitializePlotMain(AvaPlot plot, bool isDark)
         {
             _avaPlotMain = plot;
             _polarAxisMain = Plots.Initialize(plot, isDark) ?? throw new InvalidOperationException("Failed to initialize main polar axis");
             ApplyThemeToMainPlot(isDark, plot);
             UpdatePolarAxisCircles(plot, true, -50, 0, isDark);
-        }
-        private bool ArePlotsInitialized()
-        {
-            return _avaPlotMain?.Plot != null && _avaPlotTx?.Plot != null && _avaPlotRx?.Plot != null;
+            InitializeRefreshTimer();
         }
 
-        public void InitializeAllPlots(AvaPlot mainPlot, AvaPlot txPlot, AvaPlot rxPlot, bool isDark)
-        {
-            InitializePlotMain(mainPlot, isDark);
-            InitializeTxPlot(txPlot, isDark);
-            InitializeRxPlot(rxPlot, isDark);
-            if (ArePlotsInitialized())
-            {
-                InitializeRefreshTimer();
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("Failed to initialize all plots; timer not started");
-            }
-        }
 
         private void InitializeRefreshTimer()
         {
@@ -881,77 +619,9 @@ namespace AntennaAV.Services
                         _avaPlotMainNeedsRefresh = false;
                     }
                 }
-
-                if (_avaPlotTxNeedsRefresh && _avaPlotTx != null && _avaPlotTx?.Plot != null)
-                {
-                    lock (_plotTxLock)
-                    {
-                        _avaPlotTx.Refresh();
-                        _avaPlotTxNeedsRefresh = false;
-                    }
-                }
-                if (_avaPlotRxNeedsRefresh && _avaPlotRx != null && _avaPlotRx?.Plot != null)
-                {
-                    lock (_plotRxLock)
-                    {
-                        _avaPlotRx.Refresh();
-                        _avaPlotRxNeedsRefresh = false;
-                    }
-                }
             };
             _avaPlotRefreshTimer.Start();
         }
-
-        public void InitializeTxPlot(AvaPlot plot, bool isDark)
-        {
-            _avaPlotTx = plot;
-            _polarAxisTx = Plots.InitializeSmall(plot, isDark) ?? throw new InvalidOperationException("Failed to initialize Tx polar axis");
-            ApplyThemeToPlotSmall(
-                isDark,
-                plot,
-                _plotTxLock,
-                _polarAxisTx,
-                ref _avaPlotTxNeedsRefresh
-            );
-        }
-
-        public void InitializeRxPlot(AvaPlot plot, bool isDark)
-        {
-            _avaPlotRx = plot;
-            _polarAxisRx = Plots.InitializeSmall(plot, isDark, 90) ?? throw new InvalidOperationException("Failed to initialize Rx polar axis");
-            ApplyThemeToPlotSmall(
-                isDark,
-                plot,
-                _plotRxLock,
-                _polarAxisRx,
-                ref _avaPlotRxNeedsRefresh
-            );
-        }
-
-        public void ApplyThemeToPlotTx(AvaPlot plot, bool isDark)
-        {
-            if (plot != null && _polarAxisTx != null)
-                ApplyThemeToPlotSmall(
-                isDark,
-                plot,
-                _plotTxLock,
-                _polarAxisTx,
-                ref _avaPlotTxNeedsRefresh
-            );
-        }
-
-        public void ApplyThemeToPlotRx(AvaPlot plot, bool isDark)
-        {
-            if (plot != null && _polarAxisTx != null)
-                ApplyThemeToPlotSmall(
-                isDark,
-                plot,
-                _plotRxLock,
-                _polarAxisRx,
-                ref _avaPlotRxNeedsRefresh
-            );
-        }
-
 
         public void CreateOrUpdateAngleArrow(AvaPlot? plot, double angleDeg)
         {
@@ -974,7 +644,8 @@ namespace AntennaAV.Services
                     _angleArrow.ArrowWidth = Constants.ArrowWidth;
                     _angleArrow.ArrowheadWidth = Constants.ArrowheadWidth;
                     _angleArrow.ArrowFillColor = ScottPlot.Color.FromHex("#0073cf");
-                    plot.Plot.MoveToFront(_angleArrow);                }
+                    plot.Plot.MoveToFront(_angleArrow);
+                }
                 else
                 {
                     _angleArrow.Base = new ScottPlot.Coordinates(0, 0);
@@ -1004,33 +675,16 @@ namespace AntennaAV.Services
             _avaPlotMainNeedsRefresh = true;
         }
 
-        public bool IsHoverMarkerTxVisible()
-        {
-            lock (_plotTxLock)
-            {
-                return _hoverMarkerTx?.IsVisible ?? false;
-            }
-        }
-
-        public bool IsHoverMarkerRxVisible()
-        {
-            lock (_plotTxLock)
-            {
-                return _hoverMarkerRx?.IsVisible ?? false;
-            }
-        }
-
         public void SetLegendVisibility(bool isVisible)
         {
             lock (_plotMainLock)
             {
                 if (_avaPlotMain != null)
                 {
-                    if(isVisible)
+                    if (isVisible)
                     {
                         _avaPlotMain.Plot.ShowLegend(Alignment.LowerRight, Orientation.Vertical);
                     }
-                        
                     else
                     {
                         _avaPlotMain.Plot.HideLegend();
