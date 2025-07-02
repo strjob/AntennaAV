@@ -23,6 +23,8 @@ namespace AntennaAV.ViewModels
 
         public FlatTreeDataGridSource<GridAntennaData> AntennaSource { get; }
 
+        public PlotData Plot { get; set; } = new PlotData();
+
         public TabViewModel()
         {
             
@@ -31,19 +33,29 @@ namespace AntennaAV.ViewModels
             {
                 Columns =
                 {
-                    new TextColumn<GridAntennaData, string>("Угол, °", x => x.AngleStr),
-                    new TextColumn<GridAntennaData, string>("P, дБм", x => x.PowerDbmStr),
-                    new TextColumn<GridAntennaData, string>("V, мкВ", x => x.VoltageStr),
-                    new TextColumn<GridAntennaData, string>("P норм.", x => x.PowerNormStr),
-                    new TextColumn<GridAntennaData, string>("V норм.", x => x.VoltageNormStr),
-                    new TextColumn<GridAntennaData, string>("Время", x => x.TimeStr),
+                    new TextColumn<GridAntennaData, double>("Угол, °", x => x.Angle),
+                    new TextColumn<GridAntennaData, double>("P, дБм", x => x.PowerDbm),
+                    new TextColumn<GridAntennaData, double>("V, мкВ", x => x.Voltage),
+                    new TextColumn<GridAntennaData, double>("P норм.", x => x.PowerNorm),
+                    new TextColumn<GridAntennaData, double>("V норм.", x => x.VoltageNorm),
+                    new TextColumn<GridAntennaData, DateTime>("Время", x => x.Time),
                 }
             };
+            
         }
 
         public void AddAntennaData(IEnumerable<GridAntennaData> newItems)
         {
             AntennaDataCollection.AddRange(newItems);
         }
+    }
+
+    public class PlotData
+    {
+        public double[] Angles { get; set; } = Array.Empty<double>();
+        public double[] PowerNormValues { get; set; } = Array.Empty<double>();
+        public double[] VoltageNormValues { get; set; } = Array.Empty<double>();
+        public string ColorHex { get; set; } = "#0000FF";
+        public bool IsVisible { get; set; } = true;
     }
 }

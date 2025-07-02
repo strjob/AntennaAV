@@ -197,6 +197,7 @@ namespace AntennaAV.Services
 
         public void StopReading()
         {
+             StopMessaging();
             _reading = false;
             _readThread?.Join();
             _port?.DiscardInBuffer();

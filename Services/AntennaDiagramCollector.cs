@@ -52,11 +52,10 @@ namespace AntennaAV.Services
             }
         }
 
-        public Dictionary<int, GridAntennaData>.ValueCollection GetTableData()
+        public List<GridAntennaData> GetTableData()
         {
-            //var list = new List<GridAntennaData>(_data.Values);
-            var list = _data.Values;
-            //list.Sort((a, b) => double.Parse(a.Angle).CompareTo(double.Parse(b.Angle)));
+            var list = new List<GridAntennaData>(_data.Values);
+            list.Sort((b, a) => a.Time.CompareTo(b.Time));
             return list;
         }
 

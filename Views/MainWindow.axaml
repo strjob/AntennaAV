@@ -164,35 +164,28 @@
             <!--  Средний ряд - Существующие текстовые блоки  -->
             <StackPanel Grid.Row="1" VerticalAlignment="Center">
                 <TextBlock Text="Receiver Angle:" />
-                <TextBlock Margin="5" Text="{CompiledBinding ReceiverAngleDeg}" />
+                <TextBlock Margin="2" Text="{CompiledBinding ReceiverAngleDegStr}" />
 
                 <TextBlock Text="Transmitter Angle:" />
-                <TextBlock Margin="5" Text="{CompiledBinding TransmitterAngleDeg}" />
+                <TextBlock Margin="2" Text="{CompiledBinding TransmitterAngleDegStr}" />
 
                 <TextBlock Text="Power (dBm):" />
-                <TextBlock Margin="5" Text="{CompiledBinding PowerDbm}" />
+                <TextBlock Margin="2" Text="{CompiledBinding PowerDbmStr}" />
 
                 <TextBlock Text="Antenna Type:" />
-                <TextBlock Margin="5" Text="{CompiledBinding AntennaType}" />
+                <TextBlock Margin="2" Text="{CompiledBinding AntennaTypeStr}" />
 
                 <TextBlock Text="Rx Antenna Counter:" />
-                <TextBlock Margin="5" Text="{CompiledBinding RxAntennaCounter}" />
+                <TextBlock Margin="2" Text="{CompiledBinding RxAntennaCounterStr}" />
 
                 <TextBlock Text="Timestamp:" />
-                <TextBlock Margin="5" Text="{CompiledBinding Timestamp}" />
+                <TextBlock Margin="2" Text="{CompiledBinding TimestampStr}" />
             </StackPanel>
 
             <!--  Нижний ряд - пока пустой  -->
             <StackPanel Grid.Row="2" VerticalAlignment="Center">
                 <!--  Здесь можно добавить дополнительные элементы в будущем  -->
-                <TextBlock Margin="0,10,0,0" Text="COM-порты:" />
-                <ListBox Height="100" ItemsSource="{CompiledBinding AvailablePorts}" />
-                <Button
-                    Width="100"
-                    Margin="0,0,0,10"
-                    HorizontalAlignment="Left"
-                    Command="{CompiledBinding RefreshPortsCommand}"
-                    Content="Порты" />
+
             </StackPanel>
 
         </Grid>
@@ -220,11 +213,6 @@
                     IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
                 <Button
                     Margin="5"
-                    Command="{CompiledBinding EditTabCommand}"
-                    Content="Редактировать"
-                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
-                <Button
-                    Margin="5"
                     Command="{CompiledBinding RemoveTabCommand}"
                     Content="Удалить"
                     IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
@@ -233,12 +221,19 @@
                     Margin="5"
                     Content="Экспорт"
                     IsEnabled="{CompiledBinding HasTabs}" />
+                <Button
+                    x:Name="TogglePlotVisibilityButton"
+                    Margin="5"
+                    Content="Показать/Скрыть график"
+                    Click="TogglePlotVisibility_Click"
+                    IsEnabled="{CompiledBinding HasTabs}" />
 
             </StackPanel>
             <TabControl
                 Grid.Row="1"
                 ItemsSource="{CompiledBinding Tabs}"
-                SelectedIndex="{CompiledBinding SelectedTabIndex}">
+                SelectedIndex="{CompiledBinding SelectedTabIndex}"
+                IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}">
                 <TabControl.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">

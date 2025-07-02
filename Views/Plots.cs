@@ -18,7 +18,7 @@ namespace AntennaAV.Views
             for (int i = 0; i < polarAxis.Spokes.Count; i++)
             {
                 polarAxis.Spokes[i].LineWidth = 1;
-                polarAxis.Spokes[i].LabelPaddingFraction = 0.07;
+                polarAxis.Spokes[i].LabelPaddingFraction = 0.05;
                 polarAxis.Spokes[i].Length = 100;
                 polarAxis.Spokes[i].LinePattern = LinePattern.Dotted;
             }
