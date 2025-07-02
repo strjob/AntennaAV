@@ -7,7 +7,6 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Converters;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
-using Catel.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ScottPlot;
@@ -256,8 +255,7 @@ namespace AntennaAV.ViewModels
             var tab = new TabViewModel { Header = $"Антенна {Tabs.Count + 1}" };
             tab.AddAntennaData(new List<GridAntennaData>
             {
-                new GridAntennaData { Angle = 10, PowerDbm = -20, Voltage = 1.1, PowerNorm = -19, VoltageNorm = 1.0, Time = DateTime.Now },
-                new GridAntennaData { Angle = 20, PowerDbm = -21, Voltage = 1.2, PowerNorm = -18, VoltageNorm = 1.1, Time = DateTime.Now }
+
             });
             Tabs.Add(tab);
             SelectedTabIndex = Tabs.Count - 1;

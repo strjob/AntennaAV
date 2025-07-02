@@ -13,7 +13,7 @@ namespace AntennaAV.Models
         public int RxAntennaCounter { get; set; }
         public int ModeAutoHand { get; set; }
         public int TxAntennaCounter { get; set; }
-        public DateTime Timestamp { get; set; } = DateTime.Now;
+        public DateTime Timestamp { get; set; } 
     }
 }
 

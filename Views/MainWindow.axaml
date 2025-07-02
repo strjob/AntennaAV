@@ -6,9 +6,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:AntennaAVNM"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:treegrid="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.TreeDataGrid"
     xmlns:vm="using:AntennaAV.ViewModels"
-	xmlns:treegrid="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.TreeDataGrid"
-    
     Title="AntennaAV"
     d:DesignHeight="720"
     d:DesignWidth="1366"
@@ -26,27 +25,34 @@
 
     <Grid ShowGridLines="True">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200" />
-            <ColumnDefinition Width="0.6*" MinWidth="300" />
-            <ColumnDefinition Width="0.4*" MinWidth="200" />
+            <ColumnDefinition Width="250" />
+            <ColumnDefinition Width="0.65*" MinWidth="300" />
+            <ColumnDefinition Width="0.35*" MinWidth="200" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
-            <RowDefinition Height="20" />
         </Grid.RowDefinitions>
 
         <TextBlock
-            Grid.Row="1"
+            Grid.Row="0"
             Margin="5"
+            VerticalAlignment="Bottom"
             FontSize="14"
             Text="{Binding ConnectionStatus}" />
 
-        <TextBlock
-            Grid.Row="1"
+        <ScottPlot:AvaPlot
+            x:Name="AvaPlot1"
+            Grid.Row="0"
             Grid.Column="1"
-            Margin="5,0,0,0"
+            Margin="0,0,0,0" />
+
+        <TextBlock
+            Grid.Row="0"
+            Grid.Column="1"
+            Margin="5"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Bottom"
             FontSize="14"
-            HorizontalAlignment="Right"
             Text="{Binding DataFlowStatus}" />
 
         <ToggleSwitch
@@ -62,11 +68,7 @@
             OnContent="Вкл"
             ZIndex="2" />
 
-        <ScottPlot:AvaPlot
-            x:Name="AvaPlot1"
-            Grid.Row="0"
-            Grid.Column="1"
-            Margin="0,0,0,0" />
+
 
         <StackPanel
             Grid.Row="0"
@@ -116,15 +118,18 @@
                         Text="Угол:" />
                     <NumericUpDown
                         Width="125"
+                        FormatString="0.0"
                         Increment="1"
+                        KeyDown="NumericUpDown_KeyDown"
                         Maximum="359"
                         Minimum="0"
-					    KeyDown="NumericUpDown_KeyDown"
-						FormatString="0.0"
                         Watermark="0-359"
                         Value="{Binding TransmitterAngle1, Mode=TwoWay}" />
                 </StackPanel>
-                <TextBlock Foreground="Red" FontSize="12" Text="{Binding Angle1Error}" />
+                <TextBlock
+                    FontSize="12"
+                    Foreground="Red"
+                    Text="{Binding Angle1Error}" />
                 <Button
                     Width="100"
                     Margin="0,0,0,10"
@@ -140,11 +145,11 @@
                         Text="Угол:" />
                     <NumericUpDown
                         Width="125"
+                        FormatString="0.0"
                         Increment="1"
+                        KeyDown="NumericUpDown_KeyDown"
                         Maximum="359"
                         Minimum="0"
-						KeyDown="NumericUpDown_KeyDown"
-						FormatString="0.0"
                         Watermark="0-359"
                         Value="{Binding TransmitterAngle2, Mode=TwoWay, FallbackValue=0}" />
                 </StackPanel>
@@ -153,7 +158,6 @@
                     HorizontalAlignment="Left"
                     Command="{Binding SetTransmitterAngleCommand}"
                     Content="Задать"
-					
                     IsEnabled="{Binding !IsDiagramAcquisitionRunning}" />
             </StackPanel>
 
@@ -181,14 +185,14 @@
             <!--  Нижний ряд - пока пустой  -->
             <StackPanel Grid.Row="2" VerticalAlignment="Center">
                 <!--  Здесь можно добавить дополнительные элементы в будущем  -->
-              <TextBlock Text="COM-порты:" Margin="0,10,0,0"/>
-              <ListBox ItemsSource="{Binding AvailablePorts}" Height="100" />
-              <Button
+                <TextBlock Margin="0,10,0,0" Text="COM-порты:" />
+                <ListBox Height="100" ItemsSource="{Binding AvailablePorts}" />
+                <Button
                     Width="100"
                     Margin="0,0,0,10"
                     HorizontalAlignment="Left"
                     Command="{Binding RefreshPortsCommand}"
-                    Content="Порты"/>
+                    Content="Порты" />
             </StackPanel>
 
         </Grid>
@@ -259,6 +263,7 @@
                             MinHeight="100"
                             Margin="0"
                             VerticalAlignment="Top"
+                            HorizontalAlignment="Stretch"
                             Source="{Binding AntennaSource}" />
                     </DataTemplate>
                 </TabControl.ContentTemplate>
@@ -276,7 +281,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="55" />
                     <ColumnDefinition Width="130" />
-                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="80" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 

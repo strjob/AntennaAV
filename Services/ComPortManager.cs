@@ -6,15 +6,16 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.IO.Ports;
+using RJCP.IO.Ports;
 using AntennaAV.Models;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace AntennaAV.Services
 {
     public class ComPortManager : IComPortService
     {
-        private SerialPort? _port;
+        private SerialPortStream? _port;
         private Thread? _readThread;
         private volatile bool _reading = false;
         public List<AntennaData> AllRecordedData { get; } = new();
@@ -57,17 +58,34 @@ namespace AntennaAV.Services
 
         public ConnectResult AutoDetectAndConnect()
         {
-            foreach (string portName in SerialPort.GetPortNames())
+            using (var port = new SerialPortStream())
             {
-                var result = ConnectToPort(portName);
-                if (result == ConnectResult.Success)
-                    return ConnectResult.Success;
+                var portNames = port.GetPortNames();
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    portNames = portNames.Where(p => !p.Equals("COM1", StringComparison.OrdinalIgnoreCase)).ToArray();
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    portNames = portNames.Where(p => p.StartsWith("/dev/ttyUSB") || p.StartsWith("/dev/ttyACM")).ToArray();
+                }
+                foreach (string portName in portNames)
+                {
+                    var result = ConnectToPort(portName);
+                    if (result == ConnectResult.Success)
+                        return ConnectResult.Success;
+                }
             }
-
             return ConnectResult.DeviceNotResponding;
         }
 
-        public IEnumerable<string> GetAvailablePortNames() => SerialPort.GetPortNames();
+        public IEnumerable<string> GetAvailablePortNames()
+        {
+            using (var port = new SerialPortStream())
+            {
+                return port.GetPortNames();
+            }
+        }
 
         private readonly object _portLock = new object();
 
@@ -76,11 +94,17 @@ namespace AntennaAV.Services
             lock (_portLock)
             {
                 const int maxAttempts = 3;
-                SerialPort? temp = null;
+                SerialPortStream? temp = null;
                 try
                 {
-                    if (!SerialPort.GetPortNames().Contains(portName))
-                        return ConnectResult.PortNotFound;
+                    using (var port = new SerialPortStream())
+                    {
+                        var portNames = port.GetPortNames();
+                        if (!portNames.Contains(portName))
+                        {
+                            return ConnectResult.PortNotFound;
+                        }
+                    }
 
                     if (_port != null)
                     {
@@ -90,18 +114,19 @@ namespace AntennaAV.Services
                         _port = null;
                     }
 
-                    temp = new SerialPort(portName, _baudRate, Parity.None, 8, StopBits.One)
+                    temp = new SerialPortStream(portName, _baudRate, 8, Parity.None, StopBits.One)
                     {
                         ReadTimeout = 100,
                         WriteTimeout = 50
                     };
-
-                    temp.Open();
+                    if (!TryOpenPortWithTimeout(temp, 1000)) // 1 секунда
+                    {
+                        return ConnectResult.DeviceNotResponding;
+                    }
                     temp.DiscardInBuffer();
 
                     for (int attempt = 1; attempt <= maxAttempts; attempt++)
                     {
-                        Debug.WriteLine($" попытка {attempt}" + portName);
                         temp.Write("#ANT/xx/W/OFF$");
                         Thread.Sleep(50);
                         temp.DiscardInBuffer();
@@ -122,9 +147,13 @@ namespace AntennaAV.Services
                         if (attempt == maxAttempts)
                         {
                             if (response == null)
+                            {
                                 return ConnectResult.DeviceNotResponding;
+                            }
                             else
+                            {
                                 return ConnectResult.InvalidResponse;
+                            }
                         }
 
                         Thread.Sleep(50);
@@ -135,7 +164,7 @@ namespace AntennaAV.Services
                 {
                     return ConnectResult.PortBusy;
                 }
-                catch
+                catch (Exception ex)
                 {
                     return ConnectResult.ExceptionOccurred;
                 }
@@ -241,14 +270,14 @@ namespace AntennaAV.Services
                     }
                 }
 
-                catch
+                catch (Exception ex)
                 {
                     //
                 }
             }
         }
 
-        private static string? TryReadMessage(SerialPort port, int timeoutMs = 500)
+        private static string? TryReadMessage(SerialPortStream port, int timeoutMs = 500)
         {
             var buffer = new StringBuilder();
             bool insideMessage = false;
@@ -317,13 +346,30 @@ namespace AntennaAV.Services
                     TxAntennaCounter = int.Parse(parts[6]),
                     PowerDbm = double.Parse(parts[7], CultureInfo.InvariantCulture),
                     AntennaType = int.Parse(parts[8]),
-                    ModeAutoHand = int.Parse(parts[9])
+                    ModeAutoHand = int.Parse(parts[9]),
+                    Timestamp = DateTime.Now
                 };
             }
             catch
             {
                 return null;
             }
+        }
+
+        private bool TryOpenPortWithTimeout(SerialPortStream port, int timeoutMs)
+        {
+            var task = Task.Run(() => {
+                try
+                {
+                    port.Open();
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            });
+            return task.Wait(timeoutMs) && task.Result;
         }
     }
 }

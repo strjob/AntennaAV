@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Controls;
-using Catel.Collections;
+
 
 namespace AntennaAV.ViewModels
 {
@@ -25,18 +25,18 @@ namespace AntennaAV.ViewModels
 
         public TabViewModel()
         {
-            AntennaDataCollection.Add(new GridAntennaData { Angle = 123, PowerDbm = -30, Voltage = 1.2, PowerNorm = -25, VoltageNorm = 0.987, Time = DateTime.Now });
+            
 
             AntennaSource = new FlatTreeDataGridSource<GridAntennaData>(AntennaDataCollection)
             {
                 Columns =
                 {
-                    new TextColumn<GridAntennaData, double>("Угол, °", x => x.Angle),
-                    new TextColumn<GridAntennaData, double>("Мощность, дБм", x => x.PowerDbm),
-                    new TextColumn<GridAntennaData, double>("Напряжение, мкВ", x => x.Voltage),
-                    new TextColumn<GridAntennaData, double>("Мощность нормированная, дБм", x => x.PowerNorm),
-                    new TextColumn<GridAntennaData, double>("Напряжение нормированное", x => x.VoltageNorm),
-                    new TextColumn<GridAntennaData, DateTime>("Время", x => x.Time),
+                    new TextColumn<GridAntennaData, string>("Угол, °", x => x.AngleStr),
+                    new TextColumn<GridAntennaData, string>("P, дБм", x => x.PowerDbmStr),
+                    new TextColumn<GridAntennaData, string>("V, мкВ", x => x.VoltageStr),
+                    new TextColumn<GridAntennaData, string>("P норм.", x => x.PowerNormStr),
+                    new TextColumn<GridAntennaData, string>("V норм.", x => x.VoltageNormStr),
+                    new TextColumn<GridAntennaData, string>("Время", x => x.TimeStr),
                 }
             };
         }

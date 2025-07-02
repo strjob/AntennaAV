@@ -31,13 +31,13 @@
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Catel.Core" Version="6.1.4" />
     <PackageReference Include="CommunityToolkit.Common" Version="8.4.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
     <PackageReference Include="Material.Avalonia" Version="3.12.0" />
     <PackageReference Include="Material.Avalonia.DataGrid" Version="3.12.0" />
     <PackageReference Include="Material.Avalonia.Dialogs" Version="3.12.0" />
     <PackageReference Include="Material.Icons.Avalonia" Version="2.4.1" />
+    <PackageReference Include="RJCP.SerialPortStream" Version="3.0.3" />
     <PackageReference Include="ScottPlot.Avalonia" Version="5.0.55" />
     <PackageReference Include="System.IO.Ports" Version="9.0.6" />
     <PackageReference Include="System.Reactive" Version="6.0.1" />
