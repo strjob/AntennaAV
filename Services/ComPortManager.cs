@@ -268,6 +268,10 @@ namespace AntennaAV.Services
                             DataQueue.Enqueue(data);
                         }
                     }
+                    else 
+                    {
+                        Thread.Sleep(5); // Если нет данных, ждем немного
+                    }
                 }
 
                 catch (Exception)

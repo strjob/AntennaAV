@@ -1,43 +1,33 @@
 ﻿using AntennaAV.Models;
 using AntennaAV.Services;
-using AntennaAV.Views;
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Converters;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ScottPlot;
-using ScottPlot.Avalonia;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.IO.Ports;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using static AntennaAV.Services.ComPortManager;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace AntennaAV.ViewModels
 {
-    
+
     public partial class MainWindowViewModel : ViewModelBase
     {
         private readonly IComPortService _comPortService;
 
-        
+
         public MainWindowViewModel()
-    :       this(Design.IsDesignMode ? new MockComPortService() : throw new InvalidOperationException("Этот конструктор используется только в дизайнере"))
+    : this(Design.IsDesignMode ? new MockComPortService() : throw new InvalidOperationException("Этот конструктор используется только в дизайнере"))
         {
             if (Design.IsDesignMode)
             {
@@ -153,7 +143,7 @@ namespace AntennaAV.ViewModels
                 SectorSize = "10";
                 return;
             }
-            
+
             if (double.TryParse(value, out double d))
             {
                 // Проверяем границы
@@ -170,7 +160,7 @@ namespace AntennaAV.ViewModels
                     SectorSize = "360";
                     return;
                 }
-                
+
                 // Если значение в допустимых пределах, обновляем график
                 BuildRadar();
             }
@@ -190,7 +180,7 @@ namespace AntennaAV.ViewModels
                 SectorCenter = "0";
                 return;
             }
-            
+
             if (double.TryParse(value, out double d))
             {
                 if (d < 0) SectorCenter = "355";
@@ -228,23 +218,23 @@ namespace AntennaAV.ViewModels
         }
 
         public event Action<double, double>? OnBuildRadar;
-/*
-        [RelayCommand]
-        private void BuildDiagram()
-        {
-            // SectorSize и SectorCenter уже содержат введённые пользователем значения
-            // Можно преобразовать в число:
-            if (double.TryParse(SectorSize, out var size) && double.TryParse(SectorCenter, out var center))
-            {
-                // Вычисляем from и to из размера и центра сектора
-                var (from, to) = CalculateSectorRange(size, center);
-                
-                // Здесь можно добавить логику для построения диаграммы
-                // Например, вызвать OnBuildRadarPlot с данными
-                OnBuildRadarPlot?.Invoke(new double[] { from, to }, new double[] { 0, 0 });
-            }
-        }
-*/
+        /*
+                [RelayCommand]
+                private void BuildDiagram()
+                {
+                    // SectorSize и SectorCenter уже содержат введённые пользователем значения
+                    // Можно преобразовать в число:
+                    if (double.TryParse(SectorSize, out var size) && double.TryParse(SectorCenter, out var center))
+                    {
+                        // Вычисляем from и to из размера и центра сектора
+                        var (from, to) = CalculateSectorRange(size, center);
+
+                        // Здесь можно добавить логику для построения диаграммы
+                        // Например, вызвать OnBuildRadarPlot с данными
+                        OnBuildRadarPlot?.Invoke(new double[] { from, to }, new double[] { 0, 0 });
+                    }
+                }
+        */
         public event Action<double[], double[]>? OnBuildRadarPlot;
 
 
@@ -346,8 +336,7 @@ namespace AntennaAV.ViewModels
 
             _ = ConnectToPortAsync();
 
-
-            _uiTimer.Interval = TimeSpan.FromMilliseconds(300);
+            _uiTimer.Interval = TimeSpan.FromMilliseconds(100);
             _uiTimer.Tick += (_, _) => OnUiTimerTick();
             _uiTimer.Start();
         }
@@ -376,7 +365,7 @@ namespace AntennaAV.ViewModels
                 _comPortService.StartReading();
         }
 
-        
+
 
 
 
@@ -516,7 +505,7 @@ namespace AntennaAV.ViewModels
                     from = ReceiverAngleDeg;
                     to = from;
                 }
-                
+
                 _acquisitionCts = new CancellationTokenSource();
                 try
                 {
@@ -543,21 +532,21 @@ namespace AntennaAV.ViewModels
             // Нормализуем центр к диапазону [0, 360)
             center = center % 360.0;
             if (center < 0) center += 360.0;
-            
+
             // Вычисляем половину размера сектора
             double halfSize = size / 2.0;
-            
+
             // Вычисляем начальный и конечный углы
             double from = center + halfSize;
             double to = center - halfSize;
-            
+
             // Нормализуем углы к диапазону [0, 360)
             from = from % 360.0;
             if (from < 0) from += 360.0;
-            
+
             to = to % 360.0;
             if (to < 0) to += 360.0;
-            
+
             return (from, to);
         }
 
@@ -580,19 +569,19 @@ namespace AntennaAV.ViewModels
                 Debug.WriteLine("❌ Диаграмма уже запущена, выход");
                 return;
             }
-            
+
             IsDiagramAcquisitionRunning = true;
             _isDiagramDataCollecting = false;
             OnPropertyChanged(nameof(DiagramButtonText));
             OnPropertyChanged(nameof(DiagramButtonCommand));
-            
+
             try
             {
                 // Определяем текущее положение антенны
                 double currentAngle = ReceiverAngleDeg;
                 int currentCounter = RxAntennaCounter;
                 Debug.WriteLine($"Текущее положение: угол={currentAngle:F1}°, counter={currentCounter}");
-                
+
                 // Выбираем начальную точку (ближайшую к текущему положению)
                 double startAngle, endAngle;
                 if (Math.Abs(currentAngle - from) <= Math.Abs(currentAngle - to))
@@ -608,7 +597,7 @@ namespace AntennaAV.ViewModels
                     Debug.WriteLine($"Выбрана начальная точка: start={startAngle:F1}° (дальше от текущего)");
                 }
 
-                
+
                 // Устанавливаем параметры сбора
                 _acquisitionFrom = from;
                 _acquisitionTo = to;
@@ -620,7 +609,7 @@ namespace AntennaAV.ViewModels
                 {
                     overshootStart = startAngle;
                 }
-                else 
+                else
                 {
                     if (IsAngleInRange(startAngle + 1, from, to))
                         overshootStart = startAngle - 2;
@@ -634,7 +623,7 @@ namespace AntennaAV.ViewModels
 
                 Debug.WriteLine($"Движение к начальной точке: {overshootStart:F1}° (overshoot -3°)");
                 _comPortService.SetAntennaAngle(overshootStart, "R", "G");
-                
+
                 int waitCount = 0;
                 while (Math.Abs(ReceiverAngleDeg - overshootStart) > 1.0)
                 {
@@ -721,7 +710,7 @@ namespace AntennaAV.ViewModels
                         Debug.WriteLine("❌ Отмена в основном цикле");
                         break;
                     }
-                    
+
                     // Проверяем состояние порта - если связь потеряна, прерываем процесс
                     if (!_comPortService.IsOpen)
                     {
@@ -729,10 +718,10 @@ namespace AntennaAV.ViewModels
                         ConnectionStatus = "⚠ Связь потеряна во время снятия диаграммы";
                         break;
                     }
-                    
+
                     await Task.Delay(10, cancellationToken);
                 }
-                
+
                 Debug.WriteLine($"🔄 Завершение сбора данных");
                 _isDiagramDataCollecting = false;
                 //StopTableUpdateTimer();
@@ -785,7 +774,7 @@ namespace AntennaAV.ViewModels
 
 
             double t_from_to = (from + 360 - to) % 360;
-            double t_from_angle= (from + 360 - angle) % 360;
+            double t_from_angle = (from + 360 - angle) % 360;
 
             if (Math.Abs(from - to) < 0.1) return true;
             double diffFromTo = (from - to + 360) % 360;
