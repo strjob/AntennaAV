@@ -131,6 +131,11 @@ public class TestComPortService : IComPortService, IDisposable
 
     public IEnumerable<AntennaData> GetAllRecordedData() => _queue.ToArray();
 
+    public IEnumerable<string> GetAvailablePortNames()
+    {
+        return new List<string> { "COM4", "COM5" };
+    }
+
     public void Dispose()
     {
         StopReading();

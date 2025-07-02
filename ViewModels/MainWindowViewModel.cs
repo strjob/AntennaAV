@@ -7,6 +7,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Converters;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using Catel.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ScottPlot;
@@ -252,16 +253,12 @@ namespace AntennaAV.ViewModels
         [RelayCommand]
         private void AddTab()
         {
-            var tab = new TabViewModel
+            var tab = new TabViewModel { Header = $"Антенна {Tabs.Count + 1}" };
+            tab.AddAntennaData(new List<GridAntennaData>
             {
-                Header = $"Антенна {Tabs.Count + 1}",
-                AntennaDataCollection = new ObservableCollection<GridAntennaData>
-            {
-                //new() { Angle = Tabs.Count, PowerDbm = -30, Voltage = 1.2, PowerNorm = -25, VoltageNorm = 0.987, Time = DateTime.Now },
-                //new() { Angle = Tabs.Count, PowerDbm = -28, Voltage = 1.5, PowerNorm = -23, VoltageNorm = 1.123, Time = DateTime.Now }
-            }
-            };
-
+                new GridAntennaData { Angle = 10, PowerDbm = -20, Voltage = 1.1, PowerNorm = -19, VoltageNorm = 1.0, Time = DateTime.Now },
+                new GridAntennaData { Angle = 20, PowerDbm = -21, Voltage = 1.2, PowerNorm = -18, VoltageNorm = 1.1, Time = DateTime.Now }
+            });
             Tabs.Add(tab);
             SelectedTabIndex = Tabs.Count - 1;
 
@@ -341,6 +338,8 @@ namespace AntennaAV.ViewModels
         public MainWindowViewModel(IComPortService comPortService)
         {
             _comPortService = comPortService;
+            _availablePorts = _comPortService.GetAvailablePortNames();
+
             Tabs.CollectionChanged += (_, _) =>
             {
                 OnPropertyChanged(nameof(HasTabs));
@@ -351,7 +350,7 @@ namespace AntennaAV.ViewModels
             _ = ConnectToPortAsync();
 
 
-            _uiTimer.Interval = TimeSpan.FromMilliseconds(200);
+            _uiTimer.Interval = TimeSpan.FromMilliseconds(300);
             _uiTimer.Tick += (_, _) => OnUiTimerTick();
             _uiTimer.Start();
         }
@@ -379,6 +378,10 @@ namespace AntennaAV.ViewModels
             if (result == ConnectResult.Success)
                 _comPortService.StartReading();
         }
+
+        
+
+
 
         private void OnUiTimerTick()
         {
@@ -628,6 +631,7 @@ namespace AntennaAV.ViewModels
                         overshootStart = startAngle + 2;
                 }
 
+                overshootStart = (overshootStart + 360.0) % 360.0;
 
 
 
@@ -662,12 +666,20 @@ namespace AntennaAV.ViewModels
                 StartTableUpdateTimer();
 
 
-                // Определяем направление движения с учетом ограничений RxAntennaCounter
-
-
-                // Двигаемся к конечной точке с overshoot
                 double overshootEnd;
                 string direction;
+
+                if (IsAngleInRange(endAngle + 1, from, to))
+                {
+                    overshootEnd = endAngle - 2;
+                    direction = "-";
+                }
+
+                else
+                {
+                    overshootEnd = endAngle + 2;
+                    direction = "+";
+                }
 
                 if (Math.Abs(from - to) < 0.1)
                 {
@@ -679,49 +691,33 @@ namespace AntennaAV.ViewModels
                     if (currentCounter + fullCircleMovement <= 5400)
                     {
                         direction = "+";
-                        overshootEnd = endAngle;
+                        overshootEnd = endAngle + 2;
                     }
                     // Пробуем против часовой стрелки
                     else
                     {
                         direction = "-";
-                        overshootEnd = endAngle;
-                    }
-                }
-
-                else
-                {
-                    if (IsAngleInRange(endAngle + 1, from, to))
-                    {
                         overshootEnd = endAngle - 2;
-                        direction = "-";
-                    }
-
-                    else
-                    {
-                        overshootEnd = endAngle + 2;
-                        direction = "+";
                     }
                 }
 
 
-
-
-
-
+                overshootEnd = (overshootEnd + 360.0) % 360.0;
                 //direction = GetOptimalDirection(currentCounter, startAngle, endAngle);
                 Debug.WriteLine($"Направление движения: {direction} (counter: {currentCounter} -> {currentCounter + (direction == "+" ? 1 : -1) * (int)Math.Round(Math.Abs(endAngle - startAngle) * 10)})");
 
                 Debug.WriteLine($"Движение к конечной точке: {overshootEnd:F1}° (overshoot +3°)");
+                _comPortService.SetAntennaAngle(endAngle, "R", direction);
+
+
+                while (AngleDiff(tempRxAntennaAngle, ReceiverAngleDeg) < 5.0)
+                {
+                    await Task.Delay(10, cancellationToken);
+                }
+
                 _comPortService.SetAntennaAngle(overshootEnd, "R", direction);
 
-
-                while (Math.Abs(tempRxAntennaAngle - ReceiverAngleDeg) < 2.0)
-                { 
-                    await Task.Delay(10, cancellationToken);
-                }    
-
-                    while (Math.Abs(ReceiverAngleDeg - overshootEnd) > 1.0)
+                while (Math.Abs(ReceiverAngleDeg - overshootEnd) > 1.0)
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
@@ -742,7 +738,7 @@ namespace AntennaAV.ViewModels
                 
                 Debug.WriteLine($"🔄 Завершение сбора данных");
                 _isDiagramDataCollecting = false;
-                StopTableUpdateTimer();
+                //StopTableUpdateTimer();
                 _collector.FinalizeData();
                 UpdateTable();
                 Debug.WriteLine("✅ Диаграмма успешно завершена");
@@ -771,144 +767,51 @@ namespace AntennaAV.ViewModels
                 IsDiagramAcquisitionRunning = false;
                 OnPropertyChanged(nameof(DiagramButtonText));
                 OnPropertyChanged(nameof(DiagramButtonCommand));
+                StopTableUpdateTimer();
                 Debug.WriteLine("=== КОНЕЦ СНЯТИЯ ДИАГРАММЫ ===");
             }
         }
 
-        private string GetOptimalDirection(int currentCounter, double startAngle, double endAngle)
+        public static double AngleDiff(double a, double b)
         {
-            if (startAngle == endAngle)
-            {
-                // Особый случай - полный круг (360°)
-                // Проверяем, можно ли сделать полный оборот
-                int fullCircleMovement = 3600; // 360° в единицах 0.1°
-                
-                // Пробуем по часовой стрелке
-                if (currentCounter + fullCircleMovement <= 5400)
-                {
-                    return "+";
-                }
-                // Пробуем против часовой стрелки
-                else if (currentCounter - fullCircleMovement >= -5400)
-                {
-                    return "-";
-                }
-                else
-                {
-                    // Если ни одно направление не подходит, выбираем то, которое ближе к центру
-                    return Math.Abs(currentCounter) <= Math.Abs(currentCounter - fullCircleMovement) ? "+" : "-";
-                }
-            }
-            
-            // Получаем текущее положение антенны
-            double currentAngle = ReceiverAngleDeg;
-            
-            // Вычисляем расстояния до границ сектора
-            double distanceToStart = Math.Abs(currentAngle - startAngle);
-            double distanceToEnd = Math.Abs(currentAngle - endAngle);
-            
-            // Учитываем переход через 0°/360°
-            if (distanceToStart > 180) distanceToStart = 360 - distanceToStart;
-            if (distanceToEnd > 180) distanceToEnd = 360 - distanceToEnd;
-            
-            // Определяем предпочтительное направление по геометрии
-            string preferredDirection;
-            if (distanceToStart <= distanceToEnd)
-            {
-                // Ближе к start, идём start → end (по часовой +)
-                preferredDirection = "+";
-            }
-            else
-            {
-                // Ближе к end, идём end → start (против часовой -)
-                preferredDirection = "-";
-            }
-            
-            Debug.WriteLine($"🔍 GetOptimalDirection: current={currentAngle:F1}°, start={startAngle:F1}°, end={endAngle:F1}°");
-            Debug.WriteLine($"🔍 GetOptimalDirection: distanceToStart={distanceToStart:F1}°, distanceToEnd={distanceToEnd:F1}°");
-            Debug.WriteLine($"🔍 GetOptimalDirection: preferredDirection={preferredDirection}");
-            
-            // Рассчитываем изменение RxAntennaCounter в единицах 0.1 градуса
-            double angleDiff = Math.Abs(endAngle - startAngle);
-            int requiredMovement = (int)Math.Round(angleDiff * 10);
-            
-            Debug.WriteLine($"🔍 GetOptimalDirection: angleDiff={angleDiff:F1}°, requiredMovement={requiredMovement}");
-            
-            if (preferredDirection == "+")
-            {
-                // Движение по часовой стрелке (увеличение counter)
-                int newCounter = currentCounter + requiredMovement;
-                if (newCounter <= 5400)
-                {
-                    Debug.WriteLine($"🔍 GetOptimalDirection: можно двигаться в предпочтительном направлении + (counter: {currentCounter} -> {newCounter})");
-                    return "+"; // можно двигаться в предпочтительном направлении
-                }
-                else
-                {
-                    Debug.WriteLine($"🔍 GetOptimalDirection: нельзя двигаться в направлении + (counter: {currentCounter} -> {newCounter} > 5400), выбираем -");
-                    return "-"; // нужно двигаться в противоположном направлении
-                }
-            }
-            else
-            {
-                // Движение против часовой стрелки (уменьшение counter)
-                int newCounter = currentCounter - requiredMovement;
-                if (newCounter >= -5400)
-                {
-                    Debug.WriteLine($"🔍 GetOptimalDirection: можно двигаться в предпочтительном направлении - (counter: {currentCounter} -> {newCounter})");
-                    return "-"; // можно двигаться в предпочтительном направлении
-                }
-                else
-                {
-                    Debug.WriteLine($"🔍 GetOptimalDirection: нельзя двигаться в направлении - (counter: {currentCounter} -> {newCounter} < -5400), выбираем +");
-                    return "+"; // нужно двигаться в противоположном направлении
-                }
-            }
+            double diff = Math.Abs(a - b) % 360.0;
+            return diff > 180.0 ? 360.0 - diff : diff;
         }
-
         private bool IsAngleInRange(double angle, double from, double to)
         {
-            double originalAngle = angle;
-            double originalFrom = from;
-            double originalTo = to;
 
-            //angle = angle % 360;
-            //from = from % 360;
-            //to = to % 360;
+
+
             angle = (angle + 360) % 360;
             from = (from + 360) % 360;
             to = (to + 360) % 360;
 
-            bool result;
 
             double t_from_to = (from + 360 - to) % 360;
             double t_from_angle= (from + 360 - angle) % 360;
 
-
-            //double diffFromTo = (from - to + 360) % 360;
-            //double diffFromAngle = (from - angle + 360) % 360;
-
-            //return diffFromAngle <= diffFromTo;
-
             if (Math.Abs(from - to) < 0.1) return true;
+            double diffFromTo = (from - to + 360) % 360;
+            double diffFromAngle = (from - angle + 360) % 360;
 
+            return diffFromAngle <= diffFromTo;
 
+        }
 
-            result = t_from_angle <= t_from_to;
-            /*
-            // Если сектор не пересекает 0°
-            if (from <= to)
-                result = angle >= from && angle <= to;
-            // Если сектор пересекает 0°
-            else
-                result = angle >= from || angle <= to;
-
-            // Логируем только если результат false, чтобы не засорять консоль
-            */
-                Debug.WriteLine($"🔍 IsAngleInRange: angle={originalAngle:F1}°→{angle:F1}°, from={originalFrom:F1}°→{from:F1}°, to={originalTo:F1}°→{to:F1}°, result={result}");
-            
-            
-            return result;
+        private IEnumerable<string> _availablePorts = Array.Empty<string>();
+        public IEnumerable<string> AvailablePorts
+        {
+            get => _availablePorts;
+            set
+            {
+                _availablePorts = value;
+                OnPropertyChanged(nameof(AvailablePorts));
+            }
+        }
+        [RelayCommand]
+        public void RefreshPorts()
+        {
+            AvailablePorts = _comPortService.GetAvailablePortNames();
         }
 
         private void StartTableUpdateTimer()
@@ -932,7 +835,7 @@ namespace AntennaAV.ViewModels
             if (SelectedTab != null)
             {
                 var newData = _collector.GetTableData();
-                SelectedTab.AntennaDataCollection = new ObservableCollection<GridAntennaData>(newData);
+                SelectedTab.AntennaDataCollection.ReplaceRange(newData);
             }
             /*
             if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
@@ -944,5 +847,7 @@ namespace AntennaAV.ViewModels
 
         public event Action<bool>? ShowAntennaChanged;
         public event Action<bool>? ShowSectorChanged;
+
+
     }
 }

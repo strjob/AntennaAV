@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using ScottPlot;
 using ScottPlot.Avalonia;
+using System;
 using System.Collections.Generic;
 
 namespace AntennaAV.Views
@@ -11,6 +12,8 @@ namespace AntennaAV.Views
         {
             var polarAxis = avaPlot.Plot.Add.PolarAxis(radius: 100);
             polarAxis.Rotation = Angle.FromDegrees(90);
+            string[] labels = { "0", "30", "60", "90", "120", "150", "180", "210", "240", "270", "300", "330" };
+            polarAxis.SetSpokes(labels, 95, true);
 
             for (int i = 0; i < polarAxis.Spokes.Count; i++)
             {
@@ -30,20 +33,26 @@ namespace AntennaAV.Views
             polarAxis.Circles[^1].LineWidth = 3;
             polarAxis.Circles[^1].LinePattern = LinePattern.Solid;
 
+           /* // Пример для ScottPlot 5.x
+            double thetaDeg = 45;
+            double r1 = 50;
+            double r2 = 100.0;
+            double thetaRad = Math.PI * thetaDeg / 180.0;
 
+            double x1 = r1 * Math.Cos(thetaRad);
+            double y1 = r1 * Math.Sin(thetaRad);
+            double x2 = r2 * Math.Cos(thetaRad);
+            double y2 = r2 * Math.Sin(thetaRad);
+
+            // Для отрезка используем AddScatter с двумя точками:
+            double[] xs = { x1, x2 };
+            double[] ys = { y1, y2 };
+            avaPlot.Plot.Add.ScatterLine(xs, ys, color: Colors.Red);
+            avaPlot.Refresh();
+
+            */
             avaPlot.Plot.Add.Palette = new ScottPlot.Palettes.Penumbra();
             avaPlot.Plot.Axes.Margins(0.05, 0.05);
-
-            double[] radii = { 50, 90, 80, 60, 40 };
-            double[] angles = { 0, 10, 20, 30, 40 };
-
-            var points = new Coordinates[radii.Length];
-            for (int i = 0; i < radii.Length; i++)
-                points[i] = polarAxis.GetCoordinates(radii[i], angles[i]);
-
-            var line = avaPlot.Plot.Add.Scatter(points);
-            line.LineWidth = 2;
-            line.MarkerSize = 0;
 
             avaPlot.UserInputProcessor.IsEnabled = false;
             avaPlot.Refresh();

@@ -53,4 +53,9 @@ public class MockComPortService : IComPortService
         };
         return true;
     }
+
+    public IEnumerable<string> GetAvailablePortNames()
+    {
+        return new List<string> { "COM1", "COM2", "COM3" };
+    }
 }

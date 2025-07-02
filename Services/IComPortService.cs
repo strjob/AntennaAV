@@ -30,5 +30,6 @@ public interface IComPortService
     bool ReadCalibration();
 
     IEnumerable<AntennaData> GetAllRecordedData();
+    IEnumerable<string> GetAvailablePortNames();
     bool TryDequeue(out AntennaData? data);
 }

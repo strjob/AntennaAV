@@ -16,7 +16,7 @@
         <ColorPaletteResources x:Key="Dark" Accent="#ff0073cf" AltHigh="Black" AltLow="Black" AltMedium="Black" AltMediumHigh="Black" AltMediumLow="Black" BaseHigh="White" BaseLow="#ff333333" BaseMedium="#ff9a9a9a" BaseMediumHigh="#ffb4b4b4" BaseMediumLow="#ff676767" ChromeAltLow="#ffb4b4b4" ChromeBlackHigh="Black" ChromeBlackLow="#ffb4b4b4" ChromeBlackMedium="Black" ChromeBlackMediumLow="Black" ChromeDisabledHigh="#ff333333" ChromeDisabledLow="#ff9a9a9a" ChromeGray="Gray" ChromeHigh="Gray" ChromeLow="#ff151515" ChromeMedium="#ff1d1d1d" ChromeMediumLow="#ff2c2c2c" ChromeWhite="White" ListLow="#ff1d1d1d" ListMedium="#ff333333" RegionColor="Black" />
       </FluentTheme.Palettes>
     </FluentTheme>
-
-    <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+	  <StyleInclude Source="avares://Avalonia.Controls.TreeDataGrid/Themes/Fluent.axaml"/>
+	  <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
   </Application.Styles>
 </Application>

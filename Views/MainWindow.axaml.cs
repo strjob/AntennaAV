@@ -12,7 +12,8 @@ using System;
 using System.Collections;
 using System.Linq;
 using System.Windows.Markup;
-
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace AntennaAV.Views
 {
@@ -20,7 +21,7 @@ namespace AntennaAV.Views
     {
         private ScottPlot.Plottables.Polygon? _sectorPolygon;
         private ScottPlot.Plottables.Arrow? _angleArrow;
-        private Scatter? _dataScatter;
+        private List<Scatter> _dataScatters = new();
 
         public MainWindow()
         {
@@ -36,14 +37,38 @@ namespace AntennaAV.Views
                 {
                     vm.OnBuildRadarPlot += (angles, values) =>
                     {
-                        var points = new Coordinates[angles.Length];
+                        // Разбиваем на сегменты по разрывам углов
+                        List<List<Coordinates>> segments = new();
+                        List<Coordinates> current = new();
                         for (int i = 0; i < angles.Length; i++)
-                            points[i] = polarAxis.GetCoordinates(values[i], angles[i]);
+                        {
+                            double mirroredAngle = (180 - angles[i]) % 360; // если нужно отзеркалить
+                            var pt = polarAxis.GetCoordinates(values[i], mirroredAngle);
+                            if (i > 0 && Math.Abs(angles[i] - angles[i - 1]) > 1.0)
+                            {
+                                if (current.Count > 0)
+                                    segments.Add(current);
+                                current = new List<Coordinates>();
+                            }
+                            current.Add(pt);
+                        }
+                        if (current.Count > 0)
+                            segments.Add(current);
 
-                        if (_dataScatter != null)
-                            AvaPlot1.Plot.Remove(_dataScatter);
+                        // Удаляем все старые графики
+                        foreach (var scatter in _dataScatters)
+                            AvaPlot1.Plot.Remove(scatter);
+                        _dataScatters.Clear();
 
-                        _dataScatter = AvaPlot1.Plot.Add.Scatter(points, color: Colors.Blue);
+                        // Рисуем каждый сегмент отдельно
+                        foreach (var seg in segments)
+                        {
+                            if (seg.Count > 1)
+                            {
+                                var scatter = AvaPlot1.Plot.Add.Scatter(seg, color: Colors.Blue);
+                                _dataScatters.Add(scatter);
+                            }
+                        }
                         AvaPlot1.Refresh();
                     };
 
@@ -53,7 +78,16 @@ namespace AntennaAV.Views
                         {
                             DrawReceiverAngleArrow(vm.ReceiverAngleDeg);
                         }
+                        else if (e.PropertyName == nameof(vm.DataFlowStatus))
+                        {
+                            if (vm.DataFlowStatus.Contains("Данные идут"))
+                                DrawReceiverAngleArrow(vm.ReceiverAngleDeg);
+                        }
                     };
+
+                    // Нарисовать стрелку при запуске, если данные уже идут
+                    if (vm.DataFlowStatus.Contains("Данные идут"))
+                        DrawReceiverAngleArrow(vm.ReceiverAngleDeg);
                 }
             };
 
@@ -162,18 +196,21 @@ namespace AntennaAV.Views
 
             if (_angleArrow == null)
             {
-                _angleArrow = AvaPlot1.Plot.Add.Arrow(0, 0, x, y);
-                _angleArrow.ArrowLineWidth = 3;
-                _angleArrow.ArrowFillColor = Colors.Black;
+                _angleArrow = AvaPlot1.Plot.Add.Arrow(0, 0, -x, y);
+
             }
             else
             {
                 _angleArrow.Base = new Coordinates(0, 0);
-                _angleArrow.Tip = new Coordinates(x, y);
-                _angleArrow.ArrowLineWidth = 3;
-                _angleArrow.ArrowFillColor = Colors.Black;
+                _angleArrow.Tip = new Coordinates(-x, y);
             }
-            
+
+            _angleArrow.ArrowLineWidth = 1;
+            _angleArrow.ArrowFillColor = Colors.CornflowerBlue;
+            _angleArrow.ArrowLineColor = Colors.CornflowerBlue;
+            _angleArrow.ArrowWidth = 3;
+            _angleArrow.ArrowheadWidth = 6;
+
             // Учитываем состояние чекбокса ShowAntenna
             if (DataContext is MainWindowViewModel vm)
             {

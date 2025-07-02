@@ -67,6 +67,8 @@ namespace AntennaAV.Services
             return ConnectResult.DeviceNotResponding;
         }
 
+        public IEnumerable<string> GetAvailablePortNames() => SerialPort.GetPortNames();
+
         private readonly object _portLock = new object();
 
         public ConnectResult ConnectToPort(string portName)

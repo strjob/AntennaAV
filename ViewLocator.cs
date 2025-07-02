@@ -1,7 +1,8 @@
-using System;
 using AntennaAV.ViewModels;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
+using System;
+using System.Xml.Linq;
 
 namespace AntennaAV
 {
@@ -14,7 +15,10 @@ namespace AntennaAV
                 return null;
 
             var name = param.GetType().FullName!.Replace("ViewModel", "View", StringComparison.Ordinal);
-            var type = Type.GetType(name);
+            // var type = Type.GetType(name);
+
+            var viewTypeName = name + ", " + param.GetType().Assembly.GetName().Name;
+            var type = Type.GetType(viewTypeName);
 
             if (type != null)
             {
