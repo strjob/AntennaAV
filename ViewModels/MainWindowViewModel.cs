@@ -125,7 +125,6 @@ namespace AntennaAV.ViewModels
         private bool _isDiagramDataCollecting = false;
         private double _acquisitionFrom;
         private double _acquisitionTo;
-        private string _acquisitionDir = "+";
 
         private CancellationTokenSource? _acquisitionCts;
 

@@ -119,7 +119,7 @@ namespace AntennaAV.Services
                         ReadTimeout = 100,
                         WriteTimeout = 50
                     };
-                    if (!TryOpenPortWithTimeout(temp, 1000)) // 1 секунда
+                    if (!TryOpenPortWithTimeout(temp, 500)) // 0.5 секунд
                     {
                         return ConnectResult.DeviceNotResponding;
                     }
@@ -164,7 +164,7 @@ namespace AntennaAV.Services
                 {
                     return ConnectResult.PortBusy;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return ConnectResult.ExceptionOccurred;
                 }
@@ -270,7 +270,7 @@ namespace AntennaAV.Services
                     }
                 }
 
-                catch (Exception ex)
+                catch (Exception)
                 {
                     //
                 }

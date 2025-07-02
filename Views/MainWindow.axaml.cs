@@ -258,38 +258,6 @@ namespace AntennaAV.Views
         }
 
 
-
-        private DataGrid? _currentTabDataGrid;
-
-        private void DataGrid_AttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
-        {
-            _currentTabDataGrid = sender as DataGrid;
-            // Подпишемся на изменение ItemsSource (это важно!)
-            if (_currentTabDataGrid != null)
-                _currentTabDataGrid.PropertyChanged += DataGrid_PropertyChanged;
-        }
-
-        private void DataGrid_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
-        {
-            if (e.Property.Name == "ItemsSource")
-            {
-                ScrollActiveDataGridToEnd();
-            }
-        }
-
-        public void ScrollActiveDataGridToEnd()
-        {
-            if (_currentTabDataGrid?.ItemsSource is IList items && items.Count > 0)
-            {
-                // ScrollIntoView может не сработать сразу после смены ItemsSource, поэтому используем Dispatcher
-                Dispatcher.UIThread.Post(() =>
-                {
-                    var lastItem = items[items.Count - 1];
-                    _currentTabDataGrid.ScrollIntoView(lastItem, null);
-                });
-            }
-        }
-
         private void NumericUpDown_LostFocus(object? sender, RoutedEventArgs e)
         {
             if (sender is NumericUpDown numericUpDown && DataContext is MainWindowViewModel vm)

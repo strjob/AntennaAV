@@ -38,7 +38,7 @@
             Margin="5"
             VerticalAlignment="Bottom"
             FontSize="14"
-            Text="{Binding ConnectionStatus}" />
+            Text="{CompiledBinding ConnectionStatus}" />
 
         <ScottPlot:AvaPlot
             x:Name="AvaPlot1"
@@ -53,7 +53,7 @@
             HorizontalAlignment="Left"
             VerticalAlignment="Bottom"
             FontSize="14"
-            Text="{Binding DataFlowStatus}" />
+            Text="{CompiledBinding DataFlowStatus}" />
 
         <ToggleSwitch
             Grid.Row="0"
@@ -62,8 +62,8 @@
             HorizontalAlignment="Right"
             VerticalAlignment="Top"
             Content="Реальное время"
-            IsChecked="{Binding IsRealtimeMode, Mode=TwoWay}"
-            IsEnabled="{Binding !IsDiagramAcquisitionRunning}"
+            IsChecked="{CompiledBinding IsRealtimeMode, Mode=TwoWay}"
+            IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}"
             OffContent="Выкл"
             OnContent="Вкл"
             ZIndex="2" />
@@ -86,13 +86,13 @@
                 Margin="0,0,10,0"
                 Content="дБ"
                 GroupName="GraphType"
-                IsChecked="{Binding IsPowerNormSelected, Mode=TwoWay}"
-                IsEnabled="{Binding !IsDiagramAcquisitionRunning}" />
+                IsChecked="{CompiledBinding IsPowerNormSelected, Mode=TwoWay}"
+                IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
             <RadioButton
                 Content="Линейный"
                 GroupName="GraphType"
                 IsChecked="{x:Null}"
-                IsEnabled="{Binding !IsDiagramAcquisitionRunning}" />
+                IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
         </StackPanel>
 
         <Grid Grid.Row="0" Grid.Column="0">
@@ -124,19 +124,19 @@
                         Maximum="359"
                         Minimum="0"
                         Watermark="0-359"
-                        Value="{Binding TransmitterAngle1, Mode=TwoWay}" />
+                        Value="{CompiledBinding TransmitterAngle1, Mode=TwoWay}" />
                 </StackPanel>
                 <TextBlock
                     FontSize="12"
                     Foreground="Red"
-                    Text="{Binding Angle1Error}" />
+                    Text="{CompiledBinding Angle1Error}" />
                 <Button
                     Width="100"
                     Margin="0,0,0,10"
                     HorizontalAlignment="Left"
-                    Command="{Binding MoveTransmitterToAngleCommand}"
+                    Command="{CompiledBinding MoveTransmitterToAngleCommand}"
                     Content="Переместить в"
-                    IsEnabled="{Binding !IsDiagramAcquisitionRunning}" />
+                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
 
                 <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
                     <TextBlock
@@ -151,47 +151,47 @@
                         Maximum="359"
                         Minimum="0"
                         Watermark="0-359"
-                        Value="{Binding TransmitterAngle2, Mode=TwoWay, FallbackValue=0}" />
+                        Value="{CompiledBinding TransmitterAngle2, Mode=TwoWay, FallbackValue=0}" />
                 </StackPanel>
                 <Button
                     Width="100"
                     HorizontalAlignment="Left"
-                    Command="{Binding SetTransmitterAngleCommand}"
+                    Command="{CompiledBinding SetTransmitterAngleCommand}"
                     Content="Задать"
-                    IsEnabled="{Binding !IsDiagramAcquisitionRunning}" />
+                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
             </StackPanel>
 
             <!--  Средний ряд - Существующие текстовые блоки  -->
             <StackPanel Grid.Row="1" VerticalAlignment="Center">
                 <TextBlock Text="Receiver Angle:" />
-                <TextBlock Margin="5" Text="{Binding ReceiverAngleDeg}" />
+                <TextBlock Margin="5" Text="{CompiledBinding ReceiverAngleDeg}" />
 
                 <TextBlock Text="Transmitter Angle:" />
-                <TextBlock Margin="5" Text="{Binding TransmitterAngleDeg}" />
+                <TextBlock Margin="5" Text="{CompiledBinding TransmitterAngleDeg}" />
 
                 <TextBlock Text="Power (dBm):" />
-                <TextBlock Margin="5" Text="{Binding PowerDbm}" />
+                <TextBlock Margin="5" Text="{CompiledBinding PowerDbm}" />
 
                 <TextBlock Text="Antenna Type:" />
-                <TextBlock Margin="5" Text="{Binding AntennaType}" />
+                <TextBlock Margin="5" Text="{CompiledBinding AntennaType}" />
 
                 <TextBlock Text="Rx Antenna Counter:" />
-                <TextBlock Margin="5" Text="{Binding RxAntennaCounter}" />
+                <TextBlock Margin="5" Text="{CompiledBinding RxAntennaCounter}" />
 
                 <TextBlock Text="Timestamp:" />
-                <TextBlock Margin="5" Text="{Binding Timestamp}" />
+                <TextBlock Margin="5" Text="{CompiledBinding Timestamp}" />
             </StackPanel>
 
             <!--  Нижний ряд - пока пустой  -->
             <StackPanel Grid.Row="2" VerticalAlignment="Center">
                 <!--  Здесь можно добавить дополнительные элементы в будущем  -->
                 <TextBlock Margin="0,10,0,0" Text="COM-порты:" />
-                <ListBox Height="100" ItemsSource="{Binding AvailablePorts}" />
+                <ListBox Height="100" ItemsSource="{CompiledBinding AvailablePorts}" />
                 <Button
                     Width="100"
                     Margin="0,0,0,10"
                     HorizontalAlignment="Left"
-                    Command="{Binding RefreshPortsCommand}"
+                    Command="{CompiledBinding RefreshPortsCommand}"
                     Content="Порты" />
             </StackPanel>
 
@@ -215,44 +215,44 @@
                 Orientation="Horizontal">
                 <Button
                     Margin="5"
-                    Command="{Binding AddTabCommand}"
+                    Command="{CompiledBinding AddTabCommand}"
                     Content="Добавить"
-                    IsEnabled="{Binding !IsDiagramAcquisitionRunning}" />
+                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
                 <Button
                     Margin="5"
-                    Command="{Binding EditTabCommand}"
+                    Command="{CompiledBinding EditTabCommand}"
                     Content="Редактировать"
-                    IsEnabled="{Binding !IsDiagramAcquisitionRunning}" />
+                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
                 <Button
                     Margin="5"
-                    Command="{Binding RemoveTabCommand}"
+                    Command="{CompiledBinding RemoveTabCommand}"
                     Content="Удалить"
-                    IsEnabled="{Binding !IsDiagramAcquisitionRunning}" />
+                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
                 <Button
                     x:Name="ExportButton"
                     Margin="5"
                     Content="Экспорт"
-                    IsEnabled="{Binding HasTabs}" />
+                    IsEnabled="{CompiledBinding HasTabs}" />
 
             </StackPanel>
             <TabControl
                 Grid.Row="1"
-                ItemsSource="{Binding Tabs}"
-                SelectedIndex="{Binding SelectedTabIndex}">
+                ItemsSource="{CompiledBinding Tabs}"
+                SelectedIndex="{CompiledBinding SelectedTabIndex}">
                 <TabControl.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
                             <TextBox
                                 MinWidth="100"
-                                IsVisible="{Binding IsEditingHeader}"
+                                IsVisible="{CompiledBinding IsEditingHeader}"
                                 KeyDown="HeaderEdit_KeyDown"
                                 LostFocus="HeaderEdit_LostFocus"
-                                Text="{Binding Header, Mode=TwoWay}" />
+                                Text="{CompiledBinding Header, Mode=TwoWay}" />
                             <TextBlock
                                 MinWidth="100"
                                 DoubleTapped="Header_DoubleTapped"
-                                IsVisible="{Binding !IsEditingHeader}}"
-                                Text="{Binding Header}" />
+                                IsVisible="{CompiledBinding !IsEditingHeader}}"
+                                Text="{CompiledBinding Header}" />
                         </StackPanel>
                     </DataTemplate>
                 </TabControl.ItemTemplate>
@@ -300,12 +300,12 @@
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
                     Increment="5"
-                    IsEnabled="{Binding !IsDiagramAcquisitionRunning}"
+                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}"
                     LostFocus="NumericUpDown_LostFocus"
                     Maximum="360"
                     Minimum="10"
                     Watermark="Размер сектора"
-                    Value="{Binding SectorSize, Mode=TwoWay}" />
+                    Value="{CompiledBinding SectorSize, Mode=TwoWay}" />
 
                 <!--  Центр сектора  -->
                 <TextBlock
@@ -322,13 +322,13 @@
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
                     Increment="5"
-                    IsEnabled="{Binding !IsDiagramAcquisitionRunning}"
+                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}"
                     KeyDown="NumericUpDown_KeyDown"
                     LostFocus="NumericUpDown_LostFocus"
                     Maximum="360"
                     Minimum="-1"
                     Watermark="Центр сектора"
-                    Value="{Binding SectorCenter, Mode=TwoWay}" />
+                    Value="{CompiledBinding SectorCenter, Mode=TwoWay}" />
 
                 <StackPanel
                     Grid.Row="0"
@@ -341,23 +341,23 @@
                         Width="60"
                         Height="28"
                         Margin="0,0,0,6"
-                        Command="{Binding Set120DegreesCommand}"
+                        Command="{CompiledBinding Set120DegreesCommand}"
                         Content="120°"
-                        IsEnabled="{Binding !IsDiagramAcquisitionRunning}" />
+                        IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
                     <Button
                         Width="60"
                         Height="28"
                         Margin="0,0,0,6"
-                        Command="{Binding Set180DegreesCommand}"
+                        Command="{CompiledBinding Set180DegreesCommand}"
                         Content="180°"
-                        IsEnabled="{Binding !IsDiagramAcquisitionRunning}" />
+                        IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
                     <Button
                         Width="60"
                         Height="28"
                         Margin="0,0,0,6"
-                        Command="{Binding Set360DegreesCommand}"
+                        Command="{CompiledBinding Set360DegreesCommand}"
                         Content="360°"
-                        IsEnabled="{Binding !IsDiagramAcquisitionRunning}" />
+                        IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
                 </StackPanel>
                 <StackPanel
                     Grid.Row="0"
@@ -370,11 +370,11 @@
                         MinWidth="130"
                         Margin="0,0,8,0"
                         Content="отображать антенну"
-                        IsChecked="{Binding ShowAntenna, Mode=TwoWay}" />
+                        IsChecked="{CompiledBinding ShowAntenna, Mode=TwoWay}" />
                     <CheckBox
                         MinWidth="130"
                         Content="отображать сектор"
-                        IsChecked="{Binding ShowSector, Mode=TwoWay}" />
+                        IsChecked="{CompiledBinding ShowSector, Mode=TwoWay}" />
                 </StackPanel>
 
                 <!--  Кнопка построения  -->
@@ -390,8 +390,8 @@
                         Margin="0,8,0,0"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Bottom"
-                        Command="{Binding DiagramButtonCommand}"
-                        Content="{Binding DiagramButtonText}" />
+                        Command="{CompiledBinding DiagramButtonCommand}"
+                        Content="{CompiledBinding DiagramButtonText}" />
                 </StackPanel>
 
             </Grid>
