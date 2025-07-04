@@ -94,12 +94,16 @@ namespace AntennaAV.ViewModels
         }
     }
 
-    public class PlotData
+    public partial class PlotData : ObservableObject
     {
         public double[] Angles { get; set; } = Array.Empty<double>();
         public double[] PowerNormValues { get; set; } = Array.Empty<double>();
         public double[] VoltageNormValues { get; set; } = Array.Empty<double>();
-        public string ColorHex { get; set; } = "#0000FF";
-        public bool IsVisible { get; set; } = true;
+
+        [ObservableProperty]
+        private string colorHex = "#0000FF";
+
+        [ObservableProperty]
+        private bool isVisible = true;
     }
 }

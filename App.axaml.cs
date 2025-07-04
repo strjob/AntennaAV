@@ -22,9 +22,9 @@ namespace AntennaAV
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 // ������ ��������� �������
-                IComPortService comPortService = new ComPortManager();
+                //IComPortService comPortService = new ComPortManager();
 
-                //IComPortService comPortService = new TestComPortService();
+                IComPortService comPortService = new TestComPortService();
 
                 // ������ ViewModel � ��������� �����������
                 var mainViewModel = new MainWindowViewModel(comPortService);

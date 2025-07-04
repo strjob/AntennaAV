@@ -133,7 +133,19 @@ namespace AntennaAV.Services
                         temp.Write("#AA/xx/R$");
 
                         Thread.Sleep(50);
-                        var response = TryReadMessage(temp, 50);
+
+                        // Читаем всё, что есть в буфере
+                        string buffer = temp.ReadExisting();
+
+                        // Ищем полное сообщение
+                        int start = buffer.IndexOf('#');
+                        int end = buffer.IndexOf('$', start + 1);
+                        string? response = null;
+                        if (start >= 0 && end > start)
+                        {
+                            response = buffer.Substring(start, end - start + 1);
+                            buffer = buffer.Substring(end + 1); // удаляем обработанное сообщение
+                        }
 
                         if (response != null && response.StartsWith("#xx/A"))
                         {
@@ -255,25 +267,45 @@ namespace AntennaAV.Services
 
         private void ReadLoop()
         {
+            var buffer = new StringBuilder();
             while (_reading && _port != null && _port.IsOpen)
             {
                 try
                 {
-                    var message = TryReadMessage(_port, 200);
-
-                    if (!string.IsNullOrEmpty(message))
+                    if (_port.BytesToRead > 0)
                     {
-                        var data = ParseDataString(message);
-                        if (data != null)
+                        string data = _port.ReadExisting();
+                        buffer.Append(data);
+
+                        // Разбираем все сообщения из буфера
+                        while (true)
                         {
-                            DataQueue.Enqueue(data);
+                            int start = buffer.ToString().IndexOf('#');
+                            int end = buffer.ToString().IndexOf('$', start + 1);
+                            if (start >= 0 && end > start)
+                            {
+                                string message = buffer.ToString().Substring(start, end - start + 1);
+                                buffer.Remove(0, end + 1);
+
+                                var parsed = ParseDataString(message);
+                                if (parsed != null)
+                                    DataQueue.Enqueue(parsed);
+                            }
+                            else
+                            {
+                                // Нет полного сообщения
+                                break;
+                            }
                         }
                     }
+                    else
+                    {
+                        Thread.Sleep(5);
+                    }
                 }
-
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    //
+                    Debug.WriteLine($"ReadLoop error: {ex}");
                 }
             }
         }

@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ScottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:AntennaAVNM"
+    xmlns:local="clr-namespace:AntennaAV"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:treegrid="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.TreeDataGrid"
     xmlns:vm="using:AntennaAV.ViewModels"
@@ -14,6 +14,10 @@
     x:DataType="vm:MainWindowViewModel"
     Icon="/Assets/avalonia-logo.ico"
     mc:Ignorable="d">
+
+    <Window.Resources>
+        <local:HexToColorConverter x:Key="HexToColorConverter" />
+    </Window.Resources>
 
     <Design.DataContext>
         <!--
@@ -62,7 +66,8 @@
             HorizontalAlignment="Right"
             VerticalAlignment="Top"
             Content="Реальное время"
-            IsChecked="{CompiledBinding IsRealtimeMode, Mode=TwoWay}"
+            IsChecked="{CompiledBinding IsRealtimeMode,
+                                        Mode=TwoWay}"
             IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}"
             OffContent="Выкл"
             OnContent="Вкл"
@@ -86,7 +91,8 @@
                 Margin="0,0,10,0"
                 Content="дБ"
                 GroupName="GraphType"
-                IsChecked="{CompiledBinding IsPowerNormSelected, Mode=TwoWay}"
+                IsChecked="{CompiledBinding IsPowerNormSelected,
+                                            Mode=TwoWay}"
                 IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
             <RadioButton
                 Content="Линейный"
@@ -124,12 +130,13 @@
                         Maximum="359"
                         Minimum="0"
                         Watermark="0-359"
-                        Value="{CompiledBinding TransmitterAngle1, Mode=TwoWay}" />
+                        Value="{CompiledBinding TransmitterMoveAngle,
+                                                Mode=TwoWay}" />
                 </StackPanel>
                 <TextBlock
                     FontSize="12"
                     Foreground="Red"
-                    Text="{CompiledBinding Angle1Error}" />
+                    Text="{CompiledBinding TransmitterMoveAngleError}" />
                 <Button
                     Width="100"
                     Margin="0,0,0,10"
@@ -151,8 +158,14 @@
                         Maximum="359"
                         Minimum="0"
                         Watermark="0-359"
-                        Value="{CompiledBinding TransmitterAngle2, Mode=TwoWay, FallbackValue=0}" />
+                        Value="{CompiledBinding TransmitterSetAngle,
+                                                Mode=TwoWay,
+                                                FallbackValue=0}" />
                 </StackPanel>
+                <TextBlock
+                    FontSize="12"
+                    Foreground="Red"
+                    Text="{CompiledBinding TransmitterSetAngleError}" />
                 <Button
                     Width="100"
                     HorizontalAlignment="Left"
@@ -182,10 +195,64 @@
                 <TextBlock Margin="2" Text="{CompiledBinding TimestampStr}" />
             </StackPanel>
 
-            <!--  Нижний ряд - пока пустой  -->
+            <!--  Нижний ряд - Приемная антенна  -->
             <StackPanel Grid.Row="2" VerticalAlignment="Center">
-                <!--  Здесь можно добавить дополнительные элементы в будущем  -->
+                <TextBlock
+                    Margin="0,0,0,5"
+                    FontWeight="Bold"
+                    Text="Приемная антенна" />
+                <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
+                    <TextBlock
+                        Margin="0,0,5,0"
+                        VerticalAlignment="Center"
+                        Text="Угол:" />
+                    <NumericUpDown
+                        Width="125"
+                        FormatString="0.0"
+                        Increment="1"
+                        KeyDown="NumericUpDown_KeyDown"
+                        Maximum="359"
+                        Minimum="0"
+                        Watermark="0-359"
+                        Value="{CompiledBinding ReceiverMoveAngle, Mode=TwoWay}" />
+                </StackPanel>
+                <TextBlock
+                    FontSize="12"
+                    Foreground="Red"
+                    Text="{CompiledBinding ReceiverMoveAngleError}" />
+                <Button
+                    Width="100"
+                    Margin="0,0,0,10"
+                    HorizontalAlignment="Left"
+                    Command="{CompiledBinding MoveReceiverToAngleCommand}"
+                    Content="Переместить в"
+                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
 
+                <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
+                    <TextBlock
+                        Margin="0,0,5,0"
+                        VerticalAlignment="Center"
+                        Text="Угол:" />
+                    <NumericUpDown
+                        Width="125"
+                        FormatString="0.0"
+                        Increment="1"
+                        KeyDown="NumericUpDown_KeyDown"
+                        Maximum="359"
+                        Minimum="0"
+                        Watermark="0-359"
+                        Value="{CompiledBinding ReceiverSetAngle, Mode=TwoWay, FallbackValue=0}" />
+                </StackPanel>
+                <TextBlock
+                    FontSize="12"
+                    Foreground="Red"
+                    Text="{CompiledBinding ReceiverSetAngleError}" />
+                <Button
+                    Width="100"
+                    HorizontalAlignment="Left"
+                    Command="{CompiledBinding SetReceiverAngleCommand}"
+                    Content="Задать"
+                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
             </StackPanel>
 
         </Grid>
@@ -224,16 +291,21 @@
                 <Button
                     x:Name="TogglePlotVisibilityButton"
                     Margin="5"
-                    Content="Показать/Скрыть график"
                     Click="TogglePlotVisibility_Click"
+                    Content="П/С "
                     IsEnabled="{CompiledBinding CanUseWhenHasTabs}" />
+                <ColorPicker
+                    Width="70"
+                    Height="32"
+                    Margin="5"
+                    Color="{Binding SelectedTab.Plot.ColorHex, Mode=TwoWay, Converter={StaticResource HexToColorConverter}}" />
 
             </StackPanel>
             <TabControl
                 Grid.Row="1"
+                IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}"
                 ItemsSource="{CompiledBinding Tabs}"
-                SelectedIndex="{CompiledBinding SelectedTabIndex}"
-                IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}">
+                SelectedIndex="{CompiledBinding SelectedTabIndex}">
                 <TabControl.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
@@ -242,7 +314,8 @@
                                 IsVisible="{CompiledBinding IsEditingHeader}"
                                 KeyDown="HeaderEdit_KeyDown"
                                 LostFocus="HeaderEdit_LostFocus"
-                                Text="{CompiledBinding Header, Mode=TwoWay}" />
+                                Text="{CompiledBinding Header,
+                                                       Mode=TwoWay}" />
                             <TextBlock
                                 MinWidth="100"
                                 DoubleTapped="Header_DoubleTapped"
@@ -257,8 +330,8 @@
                         <treegrid:TreeDataGrid
                             MinHeight="100"
                             Margin="0"
-                            VerticalAlignment="Top"
                             HorizontalAlignment="Stretch"
+                            VerticalAlignment="Top"
                             Source="{Binding AntennaSource}" />
                     </DataTemplate>
                 </TabControl.ContentTemplate>
@@ -300,7 +373,8 @@
                     Maximum="360"
                     Minimum="10"
                     Watermark="Размер сектора"
-                    Value="{CompiledBinding SectorSize, Mode=TwoWay}" />
+                    Value="{CompiledBinding SectorSize,
+                                            Mode=TwoWay}" />
 
                 <!--  Центр сектора  -->
                 <TextBlock
@@ -323,7 +397,8 @@
                     Maximum="360"
                     Minimum="-1"
                     Watermark="Центр сектора"
-                    Value="{CompiledBinding SectorCenter, Mode=TwoWay}" />
+                    Value="{CompiledBinding SectorCenter,
+                                            Mode=TwoWay}" />
 
                 <StackPanel
                     Grid.Row="0"
@@ -365,11 +440,13 @@
                         MinWidth="130"
                         Margin="0,0,8,0"
                         Content="отображать антенну"
-                        IsChecked="{CompiledBinding ShowAntenna, Mode=TwoWay}" />
+                        IsChecked="{CompiledBinding ShowAntenna,
+                                                    Mode=TwoWay}" />
                     <CheckBox
                         MinWidth="130"
                         Content="отображать сектор"
-                        IsChecked="{CompiledBinding ShowSector, Mode=TwoWay}" />
+                        IsChecked="{CompiledBinding ShowSector,
+                                                    Mode=TwoWay}" />
                 </StackPanel>
 
                 <!--  Кнопка построения  -->
@@ -387,7 +464,8 @@
                         VerticalAlignment="Bottom"
                         Command="{CompiledBinding DiagramButtonCommand}"
                         Content="{CompiledBinding DiagramButtonText}"
-                        IsEnabled="{CompiledBinding IsPortOpen}"/>
+                        IsEnabled="{CompiledBinding IsPortOpen}"
+                        Background="{Binding DiagramButtonBrush}" />
                 </StackPanel>
 
             </Grid>

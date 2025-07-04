@@ -41,13 +41,24 @@ namespace AntennaAV.Views
                     {
                         // Сохраняем лимиты
                         var limits = AvaPlot1.Plot.Axes.GetLimits();
+
+                        // Проверка на пустой массив и вывод длины
+                        System.Diagnostics.Debug.WriteLine($"OnBuildRadarPlot: values.Length={values?.Length ?? -1}");
+                        if (values == null || values.Length == 0)
+                            return;
+
                         // Разбиваем на сегменты по разрывам углов
                         List<List<Coordinates>> segments = new();
                         List<Coordinates> current = new();
+                        double min = values.Min();
+                        double max = values.Max();
+                        double r_max = 100;
                         for (int i = 0; i < angles.Length; i++)
                         {
-                            double mirroredAngle = (180 - angles[i]) % 360; // если нужно отзеркалить
-                            var pt = _polarAxis.GetCoordinates(values[i], mirroredAngle);
+                            double mirroredAngle = (360 - angles[i]) % 360; // если нужно отзеркалить
+                            double r = (max - min) > 0 ? r_max * (values[i] - min) / (max - min) : r_max;
+                           // System.Diagnostics.Debug.WriteLine($"min={min}, max={max}, value={values[i]}, r={r}");
+                            var pt = _polarAxis.GetCoordinates(r, mirroredAngle);
                             if (i > 0 && Math.Abs(angles[i] - angles[i - 1]) > 1.0)
                             {
                                 if (current.Count > 0)
@@ -69,7 +80,8 @@ namespace AntennaAV.Views
                         {
                             if (seg.Count > 1)
                             {
-                                var scatter = AvaPlot1.Plot.Add.Scatter(seg, color: ScottPlot.Colors.Blue);
+                                var color = ScottPlot.Color.FromHex(vm.SelectedTab.Plot.ColorHex);
+                                var scatter = AvaPlot1.Plot.Add.Scatter(seg, color: color);
                                 _dataScatters.Add(scatter);
                             }
                         }
@@ -128,6 +140,16 @@ namespace AntennaAV.Views
                         _sectorPolygon = AvaPlot1.Plot.Add.Polygon(points.ToArray());
                         _sectorPolygon.FillColor = Colors.DarkGray.WithAlpha(.7);
                         _sectorPolygon.LineWidth = 0;
+
+                        // Добавлено: скрывать сектор, если чекбокс снят
+                        if (this.DataContext is MainWindowViewModel vm)
+                        {
+                            if (!vm.ShowSector)
+                            {
+                                _sectorPolygon.FillColor = Colors.Transparent;
+                                _sectorPolygon.LineWidth = 0;
+                            }
+                        }
 
                         
                         AvaPlot1.Plot.Axes.SetLimits(limits);
@@ -331,11 +353,15 @@ namespace AntennaAV.Views
                 double[] values = vm.IsPowerNormSelected ? tab.Plot.PowerNormValues : tab.Plot.VoltageNormValues;
                 if (angles.Length == 0 || values.Length == 0 || angles.Length != values.Length)
                     return;
+                double min = values.Min();
+                double max = values.Max();
+                double r_max = 100;
                 List<ScottPlot.Coordinates> coords = new();
                 for (int i = 0; i < angles.Length; i++)
                 {
-                    double mirroredAngle = (180 - angles[i]) % 360;
-                    var pt = _polarAxis.GetCoordinates(values[i], mirroredAngle);
+                    double mirroredAngle = (360 - angles[i]) % 360;
+                    double r = (max - min) > 0 ? r_max * (values[i] - min) / (max - min) : r_max;
+                    var pt = _polarAxis.GetCoordinates(r, mirroredAngle);
                     coords.Add(pt);
                 }
                 if (coords.Count > 1)
@@ -375,11 +401,15 @@ namespace AntennaAV.Views
                     double[] values = vm.IsPowerNormSelected ? tab.Plot.PowerNormValues : tab.Plot.VoltageNormValues;
                     if (angles.Length == 0 || values.Length == 0 || angles.Length != values.Length)
                         continue;
+                    double min = values.Min();
+                    double max = values.Max();
+                    double r_max = 100;
                     List<ScottPlot.Coordinates> coords = new();
                     for (int i = 0; i < angles.Length; i++)
                     {
-                        double mirroredAngle = (180 - angles[i]) % 360;
-                        var pt = _polarAxis.GetCoordinates(values[i], mirroredAngle);
+                        double mirroredAngle = (360 - angles[i]) % 360;
+                        double r = (max - min) > 0 ? r_max * (values[i] - min) / (max - min) : r_max;
+                        var pt = _polarAxis.GetCoordinates(r, mirroredAngle);
                         coords.Add(pt);
                     }
                     if (coords.Count > 1)

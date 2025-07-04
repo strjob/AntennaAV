@@ -16,6 +16,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using static AntennaAV.Services.ComPortManager;
+using Avalonia.Media;
 
 
 namespace AntennaAV.ViewModels
@@ -101,6 +102,8 @@ namespace AntennaAV.ViewModels
         {
             OnPropertyChanged(nameof(CanUseWhenPortOpen));
             OnPropertyChanged(nameof(CanUseWhenHasTabs));
+            // Меняем цвет кнопки в зависимости от состояния
+            DiagramButtonBrush = value ? Brushes.IndianRed : Brushes.LightGreen;
         }
         partial void OnIsPortOpenChanged(bool value)
         {
@@ -126,13 +129,34 @@ namespace AntennaAV.ViewModels
         private bool isRealtimeMode = true;
 
         [ObservableProperty]
-        private string transmitterAngle1 = "0";
+        private string transmitterMoveAngle = "0";
 
         [ObservableProperty]
-        private string? angle1Error;
+        private string? transmitterMoveAngleError;
 
         [ObservableProperty]
-        private double transmitterAngle2 = 0;
+        private string transmitterSetAngle = "0";
+
+        [ObservableProperty]
+        private string transmitterSetAngleError = "";
+
+        [ObservableProperty]
+        private string receiverMoveAngle = "0";
+
+        [ObservableProperty]
+        private string receiverMoveAngleError = "";
+
+        [ObservableProperty]
+        private string receiverSetAngle = "0";
+
+        [ObservableProperty]
+        private string receiverSetAngleError = "";
+
+        [ObservableProperty]
+        private string transmitterAngle2Error = "";
+
+        [ObservableProperty]
+        private IBrush diagramButtonBrush = Brushes.LightGreen;
 
         private DispatcherTimer? _tableUpdateTimer;
 
@@ -264,19 +288,31 @@ namespace AntennaAV.ViewModels
         public event Action<double[], double[]>? OnBuildRadarPlot;
 
 
+        private static readonly string[] DefaultColors = new[]
+        {
+            "#FF0000", // Красный
+            "#00FF00", // Зелёный
+            "#0000FF", // Синий
+            "#FFA500", // Оранжевый
+            "#800080", // Фиолетовый
+            "#00FFFF", // Голубой
+            "#FFC0CB", // Розовый
+            "#FFFF00", // Жёлтый
+            // ... можно добавить больше цветов
+        };
+
         [RelayCommand]
         private void AddTab()
         {
+            if (Tabs.Count >= 10)
+                return;
+            int colorIndex = Tabs.Count % DefaultColors.Length;
             var tab = new TabViewModel { Header = $"Антенна {Tabs.Count + 1}" };
-            tab.AddAntennaData(new List<GridAntennaData>
-            {
-
-            });
+            tab.Plot.ColorHex = DefaultColors[colorIndex];
+            tab.AddAntennaData(new List<GridAntennaData>());
             Tabs.Add(tab);
             SelectedTabIndex = Tabs.Count - 1;
-
             UpdateTabCommands();
-
         }
 
 
@@ -408,7 +444,7 @@ namespace AntennaAV.ViewModels
                         lastData = data;
                         dataReceived = true;
                     }
-                    if (OnBuildRadarPlot != null && plotflag)
+                    if (OnBuildRadarPlot != null && plotflag && IsRealtimeMode)
                     {
                         var angles = _collector.GetGraphAngles();
                         double[] values;
@@ -496,35 +532,59 @@ namespace AntennaAV.ViewModels
             SectorCenter = "0";
         }
 
-        partial void OnTransmitterAngle1Changed(string value)
+        partial void OnTransmitterMoveAngleChanged(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
-                Angle1Error = "Поле не может быть пустым";
+                TransmitterMoveAngleError = "Поле не может быть пустым";
             else if (!double.TryParse(value, out var d) || d < 0 || d > 359.9)
-                Angle1Error = "Введите число от 0 до 359.9";
+                TransmitterMoveAngleError = "Введите число от 0 до 359.9";
             else
-                Angle1Error = null;
+                TransmitterMoveAngleError = "";
         }
 
         [RelayCommand]
         public void MoveTransmitterToAngle()
         {
-            if (string.IsNullOrWhiteSpace(TransmitterAngle1) || Angle1Error != null || !_comPortService.IsOpen)
+            if (string.IsNullOrWhiteSpace(TransmitterMoveAngle) || !string.IsNullOrEmpty(TransmitterMoveAngleError) || !_comPortService.IsOpen)
                 return;
-            if (double.TryParse(TransmitterAngle1, out var angle) && angle >= 0 && angle <= 360)
+            if (double.TryParse(TransmitterMoveAngle, out var angle) && angle >= 0 && angle <= 360)
             {
                 _comPortService.SetAntennaAngle(angle, "T", "G");
             }
         }
 
+        partial void OnTransmitterSetAngleChanged(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                TransmitterSetAngleError = "Поле не может быть пустым";
+            else if (!double.TryParse(value, out var d) || d < 0 || d > 359.9)
+                TransmitterSetAngleError = "Введите число от 0 до 359.9";
+            else
+                TransmitterSetAngleError = "";
+        }
+
         [RelayCommand]
         public void SetTransmitterAngle()
         {
-            if (TransmitterAngle2 >= 0 && TransmitterAngle2 <= 359.9 && _comPortService.IsOpen)
+            if (string.IsNullOrWhiteSpace(TransmitterSetAngle) || !string.IsNullOrEmpty(TransmitterSetAngleError) || !_comPortService.IsOpen)
+                return;
+            if (double.TryParse(TransmitterSetAngle, out var angle) && angle >= 0 && angle <= 360)
             {
-                _comPortService.SetAntennaAngle(TransmitterAngle2, "T", "S");
+                _comPortService.SetAntennaAngle(angle, "T", "S");
             }
         }
+
+        partial void OnReceiverSetAngleChanged(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                ReceiverSetAngleError = "Поле не может быть пустым";
+            else if (!double.TryParse(value, out var d) || d < 0 || d > 359.9)
+                ReceiverSetAngleError = "Введите число от 0 до 359.9";
+            else
+                ReceiverSetAngleError = "";
+        }
+
+
 
         [RelayCommand]
         public async Task StartDiagramAcquisition()
@@ -591,6 +651,10 @@ namespace AntennaAV.ViewModels
             _acquisitionCts?.Cancel();
             _acquisitionCts?.Dispose();
             _acquisitionCts = null;
+            _isDiagramDataCollecting = false;
+            _collector.FinalizeData();
+            UpdatePlotWithNormalizedData();
+            UpdateTable();
             _comPortService.StopAntenna("R");
         }
 
@@ -876,6 +940,43 @@ namespace AntennaAV.ViewModels
         public void StopMessaging()
         {
             _comPortService.StopMessaging();
+        }
+
+        partial void OnSelectedTabIndexChanged(int value)
+        {
+            OnPropertyChanged(nameof(SelectedTab));
+        }
+
+        partial void OnReceiverMoveAngleChanged(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                ReceiverMoveAngleError = "Поле не может быть пустым";
+            else if (!double.TryParse(value, out var d) || d < 0 || d > 359.9)
+                ReceiverMoveAngleError = "Введите число от 0 до 359.9";
+            else
+                ReceiverMoveAngleError = "";
+        }
+
+        [RelayCommand]
+        public void MoveReceiverToAngle()
+        {
+            if (string.IsNullOrWhiteSpace(ReceiverMoveAngle) || !string.IsNullOrEmpty(ReceiverMoveAngleError) || !_comPortService.IsOpen)
+                return;
+            if (double.TryParse(ReceiverMoveAngle, out var angle) && angle >= 0 && angle <= 360)
+            {
+                _comPortService.SetAntennaAngle(angle, "R", "G");
+            }
+        }
+
+        [RelayCommand]
+        public void SetReceiverAngle()
+        {
+            if (string.IsNullOrWhiteSpace(ReceiverSetAngle) || !string.IsNullOrEmpty(ReceiverSetAngleError) || !_comPortService.IsOpen)
+                return;
+            if (double.TryParse(ReceiverSetAngle, out var angle) && angle >= 0 && angle <= 360)
+            {
+                _comPortService.SetAntennaAngle(angle, "R", "S");
+            }
         }
 
     }
