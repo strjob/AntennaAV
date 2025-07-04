@@ -324,7 +324,9 @@ namespace AntennaAV.Services
             return null;
         }
 
-
+        private DateTime? deviceStartTime = null;
+        private int? firstSystick = null;
+        private int? prevSystick = null;
         private AntennaData? ParseDataString(string input)
         {
             if (!input.StartsWith("#xx/ANT") || !input.EndsWith("$"))
@@ -333,22 +335,32 @@ namespace AntennaAV.Services
             var trimmed = input.Trim('#', '$');
             var parts = trimmed.Split('/');
 
-            if (parts.Length < 10) return null;
+            if (parts.Length < 11) return null;
 
             try
             {
+                int systick = int.Parse(parts[3]);
+                if (deviceStartTime == null || (prevSystick != null && systick < prevSystick))
+                {
+                    deviceStartTime = DateTime.Now;
+                    firstSystick = systick;
+                }
+                prevSystick = systick;
+                if (firstSystick == null)
+                    firstSystick = systick;
+                int deltaMs = systick - firstSystick.Value;
                 return new AntennaData
                 {
-                    ReceiverAngleDeg10 = int.Parse(parts[3]),
-                    TransmitterAngleDeg10 = int.Parse(parts[4]),
-                    ReceiverAngleDeg = int.Parse(parts[3]) / 10.0,
-                    TransmitterAngleDeg = int.Parse(parts[4]) / 10.0,
-                    RxAntennaCounter = int.Parse(parts[5]),
-                    TxAntennaCounter = int.Parse(parts[6]),
-                    PowerDbm = double.Parse(parts[7], CultureInfo.InvariantCulture),
-                    AntennaType = int.Parse(parts[8]),
-                    ModeAutoHand = int.Parse(parts[9]),
-                    Timestamp = DateTime.Now
+                    ReceiverAngleDeg10 = int.Parse(parts[4]),
+                    TransmitterAngleDeg10 = int.Parse(parts[5]),
+                    ReceiverAngleDeg = int.Parse(parts[4]) / 10.0,
+                    TransmitterAngleDeg = int.Parse(parts[5]) / 10.0,
+                    RxAntennaCounter = int.Parse(parts[6]),
+                    TxAntennaCounter = int.Parse(parts[7]),
+                    PowerDbm = double.Parse(parts[8], CultureInfo.InvariantCulture),
+                    AntennaType = int.Parse(parts[9]),
+                    ModeAutoHand = int.Parse(parts[10]),
+                    Timestamp = deviceStartTime.Value.AddMilliseconds(deltaMs)
                 };
             }
             catch

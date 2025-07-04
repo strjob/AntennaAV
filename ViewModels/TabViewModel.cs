@@ -3,11 +3,8 @@ using Avalonia.Controls.Models.TreeDataGrid;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics.Metrics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Linq.Expressions;
 
 
 namespace AntennaAV.ViewModels
@@ -28,26 +25,72 @@ namespace AntennaAV.ViewModels
 
         public TabViewModel()
         {
-            
+
 
             AntennaSource = new FlatTreeDataGridSource<GridAntennaData>(AntennaDataCollection)
             {
                 Columns =
                 {
-                    new TextColumn<GridAntennaData, double>("Угол, °", x => x.Angle),
-                    new TextColumn<GridAntennaData, double>("P, дБм", x => x.PowerDbm),
-                    new TextColumn<GridAntennaData, double>("V, мкВ", x => x.Voltage), 
-                    new TextColumn<GridAntennaData, double>("P норм.", x => x.PowerNorm),
-                    new TextColumn<GridAntennaData, double>("V норм.", x => x.VoltageNorm),
-                    new TextColumn<GridAntennaData, String>("Время", x => x.TimeStr),
+                new FormattedStringColumn<GridAntennaData>(
+                    "Угол, °",
+                    x => x.AngleStr,
+                    x => x.Angle),
+
+                new FormattedStringColumn<GridAntennaData>(
+                    "P, дБм",
+                    x => x.PowerDbmStr,
+                    x => x.PowerDbm),
+
+                new FormattedStringColumn<GridAntennaData>(
+                    "V, мкВ",
+                    x => x.VoltageStr,
+                    x => x.Voltage),
+
+                new FormattedStringColumn<GridAntennaData>(
+                    "P норм.",
+                    x => x.PowerNormStr,
+                    x => x.PowerNorm),
+
+                new FormattedStringColumn<GridAntennaData>(
+                    "V норм.",
+                    x => x.VoltageNormStr,
+                    x => x.VoltageNorm),
+
+                new TextColumn<GridAntennaData, string>("Время", x => x.TimeStr)
                 }
             };
-            
+
         }
 
         public void AddAntennaData(IEnumerable<GridAntennaData> newItems)
         {
             AntennaDataCollection.AddRange(newItems);
+        }
+    }
+
+
+    public class FormattedStringColumn<TModel> : TextColumn<TModel, string?> where TModel : class
+    {
+        private readonly Func<TModel, IComparable?> _sortKeySelector;
+
+        public FormattedStringColumn(
+            string header,
+            Expression<Func<TModel, string?>> displaySelector,
+            Func<TModel, IComparable?> sortKeySelector)
+            : base(header, displaySelector)
+        {
+            _sortKeySelector = sortKeySelector;
+        }
+
+        public override Comparison<TModel>? GetComparison(ListSortDirection direction)
+        {
+            return (x, y) =>
+            {
+                var a = _sortKeySelector(x);
+                var b = _sortKeySelector(y);
+                var result = Comparer<IComparable?>.Default.Compare(a, b);
+                return direction == ListSortDirection.Ascending ? result : -result;
+            };
         }
     }
 

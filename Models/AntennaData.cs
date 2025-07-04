@@ -4,6 +4,7 @@ namespace AntennaAV.Models
 {
     public class AntennaData
     {
+        public int Systick { get; set; }
         public double ReceiverAngleDeg { get; set; }
         public double TransmitterAngleDeg { get; set; }
         public int ReceiverAngleDeg10 { get; set; }

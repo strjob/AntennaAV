@@ -448,7 +448,7 @@ namespace AntennaAV.ViewModels
                     RxAntennaCounter = lastData.RxAntennaCounter;
                     RxAntennaCounterStr = RxAntennaCounter.ToString();
                     Timestamp = lastData.Timestamp;
-                    TimestampStr = Timestamp.ToString("mm:ss.fff");
+                    TimestampStr = Timestamp.ToString("HH:mm:ss.fff");
                 }
             }
             // Статус потока данных: только по текущему срабатыванию таймера

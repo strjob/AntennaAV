@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
+
 namespace AntennaAV
 {
     public class GridAntennaData
@@ -20,6 +22,6 @@ namespace AntennaAV
         public string VoltageStr => Voltage.ToString("F2");
         public string PowerNormStr => PowerNorm.ToString("F2");
         public string VoltageNormStr => VoltageNorm.ToString("F4");
-        public string TimeStr => Time.ToString("mm:ss.fff");
+        public string TimeStr => Time.ToString("HH:mm:ss.fff");
     }
 }

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using static AntennaAV.Services.ComPortManager;
@@ -15,6 +16,7 @@ public interface IComPortService
 
     ConnectResult ConnectToPort(string portName);
     ConnectResult AutoDetectAndConnect();
+
 
     void StartReading();
     void StopReading();
