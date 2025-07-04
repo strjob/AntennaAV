@@ -1,12 +1,13 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Avalonia.Controls;
+using Avalonia.Controls.Models.TreeDataGrid;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Avalonia.Controls.Models.TreeDataGrid;
-using Avalonia.Controls;
 
 
 namespace AntennaAV.ViewModels
@@ -35,10 +36,10 @@ namespace AntennaAV.ViewModels
                 {
                     new TextColumn<GridAntennaData, double>("Угол, °", x => x.Angle),
                     new TextColumn<GridAntennaData, double>("P, дБм", x => x.PowerDbm),
-                    new TextColumn<GridAntennaData, double>("V, мкВ", x => x.Voltage),
+                    new TextColumn<GridAntennaData, double>("V, мкВ", x => x.Voltage), 
                     new TextColumn<GridAntennaData, double>("P норм.", x => x.PowerNorm),
                     new TextColumn<GridAntennaData, double>("V норм.", x => x.VoltageNorm),
-                    new TextColumn<GridAntennaData, DateTime>("Время", x => x.Time),
+                    new TextColumn<GridAntennaData, String>("Время", x => x.TimeStr),
                 }
             };
             

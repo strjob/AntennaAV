@@ -88,7 +88,24 @@ namespace AntennaAV.ViewModels
         private string timestampStr = string.Empty;
 
         [ObservableProperty]
+        private bool isDiagramAcquisitionRunning;
+
+        [ObservableProperty]
         private bool isPortOpen;
+
+
+        public bool CanUseWhenPortOpen => !IsDiagramAcquisitionRunning && IsPortOpen;
+        public bool CanUseWhenHasTabs => !IsDiagramAcquisitionRunning && HasTabs;
+
+        partial void OnIsDiagramAcquisitionRunningChanged(bool value)
+        {
+            OnPropertyChanged(nameof(CanUseWhenPortOpen));
+            OnPropertyChanged(nameof(CanUseWhenHasTabs));
+        }
+        partial void OnIsPortOpenChanged(bool value)
+        {
+            OnPropertyChanged(nameof(CanUseWhenPortOpen));
+        }
 
         [ObservableProperty]
         private string sectorSize = "180";
@@ -116,9 +133,6 @@ namespace AntennaAV.ViewModels
 
         [ObservableProperty]
         private double transmitterAngle2 = 0;
-
-        [ObservableProperty]
-        private bool isDiagramAcquisitionRunning;
 
         private DispatcherTimer? _tableUpdateTimer;
 

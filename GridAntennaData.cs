@@ -20,6 +20,6 @@ namespace AntennaAV
         public string VoltageStr => Voltage.ToString("F2");
         public string PowerNormStr => PowerNorm.ToString("F2");
         public string VoltageNormStr => VoltageNorm.ToString("F4");
-        public string TimeStr => Time.ToString("mm:ss.ff");
+        public string TimeStr => Time.ToString("mm:ss.fff");
     }
 }

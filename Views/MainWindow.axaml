@@ -136,7 +136,7 @@
                     HorizontalAlignment="Left"
                     Command="{CompiledBinding MoveTransmitterToAngleCommand}"
                     Content="Переместить в"
-                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
+                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
 
                 <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
                     <TextBlock
@@ -158,7 +158,7 @@
                     HorizontalAlignment="Left"
                     Command="{CompiledBinding SetTransmitterAngleCommand}"
                     Content="Задать"
-                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
+                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
             </StackPanel>
 
             <!--  Средний ряд - Существующие текстовые блоки  -->
@@ -210,23 +210,23 @@
                     Margin="5"
                     Command="{CompiledBinding AddTabCommand}"
                     Content="Добавить"
-                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
+                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
                 <Button
                     Margin="5"
                     Command="{CompiledBinding RemoveTabCommand}"
                     Content="Удалить"
-                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
+                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
                 <Button
                     x:Name="ExportButton"
                     Margin="5"
                     Content="Экспорт"
-                    IsEnabled="{CompiledBinding HasTabs}" />
+                    IsEnabled="{CompiledBinding CanUseWhenHasTabs}" />
                 <Button
                     x:Name="TogglePlotVisibilityButton"
                     Margin="5"
                     Content="Показать/Скрыть график"
                     Click="TogglePlotVisibility_Click"
-                    IsEnabled="{CompiledBinding HasTabs}" />
+                    IsEnabled="{CompiledBinding CanUseWhenHasTabs}" />
 
             </StackPanel>
             <TabControl
@@ -338,21 +338,21 @@
                         Margin="0,0,0,6"
                         Command="{CompiledBinding Set120DegreesCommand}"
                         Content="120°"
-                        IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
                     <Button
                         Width="60"
                         Height="28"
                         Margin="0,0,0,6"
                         Command="{CompiledBinding Set180DegreesCommand}"
                         Content="180°"
-                        IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
                     <Button
                         Width="60"
                         Height="28"
                         Margin="0,0,0,6"
                         Command="{CompiledBinding Set360DegreesCommand}"
                         Content="360°"
-                        IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
                 </StackPanel>
                 <StackPanel
                     Grid.Row="0"
@@ -386,7 +386,8 @@
                         HorizontalAlignment="Left"
                         VerticalAlignment="Bottom"
                         Command="{CompiledBinding DiagramButtonCommand}"
-                        Content="{CompiledBinding DiagramButtonText}" />
+                        Content="{CompiledBinding DiagramButtonText}"
+                        IsEnabled="{CompiledBinding IsPortOpen}"/>
                 </StackPanel>
 
             </Grid>

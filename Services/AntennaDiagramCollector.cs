@@ -25,11 +25,11 @@ namespace AntennaAV.Services
             // Пересчёт PowerDbm -> Voltage (uV)
             double powerWatt = Math.Pow(10, (powerDbm - 30) / 10.0);
             double voltageRms = Math.Sqrt(powerWatt * 50);
-            double voltageMicroV = voltageRms * 1_000_000;
+            double voltageMicroV = Math.Round(voltageRms * 1_000_000, 1);
 
             var data = new GridAntennaData
             {
-                Angle = receiverAngleDeg10 / 10.0,
+                Angle = Math.Round(receiverAngleDeg10 / 10.0, 1),
                 PowerDbm = powerDbm,
                 Voltage = voltageMicroV,
                 Time = timestamp
@@ -47,7 +47,7 @@ namespace AntennaAV.Services
             {
                 var d = _data[key];
                 d.PowerNorm = d.PowerDbm - _maxPowerDbm;
-                d.VoltageNorm = _maxVoltage > 0 ? d.Voltage / _maxVoltage : 0;
+                d.VoltageNorm = _maxVoltage > 0 ? Math.Round(d.Voltage / _maxVoltage, 3) : 0;
                 _data[key] = d;
             }
         }
