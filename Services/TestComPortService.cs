@@ -88,8 +88,8 @@ public class TestComPortService : IComPortService, IDisposable
             if (_powerPhase > Math.PI * 2) _powerPhase -= Math.PI * 2;
             double basePower = -35 + 20 * Math.Sin(_powerPhase); // от -55 до -15
             double noise = (rand.NextDouble() - 0.5) * 2.0; // небольшой шум
-           double powerDbm = Math.Round(basePower + noise, 2);
-           //double powerDbm = -angle/10;
+           //double powerDbm = Math.Round(basePower + noise, 2);
+           double powerDbm = -angle/10;
 
             var data = new AntennaData
             {

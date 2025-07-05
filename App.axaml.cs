@@ -7,6 +7,7 @@ using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using System.Linq;
+using Avalonia.Styling;
 
 namespace AntennaAV
 {
@@ -15,6 +16,11 @@ namespace AntennaAV
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
+        }
+
+        public void SetTheme(ThemeVariant theme)
+        {
+            Application.Current!.RequestedThemeVariant = theme;
         }
 
         public override void OnFrameworkInitializationCompleted()

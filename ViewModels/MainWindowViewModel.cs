@@ -17,6 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using static AntennaAV.Services.ComPortManager;
 using Avalonia.Media;
+using Avalonia.Styling;
 
 
 namespace AntennaAV.ViewModels
@@ -54,6 +55,8 @@ namespace AntennaAV.ViewModels
         public bool IsDiagramRecording = false;
 
         public bool HasTabs => Tabs.Count > 0;
+        public bool CanRemoveTab => Tabs.Count > 1;
+        public bool CanRemoveTabWhenPortOpen => CanRemoveTab && CanUseWhenPortOpen;
 
         [ObservableProperty]
         private ObservableCollection<TabViewModel> tabs = new();
@@ -102,12 +105,13 @@ namespace AntennaAV.ViewModels
         {
             OnPropertyChanged(nameof(CanUseWhenPortOpen));
             OnPropertyChanged(nameof(CanUseWhenHasTabs));
-            // Меняем цвет кнопки в зависимости от состояния
-            DiagramButtonBrush = value ? Brushes.IndianRed : Brushes.LightGreen;
+            OnPropertyChanged(nameof(CanRemoveTabWhenPortOpen));
         }
         partial void OnIsPortOpenChanged(bool value)
         {
             OnPropertyChanged(nameof(CanUseWhenPortOpen));
+            OnPropertyChanged(nameof(CanRemoveTab));
+            OnPropertyChanged(nameof(CanRemoveTabWhenPortOpen));
         }
 
         [ObservableProperty]
@@ -155,9 +159,6 @@ namespace AntennaAV.ViewModels
         [ObservableProperty]
         private string transmitterAngle2Error = "";
 
-        [ObservableProperty]
-        private IBrush diagramButtonBrush = Brushes.LightGreen;
-
         private DispatcherTimer? _tableUpdateTimer;
 
         private AntennaDiagramCollector _collector = new();
@@ -167,17 +168,6 @@ namespace AntennaAV.ViewModels
         private double _acquisitionTo;
 
         private CancellationTokenSource? _acquisitionCts;
-
-        public string DiagramButtonText => IsDiagramAcquisitionRunning ? "Прервать" : "Начать построение диаграммы";
-
-        public IRelayCommand DiagramButtonCommand => _diagramButtonCommand ??= new RelayCommand(async () =>
-        {
-            if (IsDiagramAcquisitionRunning)
-                CancelDiagramAcquisition();
-            else
-                await StartDiagramAcquisition();
-        });
-        private RelayCommand? _diagramButtonCommand;
 
         [ObservableProperty]
         private string dataFlowStatus = "🔴 Нет данных";
@@ -354,6 +344,8 @@ namespace AntennaAV.ViewModels
 
         private void UpdateTabCommands()
         {
+            OnPropertyChanged(nameof(CanRemoveTab));
+            OnPropertyChanged(nameof(CanRemoveTabWhenPortOpen));
             RemoveTabCommand.NotifyCanExecuteChanged();
         }
 
@@ -365,6 +357,8 @@ namespace AntennaAV.ViewModels
         [RelayCommand(CanExecute = nameof(CanEditOrDelete))]
         private void RemoveTab()
         {
+            if (Tabs.Count == 1)
+                return;
             if (SelectedTab is not null)
             {
                 Tabs.Remove(SelectedTab);
@@ -384,6 +378,8 @@ namespace AntennaAV.ViewModels
             Tabs.CollectionChanged += (_, _) =>
             {
                 OnPropertyChanged(nameof(HasTabs));
+                OnPropertyChanged(nameof(CanRemoveTab));
+                OnPropertyChanged(nameof(CanRemoveTabWhenPortOpen));
             };
 
             AddTab();
@@ -646,6 +642,7 @@ namespace AntennaAV.ViewModels
 
 
 
+        [RelayCommand]
         public void CancelDiagramAcquisition()
         {
             _acquisitionCts?.Cancel();
@@ -670,8 +667,6 @@ namespace AntennaAV.ViewModels
 
             IsDiagramAcquisitionRunning = true;
             _isDiagramDataCollecting = false;
-            OnPropertyChanged(nameof(DiagramButtonText));
-            OnPropertyChanged(nameof(DiagramButtonCommand));
 
             try
             {
@@ -850,8 +845,6 @@ namespace AntennaAV.ViewModels
             finally
             {
                 IsDiagramAcquisitionRunning = false;
-                OnPropertyChanged(nameof(DiagramButtonText));
-                OnPropertyChanged(nameof(DiagramButtonCommand));
                 StopTableUpdateTimer();
                 Debug.WriteLine("=== КОНЕЦ СНЯТИЯ ДИАГРАММЫ ===");
             }
@@ -977,6 +970,15 @@ namespace AntennaAV.ViewModels
             {
                 _comPortService.SetAntennaAngle(angle, "R", "S");
             }
+        }
+
+        [ObservableProperty]
+        private bool isDarkTheme;
+
+        partial void OnIsDarkThemeChanged(bool value)
+        {
+            ((App)Avalonia.Application.Current!).SetTheme(
+                value ? ThemeVariant.Dark : ThemeVariant.Light);
         }
 
     }

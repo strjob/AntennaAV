@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Markup;
+using Avalonia.Styling;
 
 namespace AntennaAV.Views
 {
@@ -29,7 +30,16 @@ namespace AntennaAV.Views
         {
             InitializeComponent();
             this.Closing += MainWindow_Closing;
-            _polarAxis = Plots.Initialize(AvaPlot1);
+            // Удаляем старую ось, если есть (на старте не нужно, но для универсальности)
+            if (_polarAxis != null)
+            {
+                AvaPlot1.Plot.Remove(_polarAxis);
+                _polarAxis = null;
+            }
+            bool isDark = Application.Current!.ActualThemeVariant == ThemeVariant.Dark;
+            _polarAxis = Plots.Initialize(AvaPlot1, isDark);
+            // При инициализации просто передаём true для isLogScale
+            Plots.AutoUpdatePolarAxisCircles(AvaPlot1, _polarAxis, true, -50, 0, isDark);
             NumericUpDownSectorSize.AddHandler(InputElement.KeyDownEvent, NumericUpDown_KeyDown, RoutingStrategies.Tunnel);
             NumericUpDownSectorCenter.AddHandler(InputElement.KeyDownEvent, NumericUpDown_KeyDown, RoutingStrategies.Tunnel);
 
@@ -43,7 +53,7 @@ namespace AntennaAV.Views
                         var limits = AvaPlot1.Plot.Axes.GetLimits();
 
                         // Проверка на пустой массив и вывод длины
-                        System.Diagnostics.Debug.WriteLine($"OnBuildRadarPlot: values.Length={values?.Length ?? -1}");
+                        //System.Diagnostics.Debug.WriteLine($"OnBuildRadarPlot: values.Length={values?.Length ?? -1}");
                         if (values == null || values.Length == 0)
                             return;
 
@@ -80,13 +90,20 @@ namespace AntennaAV.Views
                         {
                             if (seg.Count > 1)
                             {
-                                var color = ScottPlot.Color.FromHex(vm.SelectedTab.Plot.ColorHex);
+                                var color = ScottPlot.Color.FromHex(vm.SelectedTab?.Plot?.ColorHex ?? "#0000FF");
                                 var scatter = AvaPlot1.Plot.Add.Scatter(seg, color: color);
+                                scatter.MarkerSize = 0;
+                                scatter.LineWidth = 2;
+                                scatter.Smooth = true;
                                 _dataScatters.Add(scatter);
                             }
                         }
                         // Восстанавливаем лимиты
                         AvaPlot1.Plot.Axes.SetLimits(limits);
+
+                        // === Добавлено: обновление кругов полярной оси ===
+                        bool isLogScale = vm.IsPowerNormSelected; 
+                        Plots.AutoUpdatePolarAxisCircles(AvaPlot1, _polarAxis, isLogScale, min, max, isDark);
                         AvaPlot1.Refresh();
                     };
 
@@ -100,6 +117,20 @@ namespace AntennaAV.Views
                         {
                             if (vm.DataFlowStatus.Contains("Данные идут"))
                                 DrawReceiverAngleArrow(vm.ReceiverAngleDeg);
+                        }
+                        else if (e.PropertyName == nameof(vm.IsPowerNormSelected))
+                        {
+                            // Проверяем, есть ли данные для построения графика
+                            bool hasData = vm.Tabs.Any(tab => tab.Plot != null && tab.Plot.Angles.Length > 0);
+                            if (!hasData && _polarAxis != null)
+                            {
+                                bool isDark = Application.Current!.ActualThemeVariant == ThemeVariant.Dark;
+                                if (vm.IsPowerNormSelected)
+                                    Plots.AutoUpdatePolarAxisCircles(AvaPlot1, _polarAxis, true, -50, 0, isDark);
+                                else
+                                    Plots.AutoUpdatePolarAxisCircles(AvaPlot1, _polarAxis, false, 0, 1, isDark);
+                                AvaPlot1.Refresh();
+                            }
                         }
                     };
 
@@ -138,7 +169,7 @@ namespace AntennaAV.Views
 
                            
                         _sectorPolygon = AvaPlot1.Plot.Add.Polygon(points.ToArray());
-                        _sectorPolygon.FillColor = Colors.DarkGray.WithAlpha(.7);
+                        _sectorPolygon.FillColor = Colors.DarkGray.WithAlpha(.5);
                         _sectorPolygon.LineWidth = 0;
 
                         // Добавлено: скрывать сектор, если чекбокс снят
@@ -208,7 +239,8 @@ namespace AntennaAV.Views
             ExportButton.Click += async (_, _) =>
             {
                 if (DataContext is MainWindowViewModel vm)
-                    await vm.ExportSelectedTabAsync(this);
+                    if (vm.SelectedTab != null)
+                        await vm.ExportSelectedTabAsync(this);
             };
 
             this.DataContextChanged += (s, e) =>
@@ -226,6 +258,8 @@ namespace AntennaAV.Views
                     };
                 }
             };
+            Application.Current!.ActualThemeVariantChanged += OnThemeChanged;
+            SetScottPlotTheme(Application.Current!.ActualThemeVariant == ThemeVariant.Dark);
         }
 
         private void DrawReceiverAngleArrow(double angleDeg)
@@ -368,15 +402,21 @@ namespace AntennaAV.Views
                 {
                     var color = ScottPlot.Color.FromHex(tab.Plot.ColorHex);
                     var scatter = AvaPlot1.Plot.Add.Scatter(coords, color: color);
+                    scatter.MarkerSize = 0;
+                    scatter.LineWidth = 2;
                     _dataScatters.Add(scatter);
+                    // === Обновление кругов ===
+                    bool isLogScale = vm.IsPowerNormSelected;
+                    bool isDark = Application.Current!.ActualThemeVariant == ThemeVariant.Dark;
+                    Plots.AutoUpdatePolarAxisCircles(AvaPlot1, _polarAxis, isLogScale, min, max, isDark);
+                    AvaPlot1.Refresh();
                 }
-                AvaPlot1.Refresh();
             }
         }
 
         private void TogglePlotVisibility_Click(object? sender, RoutedEventArgs e)
         {
-            if (this.DataContext is MainWindowViewModel vm && vm.SelectedTab != null)
+            if (this.DataContext is MainWindowViewModel vm && vm.SelectedTab != null && vm.SelectedTab.Plot != null)
             {
                 vm.SelectedTab.Plot.IsVisible = !vm.SelectedTab.Plot.IsVisible;
                 DrawAllVisiblePlots();
@@ -393,22 +433,44 @@ namespace AntennaAV.Views
             _dataScatters.Clear();
 
             if (_polarAxis == null) return;
+            bool isLogScale = vm.IsPowerNormSelected;
+            double? globalMin = null, globalMax = null;
+            // Сначала ищем общий min/max по всем видимым графикам
+            foreach (var tab in vm.Tabs)
+            {
+                if (tab.Plot != null && tab.Plot.IsVisible)
+                {
+                    double[] values = isLogScale ? tab.Plot.PowerNormValues : tab.Plot.VoltageNormValues;
+                    if (values.Length > 1)
+                    {
+                        double min = values.Min();
+                        double max = values.Max();
+                        globalMin = globalMin.HasValue ? Math.Min(globalMin.Value, min) : min;
+                        globalMax = globalMax.HasValue ? Math.Max(globalMax.Value, max) : max;
+                    }
+                }
+            }
+            // Если нет данных — не обновлять круги и не строить графики
+            if (!globalMin.HasValue || !globalMax.HasValue || globalMax.Value <= globalMin.Value)
+            {
+                AvaPlot1.Refresh();
+                return;
+            }
+            // Теперь строим все графики с общей нормализацией
             foreach (var tab in vm.Tabs)
             {
                 if (tab.Plot != null && tab.Plot.IsVisible)
                 {
                     double[] angles = tab.Plot.Angles;
-                    double[] values = vm.IsPowerNormSelected ? tab.Plot.PowerNormValues : tab.Plot.VoltageNormValues;
+                    double[] values = isLogScale ? tab.Plot.PowerNormValues : tab.Plot.VoltageNormValues;
                     if (angles.Length == 0 || values.Length == 0 || angles.Length != values.Length)
                         continue;
-                    double min = values.Min();
-                    double max = values.Max();
                     double r_max = 100;
                     List<ScottPlot.Coordinates> coords = new();
                     for (int i = 0; i < angles.Length; i++)
                     {
                         double mirroredAngle = (360 - angles[i]) % 360;
-                        double r = (max - min) > 0 ? r_max * (values[i] - min) / (max - min) : r_max;
+                        double r = (globalMax.Value - globalMin.Value) > 0 ? r_max * (values[i] - globalMin.Value) / (globalMax.Value - globalMin.Value) : r_max;
                         var pt = _polarAxis.GetCoordinates(r, mirroredAngle);
                         coords.Add(pt);
                     }
@@ -416,11 +478,64 @@ namespace AntennaAV.Views
                     {
                         var color = ScottPlot.Color.FromHex(tab.Plot.ColorHex);
                         var scatter = AvaPlot1.Plot.Add.Scatter(coords, color: color);
+                        scatter.MarkerSize = 0;
+                        scatter.LineWidth = 2;
                         _dataScatters.Add(scatter);
                     }
                 }
             }
+            // Обновляем круги по общему диапазону
+            bool isDark = Application.Current!.ActualThemeVariant == ThemeVariant.Dark;
+            Plots.AutoUpdatePolarAxisCircles(AvaPlot1, _polarAxis, isLogScale, globalMin.Value, globalMax.Value, isDark);
             AvaPlot1.Refresh();
+        }
+
+        private void OnThemeChanged(object? sender, EventArgs e)
+        {
+            var isDark = Application.Current!.ActualThemeVariant == ThemeVariant.Dark;
+            SetScottPlotTheme(isDark);
+            // Удаляем старую полярную ось и создаём новую с нужной темой
+            if (_polarAxis != null)
+            {
+                AvaPlot1.Plot.Remove(_polarAxis);
+                _polarAxis = null;
+            }
+            if (this.DataContext is MainWindowViewModel vm)
+            {
+                _polarAxis = Plots.Initialize(AvaPlot1, isDark);
+                bool isLogScale = vm.IsPowerNormSelected;
+                Plots.AutoUpdatePolarAxisCircles(AvaPlot1, _polarAxis, isLogScale, -50, 0, isDark);
+            }
+        }
+
+        private void SetScottPlotTheme(bool isDark)
+        {
+            if (AvaPlot1?.Plot != null)
+            {
+                if (isDark)
+                {
+                    AvaPlot1.Plot.FigureBackground.Color = ScottPlot.Color.FromHex("#181818");
+                    AvaPlot1.Plot.DataBackground.Color = ScottPlot.Color.FromHex("#1f1f1f");
+                    AvaPlot1.Plot.Axes.Color(ScottPlot.Color.FromHex("#d7d7d7"));
+                    AvaPlot1.Plot.Grid.MajorLineColor = ScottPlot.Color.FromHex("#404040");
+                    AvaPlot1.Plot.Legend.BackgroundColor = ScottPlot.Color.FromHex("#404040");
+                    AvaPlot1.Plot.Legend.FontColor = ScottPlot.Color.FromHex("#d7d7d7");
+                    AvaPlot1.Plot.Legend.OutlineColor = ScottPlot.Color.FromHex("#d7d7d7");
+                    AvaPlot1.Plot.Add.Palette = new ScottPlot.Palettes.Penumbra();
+                }
+                else
+                {
+                    AvaPlot1.Plot.FigureBackground.Color = ScottPlot.Color.FromHex("#ffffff");
+                    AvaPlot1.Plot.DataBackground.Color = ScottPlot.Color.FromHex("#ffffff");
+                    AvaPlot1.Plot.Axes.Color(ScottPlot.Color.FromHex("#222222"));
+                    AvaPlot1.Plot.Grid.MajorLineColor = ScottPlot.Color.FromHex("#e5e5e5");
+                    AvaPlot1.Plot.Legend.BackgroundColor = ScottPlot.Color.FromHex("#f0f0f0");
+                    AvaPlot1.Plot.Legend.FontColor = ScottPlot.Color.FromHex("#222222");
+                    AvaPlot1.Plot.Legend.OutlineColor = ScottPlot.Color.FromHex("#222222");
+                    AvaPlot1.Plot.Add.Palette = new ScottPlot.Palettes.Category10();
+                }
+                AvaPlot1.Refresh();
+            }
         }
     }
 }
