@@ -310,52 +310,6 @@ namespace AntennaAV.Services
             }
         }
 
-        private static string? TryReadMessage(SerialPortStream port, int timeoutMs = 500)
-        {
-            var buffer = new StringBuilder();
-            bool insideMessage = false;
-
-            int originalTimeout = port.ReadTimeout;
-            try
-            {
-                port.ReadTimeout = timeoutMs;
-
-                while (true)
-                {
-                    int b;
-                    try
-                    {
-                        b = port.ReadByte(); // Блокирующее чтение до таймаута
-                    }
-                    catch (TimeoutException)
-                    {
-                        break; // Время вышло, выходим из метода
-                    }
-
-                    char c = (char)b;
-
-                    if (c == '#')
-                    {
-                        buffer.Clear();
-                        buffer.Append(c);
-                        insideMessage = true;
-                    }
-                    else if (insideMessage)
-                    {
-                        buffer.Append(c);
-                        if (c == '$')
-                            return buffer.ToString();
-                    }
-                }
-            }
-            finally
-            {
-                port.ReadTimeout = originalTimeout; // Восстанавливаем изначальное значение
-            }
-
-            return null;
-        }
-
         private DateTime? deviceStartTime = null;
         private int? firstSystick = null;
         private int? prevSystick = null;

@@ -94,7 +94,6 @@ namespace AntennaAV.Views
                                 var scatter = AvaPlot1.Plot.Add.Scatter(seg, color: color);
                                 scatter.MarkerSize = 0;
                                 scatter.LineWidth = 2;
-                                scatter.Smooth = true;
                                 _dataScatters.Add(scatter);
                             }
                         }
@@ -390,27 +389,41 @@ namespace AntennaAV.Views
                 double min = values.Min();
                 double max = values.Max();
                 double r_max = 100;
-                List<ScottPlot.Coordinates> coords = new();
+                // Разбиваем на сегменты по разрывам углов
+                List<List<ScottPlot.Coordinates>> segments = new();
+                List<ScottPlot.Coordinates> current = new();
                 for (int i = 0; i < angles.Length; i++)
                 {
                     double mirroredAngle = (360 - angles[i]) % 360;
                     double r = (max - min) > 0 ? r_max * (values[i] - min) / (max - min) : r_max;
                     var pt = _polarAxis.GetCoordinates(r, mirroredAngle);
-                    coords.Add(pt);
+                    if (i > 0 && Math.Abs(angles[i] - angles[i - 1]) > 1.0)
+                    {
+                        if (current.Count > 0)
+                            segments.Add(current);
+                        current = new List<ScottPlot.Coordinates>();
+                    }
+                    current.Add(pt);
                 }
-                if (coords.Count > 1)
+                if (current.Count > 0)
+                    segments.Add(current);
+
+                var color = ScottPlot.Color.FromHex(tab.Plot.ColorHex);
+                foreach (var seg in segments)
                 {
-                    var color = ScottPlot.Color.FromHex(tab.Plot.ColorHex);
-                    var scatter = AvaPlot1.Plot.Add.Scatter(coords, color: color);
-                    scatter.MarkerSize = 0;
-                    scatter.LineWidth = 2;
-                    _dataScatters.Add(scatter);
-                    // === Обновление кругов ===
-                    bool isLogScale = vm.IsPowerNormSelected;
-                    bool isDark = Application.Current!.ActualThemeVariant == ThemeVariant.Dark;
-                    Plots.AutoUpdatePolarAxisCircles(AvaPlot1, _polarAxis, isLogScale, min, max, isDark);
-                    AvaPlot1.Refresh();
+                    if (seg.Count > 1)
+                    {
+                        var scatter = AvaPlot1.Plot.Add.Scatter(seg, color: color);
+                        scatter.MarkerSize = 0;
+                        scatter.LineWidth = 2;
+                        _dataScatters.Add(scatter);
+                    }
                 }
+                // === Обновление кругов ===
+                bool isLogScale = vm.IsPowerNormSelected;
+                bool isDark = Application.Current!.ActualThemeVariant == ThemeVariant.Dark;
+                Plots.AutoUpdatePolarAxisCircles(AvaPlot1, _polarAxis, isLogScale, min, max, isDark);
+                AvaPlot1.Refresh();
             }
         }
 
@@ -466,21 +479,35 @@ namespace AntennaAV.Views
                     if (angles.Length == 0 || values.Length == 0 || angles.Length != values.Length)
                         continue;
                     double r_max = 100;
-                    List<ScottPlot.Coordinates> coords = new();
+                    // Разбиваем на сегменты по разрывам углов
+                    List<List<ScottPlot.Coordinates>> segments = new();
+                    List<ScottPlot.Coordinates> current = new();
                     for (int i = 0; i < angles.Length; i++)
                     {
                         double mirroredAngle = (360 - angles[i]) % 360;
                         double r = (globalMax.Value - globalMin.Value) > 0 ? r_max * (values[i] - globalMin.Value) / (globalMax.Value - globalMin.Value) : r_max;
                         var pt = _polarAxis.GetCoordinates(r, mirroredAngle);
-                        coords.Add(pt);
+                        if (i > 0 && Math.Abs(angles[i] - angles[i - 1]) > 1.0)
+                        {
+                            if (current.Count > 0)
+                                segments.Add(current);
+                            current = new List<ScottPlot.Coordinates>();
+                        }
+                        current.Add(pt);
                     }
-                    if (coords.Count > 1)
+                    if (current.Count > 0)
+                        segments.Add(current);
+
+                    var color = ScottPlot.Color.FromHex(tab.Plot.ColorHex);
+                    foreach (var seg in segments)
                     {
-                        var color = ScottPlot.Color.FromHex(tab.Plot.ColorHex);
-                        var scatter = AvaPlot1.Plot.Add.Scatter(coords, color: color);
-                        scatter.MarkerSize = 0;
-                        scatter.LineWidth = 2;
-                        _dataScatters.Add(scatter);
+                        if (seg.Count > 1)
+                        {
+                            var scatter = AvaPlot1.Plot.Add.Scatter(seg, color: color);
+                            scatter.MarkerSize = 0;
+                            scatter.LineWidth = 2;
+                            _dataScatters.Add(scatter);
+                        }
                     }
                 }
             }

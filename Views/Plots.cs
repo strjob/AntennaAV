@@ -76,11 +76,12 @@ namespace AntennaAV.Views
                 avaPlot.Plot.Remove(line);
             _customSpokeLines.Clear();
 
-            if (polarAxis.Circles.Count < 2)
-                return;
-            double rStart = polarAxis.Circles[0].Radius;
-            double rEnd = polarAxis.Circles.Last().Radius;
+            double rStart = 10;
+            double rEnd = 100;
             var lineColor = isDark ? ScottPlot.Color.FromHex("#777777") : ScottPlot.Color.FromHex("#BBBBBB");
+
+            rStart = polarAxis.Circles[0].Radius;
+            //rEnd = polarAxis.Circles.Last().Radius;
 
             for (int angle = 0; angle < 360; angle += 10)
             {
@@ -97,6 +98,8 @@ namespace AntennaAV.Views
                 line.LinePattern = ScottPlot.LinePattern.Dotted;
                 _customSpokeLines.Add(line);
             }
+          
+               
         }
 
         public static void AutoUpdatePolarAxisCircles(
@@ -109,38 +112,108 @@ namespace AntennaAV.Views
             int minCircles = 2,
             int maxCircles = 7)
         {
-            // 1. Выбираем красивый шаг
-            double range = maxValue - minValue;
+            // Проверка относительной разницы между minValue и maxValue
+            double relDiff = Math.Abs(maxValue - minValue) / Math.Max(Math.Max(Math.Abs(maxValue), Math.Abs(minValue)), 1);
+            if (relDiff < 0.02)
+            {
+                double value50 = (minValue + maxValue) / 2;
+                double value10 = minValue + (maxValue - minValue) * 0.1;
+                for (int i = 0; i < polarAxis.Circles.Count; i++)
+                {
+                    if (i == 0)
+                    {
+                        polarAxis.Circles[i].Radius = 10;
+                        polarAxis.Circles[i].LabelText = isLogScale
+                            ? $"{Math.Round(value10, 1)} дБ"
+                            : $"{Math.Round(value10, 1)}";
+                        polarAxis.Circles[i].LineWidth = 1;
+                        polarAxis.Circles[i].LinePattern = ScottPlot.LinePattern.Dotted;
+                        polarAxis.Circles[i].LineColor = isDark ? ScottPlot.Color.FromHex("#777777") : ScottPlot.Color.FromHex("#BBBBBB");
+                        polarAxis.Circles[i].LabelStyle.ForeColor = isDark ? ScottPlot.Color.FromHex("#eeeeee") : ScottPlot.Color.FromHex("#111111");
+                    }
+                    else if (i == 1)
+                    {
+                        polarAxis.Circles[i].Radius = 50;
+                        polarAxis.Circles[i].LabelText = isLogScale
+                            ? $"{Math.Round(value50, 1)} дБ"
+                            : $"{Math.Round(value50, 1)}";
+                        polarAxis.Circles[i].LineWidth = 1;
+                        polarAxis.Circles[i].LinePattern = ScottPlot.LinePattern.Dotted;
+                        polarAxis.Circles[i].LineColor = isDark ? ScottPlot.Color.FromHex("#777777") : ScottPlot.Color.FromHex("#BBBBBB");
+                        polarAxis.Circles[i].LabelStyle.ForeColor = isDark ? ScottPlot.Color.FromHex("#eeeeee") : ScottPlot.Color.FromHex("#111111");
+                    }
+                    else if (i == 2)
+                    {
+                        polarAxis.Circles[i].Radius = 100;
+                        polarAxis.Circles[i].LabelText = "";
+                        polarAxis.Circles[i].LineWidth = 2;
+                        polarAxis.Circles[i].LinePattern = ScottPlot.LinePattern.Solid;
+                        polarAxis.Circles[i].LineColor = isDark ? ScottPlot.Color.FromHex("#bbbbbb") : ScottPlot.Color.FromHex("#666666");
+                        polarAxis.Circles[i].LabelStyle.ForeColor = isDark ? ScottPlot.Color.FromHex("#eeeeee") : ScottPlot.Color.FromHex("#111111");
+                    }
+                    else
+                    {
+                        polarAxis.Circles[i].Radius = 0;
+                        polarAxis.Circles[i].LabelText = "";
+                    }
+                }
+                AddCustomSpokeLines(avaPlot, polarAxis, isDark);
+                return;
+            }
+            // 1. Красивые шаги (только стандартные, без дробных)
             double[] possibleSteps = {0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 30000, 50000, 100000 };
+            double range = maxValue - minValue;
+            // 2. Находим красивый шаг (только целые или стандартные значения)
             double step = possibleSteps
                 .Select(s => new { s, count = Math.Ceiling(range / s) })
                 .Where(x => x.count >= minCircles && x.count <= maxCircles)
                 .OrderBy(x => Math.Abs(x.count - (minCircles + maxCircles) / 2))
                 .Select(x => x.s)
                 .FirstOrDefault(10);
-
-            // 2. Генерируем значения для подписей
-            List<double> circleValues = new();
-            double start = Math.Ceiling(minValue / step) * step;
-            double end = Math.Floor(maxValue / step) * step;
-            for (double v = start; v <= end; v += step)
+            // 3. Округляем minValue вниз, maxValue вверх к красивым значениям по модулю
+            double NiceFloor(double value, double step)
             {
-                double r = (maxValue - minValue) > 0 ? 100 * (v - minValue) / (maxValue - minValue) : 100;
-                if (r >= 10)
-                    circleValues.Add(v);
+                if (value >= 0)
+                    return Math.Floor(value / step) * step;
+                else
+                    return -Math.Ceiling(Math.Abs(value) / step) * step;
             }
-            // Гарантируем, что внешний круг всегда есть и его радиус = 100
-            if (circleValues.Count == 0 || Math.Abs(circleValues.Last() - maxValue) > 1e-6)
-                circleValues.Add(maxValue);
-            var labelColor = isDark ? ScottPlot.Color.FromHex("#eeeeee") : ScottPlot.Color.FromHex("#111111");
-            var lineColor = isDark ? ScottPlot.Color.FromHex("#777777") : ScottPlot.Color.FromHex("#BBBBBB");
-            // 3. Обновляем круги
+            double NiceCeil(double value, double step)
+            {
+                if (value >= 0)
+                    return Math.Ceiling(value / step) * step;
+                else
+                    return -Math.Floor(Math.Abs(value) / step) * step;
+            }
+            double niceMin = NiceFloor(minValue, step);
+            double niceMax = NiceCeil(maxValue, step);
+            // 4. Генерируем красивые значения строго по шагу, с защитой от накопления ошибок
+            List<double> circleValues = new();
+            for (double v = niceMin; v <= niceMax + step * 0.1; v += step)
+                circleValues.Add(Math.Round(v, 6));
+            // 5. Сортируем значения
+            circleValues = circleValues.OrderBy(v => v).ToList();
+            // 6. Фильтруем по радиусу >= 10% (кроме niceMax)
+            circleValues = circleValues
+                .Where(v => v == niceMax || ((niceMax - niceMin) > 0 ? 100 * (v - niceMin) / (niceMax - niceMin) : 100) >= 10)
+                .ToList();
+            // 7. Радиусы: первый и последний — по формуле, промежуточные — равномерно между ними
             int n = Math.Min(polarAxis.Circles.Count, circleValues.Count);
+            if (n == 0) return;
+            double r0 = ((niceMax - niceMin) > 0) ? 100 * (circleValues[0] - niceMin) / (niceMax - niceMin) : 100;
+            double rN = 100;
             for (int i = 0; i < n; i++)
             {
                 double value = circleValues[i];
-                double r = (i == n - 1) ? 100 : (maxValue - minValue) > 0 ? 100 * (value - minValue) / (maxValue - minValue) : 100;
+                double r;
+                if (i == 0)
+                    r = r0;
+                else if (i == n - 1)
+                    r = rN;
+                else
+                    r = r0 + (rN - r0) * i / (n - 1);
                 polarAxis.Circles[i].Radius = r;
+                var labelColor = isDark ? ScottPlot.Color.FromHex("#eeeeee") : ScottPlot.Color.FromHex("#111111");
                 polarAxis.Circles[i].LabelStyle.ForeColor = labelColor;
                 if (i == n - 1)
                 {

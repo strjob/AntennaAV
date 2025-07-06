@@ -418,12 +418,9 @@ namespace AntennaAV.ViewModels
 
 
 
-        private bool plotflag = true;
-
         private void OnUiTimerTick()
         {
             bool dataReceived = false;
-            plotflag = !plotflag;
             if (_comPortService.IsOpen && !Design.IsDesignMode)
             {
                 AntennaData? lastData = null;
@@ -440,23 +437,7 @@ namespace AntennaAV.ViewModels
                         lastData = data;
                         dataReceived = true;
                     }
-                    if (OnBuildRadarPlot != null && plotflag && IsRealtimeMode)
-                    {
-                        var angles = _collector.GetGraphAngles();
-                        double[] values;
-                        if (IsPowerNormSelected)
-                            values = _collector.GetGraphValues(d => d.PowerDbm);
-                        else
-                            values = _collector.GetGraphValues(d => d.Voltage);
-                        OnBuildRadarPlot.Invoke(angles, values);
-                        // Сохраняем сырые данные для графика в PlotData активной вкладки
-                        if (SelectedTab != null)
-                        {
-                            SelectedTab.Plot.Angles = angles;
-                            SelectedTab.Plot.PowerNormValues = _collector.GetGraphValues(d => d.PowerDbm);
-                            SelectedTab.Plot.VoltageNormValues = _collector.GetGraphValues(d => d.Voltage);
-                        }
-                    }
+
                 }
                 else
                 {
@@ -897,7 +878,7 @@ namespace AntennaAV.ViewModels
             if (_tableUpdateTimer == null)
             {
                 _tableUpdateTimer = new DispatcherTimer();
-                _tableUpdateTimer.Interval = TimeSpan.FromMilliseconds(200);
+                _tableUpdateTimer.Interval = TimeSpan.FromMilliseconds(500);
                 _tableUpdateTimer.Tick += (s, e) => UpdateTable();
             }
             _tableUpdateTimer.Start();
@@ -910,10 +891,27 @@ namespace AntennaAV.ViewModels
 
         private void UpdateTable()
         {
-            if (SelectedTab != null)
+            if (SelectedTab != null && IsRealtimeMode)
             {
                 var newData = _collector.GetTableData();
                 SelectedTab.AntennaDataCollection.ReplaceRange(newData);
+            }
+            if (OnBuildRadarPlot != null && IsRealtimeMode)
+            {
+                var angles = _collector.GetGraphAngles();
+                double[] values;
+                if (IsPowerNormSelected)
+                    values = _collector.GetGraphValues(d => d.PowerDbm);
+                else
+                    values = _collector.GetGraphValues(d => d.Voltage);
+                OnBuildRadarPlot.Invoke(angles, values);
+                // Сохраняем сырые данные для графика в PlotData активной вкладки
+                if (SelectedTab != null)
+                {
+                    SelectedTab.Plot.Angles = angles;
+                    SelectedTab.Plot.PowerNormValues = _collector.GetGraphValues(d => d.PowerDbm);
+                    SelectedTab.Plot.VoltageNormValues = _collector.GetGraphValues(d => d.Voltage);
+                }
             }
         }
 
