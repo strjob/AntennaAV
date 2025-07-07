@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using static AntennaAV.Services.ComPortManager;
 using Avalonia.Media;
 using Avalonia.Styling;
+using System.ComponentModel;
 
 
 namespace AntennaAV.ViewModels
@@ -49,7 +50,7 @@ namespace AntennaAV.ViewModels
         }
 
 
-
+        partial void OnSelectedTabChanged(TabViewModel? oldValue, TabViewModel? newValue);
         private readonly DispatcherTimer _uiTimer = new();
 
         public bool IsDiagramRecording = false;
@@ -978,6 +979,8 @@ namespace AntennaAV.ViewModels
             ((App)Avalonia.Application.Current!).SetTheme(
                 value ? ThemeVariant.Dark : ThemeVariant.Light);
         }
+
+
 
     }
 }

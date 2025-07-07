@@ -4,6 +4,7 @@ using ScottPlot.Avalonia;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 
 namespace AntennaAV.Views
 {
@@ -11,11 +12,22 @@ namespace AntennaAV.Views
     {
         private static List<IPlottable> _customSpokeLines = new();
 
+        private static string[] CreateListofAngles(int step)
+        {
+            string[] ret = new string[360 / step];
+
+            for (int i = 0; i < ret.Length; i++)
+            {
+                ret[i] = (i * step).ToString();
+            }
+            return ret;
+        }
+
         public static ScottPlot.Plottables.PolarAxis Initialize(AvaPlot avaPlot, bool isDark)
         {
             var polarAxis = avaPlot.Plot.Add.PolarAxis(radius: 100);
             polarAxis.Rotation = Angle.FromDegrees(90);
-            string[] labels = { "0", "30", "60", "90", "120", "150", "180", "210", "240", "270", "300", "330" };
+            var labels = CreateListofAngles(30);// { "0", "30", "60", "90", "120", "150", "180", "210", "240", "270", "300", "330" };
             polarAxis.SetSpokes(labels, 95, true);
 
             // Цвета для темной и светлой темы
@@ -83,7 +95,7 @@ namespace AntennaAV.Views
             rStart = polarAxis.Circles[0].Radius;
             //rEnd = polarAxis.Circles.Last().Radius;
 
-            for (int angle = 0; angle < 360; angle += 10)
+            for (double angle = 0; angle < 360; angle += 10)
             {
                 if (angle % 30 == 0) rStart = polarAxis.Circles[0].Radius;
                 else rStart = polarAxis.Circles[1].Radius;
