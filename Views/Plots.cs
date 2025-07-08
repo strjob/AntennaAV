@@ -121,58 +121,18 @@ namespace AntennaAV.Views
             double minValue,
             double maxValue,
             bool isDark,
-            int minCircles = 2,
-            int maxCircles = 7)
+            int minCircles = 3,
+            int maxCircles = 8)
         {
+            // Оставить только внешний круг (последний)
+            while (polarAxis.Circles.Count > 1)
+                polarAxis.Circles.RemoveAt(polarAxis.Circles.Count - 2); // удаляем все, кроме последнего
             // Проверка относительной разницы между minValue и maxValue
             double relDiff = Math.Abs(maxValue - minValue) / Math.Max(Math.Max(Math.Abs(maxValue), Math.Abs(minValue)), 1);
-            if (relDiff < 0.02)
-            {
-                double value50 = (minValue + maxValue) / 2;
-                double value10 = minValue + (maxValue - minValue) * 0.1;
-                for (int i = 0; i < polarAxis.Circles.Count; i++)
-                {
-                    if (i == 0)
-                    {
-                        polarAxis.Circles[i].Radius = 10;
-                        polarAxis.Circles[i].LabelText = isLogScale
-                            ? $"{Math.Round(value10, 1)} дБ"
-                            : $"{Math.Round(value10, 1)}";
-                        polarAxis.Circles[i].LineWidth = 1;
-                        polarAxis.Circles[i].LinePattern = ScottPlot.LinePattern.Dotted;
-                        polarAxis.Circles[i].LineColor = isDark ? ScottPlot.Color.FromHex("#777777") : ScottPlot.Color.FromHex("#BBBBBB");
-                        polarAxis.Circles[i].LabelStyle.ForeColor = isDark ? ScottPlot.Color.FromHex("#eeeeee") : ScottPlot.Color.FromHex("#111111");
-                    }
-                    else if (i == 1)
-                    {
-                        polarAxis.Circles[i].Radius = 50;
-                        polarAxis.Circles[i].LabelText = isLogScale
-                            ? $"{Math.Round(value50, 1)} дБ"
-                            : $"{Math.Round(value50, 1)}";
-                        polarAxis.Circles[i].LineWidth = 1;
-                        polarAxis.Circles[i].LinePattern = ScottPlot.LinePattern.Dotted;
-                        polarAxis.Circles[i].LineColor = isDark ? ScottPlot.Color.FromHex("#777777") : ScottPlot.Color.FromHex("#BBBBBB");
-                        polarAxis.Circles[i].LabelStyle.ForeColor = isDark ? ScottPlot.Color.FromHex("#eeeeee") : ScottPlot.Color.FromHex("#111111");
-                    }
-                    else if (i == 2)
-                    {
-                        polarAxis.Circles[i].Radius = 100;
-                        polarAxis.Circles[i].LabelText = "";
-                        polarAxis.Circles[i].LineWidth = 2;
-                        polarAxis.Circles[i].LinePattern = ScottPlot.LinePattern.Solid;
-                        polarAxis.Circles[i].LineColor = isDark ? ScottPlot.Color.FromHex("#bbbbbb") : ScottPlot.Color.FromHex("#666666");
-                        polarAxis.Circles[i].LabelStyle.ForeColor = isDark ? ScottPlot.Color.FromHex("#eeeeee") : ScottPlot.Color.FromHex("#111111");
-                    }
-                    else
-                    {
-                        polarAxis.Circles[i].Radius = 0;
-                        polarAxis.Circles[i].LabelText = "";
-                    }
-                }
-                AddCustomSpokeLines(avaPlot, polarAxis, isDark);
-                return;
-            }
-            // 1. Красивые шаги (только стандартные, без дробных)
+            double[] positions = Array.Empty<double>();
+            string[] labels = Array.Empty<string>();
+
+            // 1. Пытаемся построить красивые круги
             double[] possibleSteps = {0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 30000, 50000, 100000 };
             double range = maxValue - minValue;
             // 2. Находим красивый шаг (только целые или стандартные значения)
@@ -183,19 +143,19 @@ namespace AntennaAV.Views
                 .Select(x => x.s)
                 .FirstOrDefault(10);
             // 3. Округляем minValue вниз, maxValue вверх к красивым значениям по модулю
-            double NiceFloor(double value, double step)
+            double NiceFloor(double value, double s)
             {
                 if (value >= 0)
-                    return Math.Floor(value / step) * step;
+                    return Math.Floor(value / s) * s;
                 else
-                    return -Math.Ceiling(Math.Abs(value) / step) * step;
+                    return -Math.Ceiling(Math.Abs(value) / s) * s;
             }
-            double NiceCeil(double value, double step)
+            double NiceCeil(double value, double s)
             {
                 if (value >= 0)
-                    return Math.Ceiling(value / step) * step;
+                    return Math.Ceiling(value / s) * s;
                 else
-                    return -Math.Floor(Math.Abs(value) / step) * step;
+                    return -Math.Floor(Math.Abs(value) / s) * s;
             }
             double niceMin = NiceFloor(minValue, step);
             double niceMax = NiceCeil(maxValue, step);
@@ -209,37 +169,55 @@ namespace AntennaAV.Views
             circleValues = circleValues
                 .Where(v => v == niceMax || ((niceMax - niceMin) > 0 ? 100 * (v - niceMin) / (niceMax - niceMin) : 100) >= 10)
                 .ToList();
-            // 7. Радиусы: первый и последний — по формуле, промежуточные — равномерно между ними
-            int n = Math.Min(polarAxis.Circles.Count, circleValues.Count);
-            if (n == 0) return;
-            double r0 = ((niceMax - niceMin) > 0) ? 100 * (circleValues[0] - niceMin) / (niceMax - niceMin) : 100;
-            double rN = 100;
-            for (int i = 0; i < n; i++)
+            // 7. Если получилось >=2 кругов — используем их, иначе строим стандартные 3 круга
+            if (circleValues.Count >= 2)
             {
-                double value = circleValues[i];
-                double r;
-                if (i == 0)
-                    r = r0;
-                else if (i == n - 1)
-                    r = rN;
-                else
-                    r = r0 + (rN - r0) * i / (n - 1);
-                polarAxis.Circles[i].Radius = r;
+                int n = circleValues.Count;
+                double r0 = ((niceMax - niceMin) > 0) ? 100 * (circleValues[0] - niceMin) / (niceMax - niceMin) : 100;
+                double rN = 100;
+                positions = new double[n];
+                labels = new string[n];
+                for (int i = 0; i < n; i++)
+                {
+                    double value = circleValues[i];
+                    double r;
+                    if (i == 0)
+                        r = r0;
+                    else if (i == n - 1)
+                        r = rN;
+                    else
+                        r = r0 + (rN - r0) * i / (n - 1);
+                    positions[i] = r;
+                    labels[i] = (i == n - 1) ? "" : (isLogScale ? $"{Math.Round(value, 1)} дБ" : $"{Math.Round(value, 1)}");
+                }
+            }
+            else
+            {
+                double value50 = (minValue + maxValue) / 2;
+                double value10 = minValue + (maxValue - minValue) * 0.1;
+                positions = new double[] { 10, 50, 100 };
+                labels = new string[] {
+                    isLogScale ? $"{Math.Round(value10, 1)} дБ" : $"{Math.Round(value10, 1)}",
+                    isLogScale ? $"{Math.Round(value50, 1)} дБ" : $"{Math.Round(value50, 1)}",
+                    "" // внешний круг без подписи
+                };
+            }
+            if (positions.Length == 0 || labels.Length == 0)
+                return;
+            polarAxis.SetCircles(positions, labels);
+            // Стилизация кругов
+            for (int i = 0; i < polarAxis.Circles.Count; i++)
+            {
                 var labelColor = isDark ? ScottPlot.Color.FromHex("#eeeeee") : ScottPlot.Color.FromHex("#111111");
                 polarAxis.Circles[i].LabelStyle.ForeColor = labelColor;
-                if (i == n - 1)
+                if (i == polarAxis.Circles.Count - 1)
                 {
-                    // Самый внешний круг — всегда сплошной и толстый
-                    polarAxis.Circles[i].LabelText = "";
                     polarAxis.Circles[i].LineWidth = 2;
                     polarAxis.Circles[i].LinePattern = ScottPlot.LinePattern.Solid;
                     polarAxis.Circles[i].LineColor = isDark ? ScottPlot.Color.FromHex("#bbbbbb") : ScottPlot.Color.FromHex("#666666");
                 }
                 else
                 {
-                    polarAxis.Circles[i].LabelText = isLogScale
-                        ? $"{Math.Round(value, 1)} дБ"
-                        : $"{Math.Round(value, 1)}";
                     polarAxis.Circles[i].LineWidth = 1;
                     polarAxis.Circles[i].LinePattern = ScottPlot.LinePattern.Dotted;
                     polarAxis.Circles[i].LineColor = isDark ? ScottPlot.Color.FromHex("#777777") : ScottPlot.Color.FromHex("#BBBBBB");

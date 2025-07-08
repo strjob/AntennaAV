@@ -55,21 +55,36 @@ namespace AntennaAV.Views
                         // Проверка на пустой массив и вывод длины
                         //System.Diagnostics.Debug.WriteLine($"OnBuildRadarPlot: values.Length={values?.Length ?? -1}");
                         if (values == null || values.Length == 0)
+                        {
+                            // Удаляем все старые графики, если данных нет
+                            foreach (var scatter in _dataScatters)
+                                AvaPlot1.Plot.Remove(scatter);
+                            _dataScatters.Clear();
+                            AvaPlot1.Refresh();
                             return;
+                        }
+
+                        // Сортировка по углу
+                        var zipped = angles.Zip(values, (a, v) => new { Angle = a, Value = v })
+                                           .OrderBy(x => x.Angle)
+                                           .ToList();
+                        var sortedAngles = zipped.Select(x => x.Angle).ToArray();
+                        var sortedValues = zipped.Select(x => x.Value).ToArray();
 
                         // Разбиваем на сегменты по разрывам углов
                         List<List<Coordinates>> segments = new();
                         List<Coordinates> current = new();
-                        double min = values.Min();
-                        double max = values.Max();
+                        double min = sortedValues.Min();
+                        double max = sortedValues.Max();
                         double r_max = 100;
-                        for (int i = 0; i < angles.Length; i++)
+                        bool allRadiiEqual = Math.Abs(max - min) < 1e-8;
+                        double angleGapThreshold = allRadiiEqual ? 30.0 : 1.0; // если мощности одинаковые, разрешаем большие разрывы, но не более 30°
+                        for (int i = 0; i < sortedAngles.Length; i++)
                         {
-                            double mirroredAngle = (360 - angles[i]) % 360; // если нужно отзеркалить
-                            double r = (max - min) > 0 ? r_max * (values[i] - min) / (max - min) : r_max;
-                           // System.Diagnostics.Debug.WriteLine($"min={min}, max={max}, value={values[i]}, r={r}");
+                            double mirroredAngle = (360 - sortedAngles[i]) % 360; // если нужно отзеркалить
+                            double r = (max - min) > 0 ? r_max * (sortedValues[i] - min) / (max - min) : r_max;
                             var pt = _polarAxis.GetCoordinates(r, mirroredAngle);
-                            if (i > 0 && Math.Abs(angles[i] - angles[i - 1]) > 1.0)
+                            if (i > 0 && Math.Abs(sortedAngles[i] - sortedAngles[i - 1]) > angleGapThreshold)
                             {
                                 if (current.Count > 0)
                                     segments.Add(current);
@@ -246,14 +261,36 @@ namespace AntennaAV.Views
             {
                 if (this.DataContext is MainWindowViewModel vm)
                 {
+                    // Уже есть подписка на PropertyChanged
                     vm.PropertyChanged += (s2, e2) =>
                     {
                         if (e2.PropertyName == nameof(vm.SelectedTabIndex) || e2.PropertyName == nameof(vm.IsDiagramAcquisitionRunning))
                         {
                             if (!vm.IsDiagramAcquisitionRunning && vm.SelectedTab != null)
                                 DrawTabPlot(vm.SelectedTab);
-                            DrawAllVisiblePlots();
+                            //DrawAllVisiblePlots();
                         }
+                       /* if (e2.PropertyName == nameof(vm.SelectedTab))
+                        {
+                            if (vm.SelectedTab?.Plot != null)
+                            {
+                                vm.SelectedTab.Plot.PropertyChanged += (s3, e3) =>
+                                {
+                                    if (e3.PropertyName == nameof(vm.SelectedTab.Plot.ColorHex))
+                                        DrawTabPlot(vm.SelectedTab);
+                                };
+                            }
+                        }*/
+                    };
+                    // Добавлено: подписка на изменение коллекции вкладок
+                    vm.Tabs.CollectionChanged += (s2, e2) =>
+                    {
+                        DrawAllVisiblePlots();
+                    };
+                    vm.RequestPlotRedraw += () =>
+                    {
+                        if (vm.SelectedTab != null)
+                            DrawTabPlot(vm.SelectedTab);
                     };
                 }
             };
@@ -371,44 +408,83 @@ namespace AntennaAV.Views
             }
         }
 
-        private void DrawTabPlot(TabViewModel tab)
+        public void DrawTabPlot(TabViewModel tab)
         {
             if (tab == null || tab.Plot == null)
                 return;
-            // Очистить старые графики
-            foreach (var scatter in _dataScatters)
+            // Очистить только свои графики
+            foreach (var scatter in tab.DataScatters)
                 AvaPlot1.Plot.Remove(scatter);
-            _dataScatters.Clear();
+            tab.DataScatters.Clear();
 
             if (this.DataContext is MainWindowViewModel vm && _polarAxis != null)
             {
                 double[] angles = tab.Plot.Angles;
                 double[] values = vm.IsPowerNormSelected ? tab.Plot.PowerNormValues : tab.Plot.VoltageNormValues;
-                if (angles.Length == 0 || values.Length == 0 || angles.Length != values.Length)
+                if (angles == null || values == null || angles.Length == 0 || values.Length == 0 || angles.Length != values.Length)
                     return;
-                double min = values.Min();
-                double max = values.Max();
+                // Сортировка по углу
+                var zipped = angles.Zip(values, (a, v) => new { Angle = a, Value = v })
+                                   .OrderBy(x => x.Angle)
+                                   .ToList();
+                var sortedAngles = zipped.Select(x => x.Angle).ToArray();
+                var sortedValues = zipped.Select(x => x.Value).ToArray();
+                double min = sortedValues.Min();
+                double max = sortedValues.Max();
                 double r_max = 100;
-                // Разбиваем на сегменты по разрывам углов
-                List<List<ScottPlot.Coordinates>> segments = new();
-                List<ScottPlot.Coordinates> current = new();
-                for (int i = 0; i < angles.Length; i++)
-                {
-                    double mirroredAngle = (360 - angles[i]) % 360;
-                    double r = (max - min) > 0 ? r_max * (values[i] - min) / (max - min) : r_max;
-                    var pt = _polarAxis.GetCoordinates(r, mirroredAngle);
-                    if (i > 0 && Math.Abs(angles[i] - angles[i - 1]) > 1.0)
-                    {
-                        if (current.Count > 0)
-                            segments.Add(current);
-                        current = new List<ScottPlot.Coordinates>();
-                    }
-                    current.Add(pt);
-                }
-                if (current.Count > 0)
-                    segments.Add(current);
+                bool allRadiiEqual = Math.Abs(max - min) < 1e-8;
+                double angleGapThreshold = allRadiiEqual ? 30.0 : 1.0;
 
+                List<List<ScottPlot.Coordinates>> segments = new();
+
+                // Если все значения мощности одинаковые и углов больше одной — строим линию по всем точкам
+                if (allRadiiEqual && sortedAngles.Length > 1)
+                {
+                    List<ScottPlot.Coordinates> circle = new();
+                    for (int i = 0; i < sortedAngles.Length; i++)
+                    {
+                        double mirroredAngle = (360 - sortedAngles[i]) % 360;
+                        double r = r_max;
+                        var pt = _polarAxis.GetCoordinates(r, mirroredAngle);
+                        circle.Add(pt);
+                    }
+                    // Замыкаем окружность, если точек больше двух
+                    if (circle.Count > 2)
+                        circle.Add(circle[0]);
+                    segments.Add(circle);
+                }
+                else
+                {
+                    List<ScottPlot.Coordinates> current = new();
+                    for (int i = 0; i < sortedAngles.Length; i++)
+                    {
+                        double mirroredAngle = (360 - sortedAngles[i]) % 360;
+                        double r = (max - min) > 0 ? r_max * (sortedValues[i] - min) / (max - min) : r_max;
+                        var pt = _polarAxis.GetCoordinates(r, mirroredAngle);
+                        if (i > 0 && Math.Abs(sortedAngles[i] - sortedAngles[i - 1]) > angleGapThreshold)
+                        {
+                            if (current.Count > 0)
+                                segments.Add(current);
+                            current = new List<ScottPlot.Coordinates>();
+                        }
+                        current.Add(pt);
+                    }
+                    if (current.Count > 0)
+                        segments.Add(current);
+                }
+
+                // === Сначала обновляем круги ===
+                bool isLogScale = vm.IsPowerNormSelected;
+                bool isDark = Application.Current!.ActualThemeVariant == ThemeVariant.Dark;
+                Plots.AutoUpdatePolarAxisCircles(AvaPlot1, _polarAxis, isLogScale, min, max, isDark);
+
+                // === Потом рисуем графики ===
                 var color = ScottPlot.Color.FromHex(tab.Plot.ColorHex);
+                System.Diagnostics.Debug.WriteLine($"[DrawTabPlot] Segments: {segments.Count}");
+                for (int i = 0; i < segments.Count; i++)
+                {
+                    System.Diagnostics.Debug.WriteLine($"  Segment {i + 1}: {segments[i].Count} points");
+                }
                 foreach (var seg in segments)
                 {
                     if (seg.Count > 1)
@@ -416,13 +492,9 @@ namespace AntennaAV.Views
                         var scatter = AvaPlot1.Plot.Add.Scatter(seg, color: color);
                         scatter.MarkerSize = 0;
                         scatter.LineWidth = 2;
-                        _dataScatters.Add(scatter);
+                        tab.DataScatters.Add(scatter);
                     }
                 }
-                // === Обновление кругов ===
-                bool isLogScale = vm.IsPowerNormSelected;
-                bool isDark = Application.Current!.ActualThemeVariant == ThemeVariant.Dark;
-                Plots.AutoUpdatePolarAxisCircles(AvaPlot1, _polarAxis, isLogScale, min, max, isDark);
                 AvaPlot1.Refresh();
             }
         }
@@ -438,83 +510,103 @@ namespace AntennaAV.Views
 
         private void DrawAllVisiblePlots()
         {
-            if (this.DataContext is not MainWindowViewModel vm)
-                return;
-            // Очистить старые графики
-            foreach (var scatter in _dataScatters)
-                AvaPlot1.Plot.Remove(scatter);
-            _dataScatters.Clear();
-
-            if (_polarAxis == null) return;
-            bool isLogScale = vm.IsPowerNormSelected;
-            double? globalMin = null, globalMax = null;
-            // Сначала ищем общий min/max по всем видимым графикам
-            foreach (var tab in vm.Tabs)
+            try
             {
-                if (tab.Plot != null && tab.Plot.IsVisible)
+                if (this.DataContext is not MainWindowViewModel vm)
+                    return;
+                // Очистить старые графики
+                foreach (var scatter in _dataScatters)
+                    AvaPlot1.Plot.Remove(scatter);
+                _dataScatters.Clear();
+
+                if (_polarAxis == null) return;
+                bool isLogScale = vm.IsPowerNormSelected;
+                double? globalMin = null, globalMax = null;
+                // Сначала ищем общий min/max по всем видимым графикам
+                foreach (var tab in vm.Tabs)
                 {
-                    double[] values = isLogScale ? tab.Plot.PowerNormValues : tab.Plot.VoltageNormValues;
-                    if (values.Length > 1)
+                    if (tab.Plot != null && tab.Plot.IsVisible)
                     {
+                        double[] values = isLogScale ? tab.Plot.PowerNormValues : tab.Plot.VoltageNormValues;
+                        if (values == null || values.Length <= 1)
+                            continue;
                         double min = values.Min();
                         double max = values.Max();
                         globalMin = globalMin.HasValue ? Math.Min(globalMin.Value, min) : min;
                         globalMax = globalMax.HasValue ? Math.Max(globalMax.Value, max) : max;
                     }
                 }
-            }
-            // Если нет данных — не обновлять круги и не строить графики
-            if (!globalMin.HasValue || !globalMax.HasValue || globalMax.Value <= globalMin.Value)
-            {
-                AvaPlot1.Refresh();
-                return;
-            }
-            // Теперь строим все графики с общей нормализацией
-            foreach (var tab in vm.Tabs)
-            {
-                if (tab.Plot != null && tab.Plot.IsVisible)
+                // Если нет данных — не обновлять круги и не строить графики
+                if (!globalMin.HasValue || !globalMax.HasValue || globalMax.Value <= globalMin.Value)
                 {
-                    double[] angles = tab.Plot.Angles;
-                    double[] values = isLogScale ? tab.Plot.PowerNormValues : tab.Plot.VoltageNormValues;
-                    if (angles.Length == 0 || values.Length == 0 || angles.Length != values.Length)
-                        continue;
-                    double r_max = 100;
-                    // Разбиваем на сегменты по разрывам углов
-                    List<List<ScottPlot.Coordinates>> segments = new();
-                    List<ScottPlot.Coordinates> current = new();
-                    for (int i = 0; i < angles.Length; i++)
+                    AvaPlot1.Refresh();
+                    return;
+                }
+                // Теперь строим все графики с общей нормализацией
+                foreach (var tab in vm.Tabs)
+                {
+                    if (tab.Plot != null && tab.Plot.IsVisible)
                     {
-                        double mirroredAngle = (360 - angles[i]) % 360;
-                        double r = (globalMax.Value - globalMin.Value) > 0 ? r_max * (values[i] - globalMin.Value) / (globalMax.Value - globalMin.Value) : r_max;
-                        var pt = _polarAxis.GetCoordinates(r, mirroredAngle);
-                        if (i > 0 && Math.Abs(angles[i] - angles[i - 1]) > 1.0)
+                        double[] angles = tab.Plot.Angles;
+                        double[] values = isLogScale ? tab.Plot.PowerNormValues : tab.Plot.VoltageNormValues;
+                        if (angles == null || values == null || angles.Length == 0 || values.Length == 0 || angles.Length != values.Length)
+                            continue;
+                        // Сортировка по углу
+                        var zipped = angles.Zip(values, (a, v) => new { Angle = a, Value = v })
+                                           .OrderBy(x => x.Angle)
+                                           .ToList();
+                        var sortedAngles = zipped.Select(x => x.Angle).ToArray();
+                        var sortedValues = zipped.Select(x => x.Value).ToArray();
+                        double r_max = 100;
+                        bool allRadiiEqual = Math.Abs(globalMax.Value - globalMin.Value) < 1e-8;
+                        double angleGapThreshold = allRadiiEqual ? 30.0 : 1.0;
+                        List<List<ScottPlot.Coordinates>> segments = new();
+                        List<ScottPlot.Coordinates> current = new();
+                        for (int i = 0; i < sortedAngles.Length; i++)
                         {
-                            if (current.Count > 0)
-                                segments.Add(current);
-                            current = new List<ScottPlot.Coordinates>();
+                            double mirroredAngle = (360 - sortedAngles[i]) % 360;
+                            double r = (globalMax.Value - globalMin.Value) > 0 ? r_max * (sortedValues[i] - globalMin.Value) / (globalMax.Value - globalMin.Value) : r_max;
+                            var pt = _polarAxis.GetCoordinates(r, mirroredAngle);
+                            if (i > 0 && Math.Abs(sortedAngles[i] - sortedAngles[i - 1]) > angleGapThreshold)
+                            {
+                                if (current.Count > 0)
+                                    segments.Add(current);
+                                current = new List<ScottPlot.Coordinates>();
+                            }
+                            current.Add(pt);
                         }
-                        current.Add(pt);
-                    }
-                    if (current.Count > 0)
-                        segments.Add(current);
+                        if (current.Count > 0)
+                            segments.Add(current);
 
-                    var color = ScottPlot.Color.FromHex(tab.Plot.ColorHex);
-                    foreach (var seg in segments)
-                    {
-                        if (seg.Count > 1)
+                        // === Сначала обновляем круги по общему диапазону ===
+                        bool isDark = Application.Current!.ActualThemeVariant == ThemeVariant.Dark;
+                        Plots.AutoUpdatePolarAxisCircles(AvaPlot1, _polarAxis, isLogScale, globalMin.Value, globalMax.Value, isDark);
+
+                        // === Потом рисуем графики ===
+                        var color = ScottPlot.Color.FromHex(tab.Plot.ColorHex);
+                        System.Diagnostics.Debug.WriteLine($"[DrawAllVisiblePlots] Segments: {segments.Count}");
+                        for (int i = 0; i < segments.Count; i++)
                         {
-                            var scatter = AvaPlot1.Plot.Add.Scatter(seg, color: color);
-                            scatter.MarkerSize = 0;
-                            scatter.LineWidth = 2;
-                            _dataScatters.Add(scatter);
+                            System.Diagnostics.Debug.WriteLine($"  Segment {i + 1}: {segments[i].Count} points");
+                        }
+                        foreach (var seg in segments)
+                        {
+                            if (seg.Count > 1)
+                            {
+                                var scatter = AvaPlot1.Plot.Add.Scatter(seg, color: color);
+                                scatter.MarkerSize = 0;
+                                scatter.LineWidth = 2;
+                                _dataScatters.Add(scatter);
+                            }
                         }
                     }
                 }
+                AvaPlot1.Refresh();
             }
-            // Обновляем круги по общему диапазону
-            bool isDark = Application.Current!.ActualThemeVariant == ThemeVariant.Dark;
-            Plots.AutoUpdatePolarAxisCircles(AvaPlot1, _polarAxis, isLogScale, globalMin.Value, globalMax.Value, isDark);
-            AvaPlot1.Refresh();
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DrawAllVisiblePlots] Exception: {ex}");
+            }
         }
 
         private void OnThemeChanged(object? sender, EventArgs e)
@@ -562,6 +654,16 @@ namespace AntennaAV.Views
                     AvaPlot1.Plot.Add.Palette = new ScottPlot.Palettes.Category10();
                 }
                 AvaPlot1.Refresh();
+            }
+        }
+
+        private async void ImportButton_Click(object? sender, RoutedEventArgs e)
+        {
+            if (this.DataContext is MainWindowViewModel vm)
+            {
+                await vm.ImportTableFromCsvAsync(this);
+                if (vm.SelectedTab != null)
+                    DrawTabPlot(vm.SelectedTab);
             }
         }
     }

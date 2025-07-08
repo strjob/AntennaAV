@@ -23,6 +23,10 @@ namespace AntennaAV.ViewModels
 
         public PlotData Plot { get; set; } = new PlotData();
 
+        public List<ScottPlot.Plottables.Scatter> DataScatters { get; } = new();
+
+        public bool IsPlotColorDirty { get; set; }
+
         public TabViewModel()
         {
 
@@ -60,11 +64,20 @@ namespace AntennaAV.ViewModels
                 }
             };
 
+            Plot.ColorChanged += () =>
+            {
+                IsPlotColorDirty = true;
+            };
         }
 
         public void AddAntennaData(IEnumerable<GridAntennaData> newItems)
         {
             AntennaDataCollection.AddRange(newItems);
+        }
+
+        public void ClearTableData()
+        {
+            AntennaDataCollection.Clear();
         }
     }
 
@@ -102,8 +115,16 @@ namespace AntennaAV.ViewModels
 
         [ObservableProperty]
         private string colorHex = "#0000FF";
+        public string colorHexPrev = "#0000FF";
 
         [ObservableProperty]
         private bool isVisible = true;
+
+        // Добавляем событие
+        public event Action? ColorChanged;
+        partial void OnColorHexChanged(string value)
+        {
+            ColorChanged?.Invoke();
+        }
     }
 }

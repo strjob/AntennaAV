@@ -1,13 +1,17 @@
 ﻿using AntennaAV.Models;
 using AntennaAV.Services;
+using AntennaAV.Views;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
@@ -16,9 +20,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using static AntennaAV.Services.ComPortManager;
-using Avalonia.Media;
-using Avalonia.Styling;
-using System.ComponentModel;
+
 
 
 namespace AntennaAV.ViewModels
@@ -343,6 +345,77 @@ namespace AntennaAV.ViewModels
             ConnectionStatus = $"✅ Файл сохранён: {file.Name}";
         }
 
+        public async Task ImportTableFromCsvAsync(Window window)
+        {
+            if (SelectedTab is null || window is null)
+                return;
+
+            var files = await window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "Загрузить таблицу из CSV",
+                AllowMultiple = false,
+                FileTypeFilter = new List<FilePickerFileType>
+                {
+                    new("CSV файл") { Patterns = new[] { "*.csv" } }
+                }
+            });
+
+            var file = files?.FirstOrDefault();
+            if (file is null)
+                return;
+
+            var newRows = new List<GridAntennaData>();
+            using (var stream = await file.OpenReadAsync())
+            using (var reader = new StreamReader(stream, Encoding.UTF8))
+            {
+                string? line;
+                bool isFirst = true;
+                while ((line = await reader.ReadLineAsync()) != null)
+                {
+                    if (isFirst)
+                    {
+                        isFirst = false; // пропускаем заголовок
+                        continue;
+                    }
+                    var parts = line.Split(',');
+                    if (parts.Length < 6) continue;
+                    if (!double.TryParse(parts[0], out var angle)) continue;
+                    if (!double.TryParse(parts[1], out var powerDbm)) continue;
+                    if (!double.TryParse(parts[2], out var voltage)) continue;
+                    if (!double.TryParse(parts[3], out var powerNorm)) continue;
+                    if (!double.TryParse(parts[4], out var voltageNorm)) continue;
+                    if (!DateTime.TryParse(parts[5], out var time)) time = DateTime.Now;
+                    newRows.Add(new GridAntennaData
+                    {
+                        Angle = angle,
+                        PowerDbm = powerDbm,
+                        Voltage = voltage,
+                        PowerNorm = powerNorm,
+                        VoltageNorm = voltageNorm,
+                        Time = time
+                    });
+                }
+            }
+            SelectedTab.ClearTableData();
+            SelectedTab.AddAntennaData(newRows);
+            // Формируем PlotData по новым данным
+            var anglesArr = newRows.Select(x => x.Angle).ToArray();
+            var powerNormArr = newRows.Select(x => x.PowerNorm).ToArray();
+            var voltageNormArr = newRows.Select(x => x.VoltageNorm).ToArray();
+            SelectedTab.Plot.Angles = anglesArr;
+            SelectedTab.Plot.PowerNormValues = powerNormArr;
+            SelectedTab.Plot.VoltageNormValues = voltageNormArr;
+            // Обновить график по новым данным
+            OnPropertyChanged(nameof(SelectedTabIndex));
+            ConnectionStatus = $"✅ Таблица загружена: {file.Name}";
+        }
+
+        private void DrawAllVisiblePlotsIfNeeded()
+        {
+            // Для вызова из ViewModel через событие или напрямую из View
+            OnBuildRadarPlot?.Invoke(Array.Empty<double>(), Array.Empty<double>()); // Сбросить график
+        }
+
         private void UpdateTabCommands()
         {
             OnPropertyChanged(nameof(CanRemoveTab));
@@ -422,6 +495,10 @@ namespace AntennaAV.ViewModels
         private void OnUiTimerTick()
         {
             bool dataReceived = false;
+            bool needRedraw = false;
+
+            
+            
             if (_comPortService.IsOpen && !Design.IsDesignMode)
             {
                 AntennaData? lastData = null;
@@ -488,6 +565,17 @@ namespace AntennaAV.ViewModels
                     _isReconnecting = false;
                 });
             }
+
+            foreach (var tab in Tabs)
+            {
+                if (tab.IsPlotColorDirty)
+                {
+                    tab.IsPlotColorDirty = false;
+                    needRedraw = true;
+                }
+            }
+            if (needRedraw)
+                RequestPlotRedraw?.Invoke();
         }
         [RelayCommand]
         public void Set120Degrees()
@@ -799,10 +887,10 @@ namespace AntennaAV.ViewModels
 
                 Debug.WriteLine($"🔄 Завершение сбора данных");
                 _isDiagramDataCollecting = false;
-                //StopTableUpdateTimer();
+                UpdateTable();
+                StopTableUpdateTimer();
                 _collector.FinalizeData();
                 UpdatePlotWithNormalizedData();
-                UpdateTable();
                 Debug.WriteLine("✅ Диаграмма успешно завершена");
                 _comPortService.StopAntenna("R");
             }
@@ -928,6 +1016,7 @@ namespace AntennaAV.ViewModels
 
         public event Action<bool>? ShowAntennaChanged;
         public event Action<bool>? ShowSectorChanged;
+        public event Action? RequestPlotRedraw;
 
         public void StopMessaging()
         {
@@ -969,6 +1058,21 @@ namespace AntennaAV.ViewModels
             {
                 _comPortService.SetAntennaAngle(angle, "R", "S");
             }
+        }
+
+        [RelayCommand]
+        public void ClearTable()
+        {
+            if (SelectedTab != null)
+            {
+                SelectedTab.ClearTableData();
+                // Очистить данные графика
+                SelectedTab.Plot.Angles = Array.Empty<double>();
+                SelectedTab.Plot.PowerNormValues = Array.Empty<double>();
+                SelectedTab.Plot.VoltageNormValues = Array.Empty<double>();
+            }
+            // Сообщить View, чтобы график исчез
+            OnBuildRadarPlot?.Invoke(Array.Empty<double>(), Array.Empty<double>());
         }
 
         [ObservableProperty]
