@@ -26,9 +26,10 @@
         <StreamGeometry x:Key="eye_hide_regular">M2.21967 2.21967C1.9534 2.48594 1.9292 2.9026 2.14705 3.19621L2.21967 3.28033L6.25424 7.3149C4.33225 8.66437 2.89577 10.6799 2.29888 13.0644C2.1983 13.4662 2.4425 13.8735 2.84431 13.9741C3.24613 14.0746 3.6534 13.8305 3.75399 13.4286C4.28346 11.3135 5.59112 9.53947 7.33416 8.39452L9.14379 10.2043C8.43628 10.9258 8 11.9143 8 13.0046C8 15.2138 9.79086 17.0046 12 17.0046C13.0904 17.0046 14.0788 16.5683 14.8004 15.8608L20.7197 21.7803C21.0126 22.0732 21.4874 22.0732 21.7803 21.7803C22.0466 21.5141 22.0708 21.0974 21.8529 20.8038L21.7803 20.7197L15.6668 14.6055L15.668 14.604L14.4679 13.4061L11.598 10.5368L11.6 10.536L8.71877 7.65782L8.72 7.656L7.58672 6.52549L3.28033 2.21967C2.98744 1.92678 2.51256 1.92678 2.21967 2.21967ZM10.2041 11.2655L13.7392 14.8006C13.2892 15.2364 12.6759 15.5046 12 15.5046C10.6193 15.5046 9.5 14.3853 9.5 13.0046C9.5 12.3287 9.76824 11.7154 10.2041 11.2655ZM12 5.5C10.9997 5.5 10.0291 5.64807 9.11109 5.925L10.3481 7.16119C10.8839 7.05532 11.4364 7 12 7C15.9231 7 19.3099 9.68026 20.2471 13.4332C20.3475 13.835 20.7546 14.0794 21.1565 13.9791C21.5584 13.8787 21.8028 13.4716 21.7024 13.0697C20.5994 8.65272 16.6155 5.5 12 5.5Z</StreamGeometry>
         <StreamGeometry x:Key="delete_regular">M24,7.25 C27.1017853,7.25 29.629937,9.70601719 29.7458479,12.7794443 L29.75,13 L37,13 C37.6903559,13 38.25,13.5596441 38.25,14.25 C38.25,14.8972087 37.7581253,15.4295339 37.1278052,15.4935464 L37,15.5 L35.909,15.5 L34.2058308,38.0698451 C34.0385226,40.2866784 32.1910211,42 29.9678833,42 L18.0321167,42 C15.8089789,42 13.9614774,40.2866784 13.7941692,38.0698451 L12.09,15.5 L11,15.5 C10.3527913,15.5 9.8204661,15.0081253 9.75645361,14.3778052 L9.75,14.25 C9.75,13.6027913 10.2418747,13.0704661 10.8721948,13.0064536 L11,13 L18.25,13 C18.25,9.82436269 20.8243627,7.25 24,7.25 Z M33.4021054,15.5 L14.5978946,15.5 L16.2870795,37.8817009 C16.3559711,38.7945146 17.116707,39.5 18.0321167,39.5 L29.9678833,39.5 C30.883293,39.5 31.6440289,38.7945146 31.7129205,37.8817009 L33.4021054,15.5 Z M27.25,20.75 C27.8972087,20.75 28.4295339,21.2418747 28.4935464,21.8721948 L28.5,22 L28.5,33 C28.5,33.6903559 27.9403559,34.25 27.25,34.25 C26.6027913,34.25 26.0704661,33.7581253 26.0064536,33.1278052 L26,33 L26,22 C26,21.3096441 26.5596441,20.75 27.25,20.75 Z M20.75,20.75 C21.3972087,20.75 21.9295339,21.2418747 21.9935464,21.8721948 L22,22 L22,33 C22,33.6903559 21.4403559,34.25 20.75,34.25 C20.1027913,34.25 19.5704661,33.7581253 19.5064536,33.1278052 L19.5,33 L19.5,22 C19.5,21.3096441 20.0596441,20.75 20.75,20.75 Z M24,9.75 C22.2669685,9.75 20.8507541,11.1064548 20.7551448,12.8155761 L20.75,13 L27.25,13 C27.25,11.2050746 25.7949254,9.75 24,9.75 Z</StreamGeometry>
         <StreamGeometry x:Key="erase_regular">M15.8698693,2.66881311 L20.838395,7.63733874 C21.7170746,8.5160184 21.7170746,9.9406396 20.838395,10.8193193 L12.1565953,19.4998034 L18.25448,19.5 C18.6341758,19.5 18.947971,19.7821539 18.9976334,20.1482294 L19.00448,20.25 C19.00448,20.6296958 18.7223262,20.943491 18.3562506,20.9931534 L18.25448,21 L9.84446231,21.0012505 C9.22825282,21.0348734 8.60085192,20.8163243 8.13013068,20.345603 L3.16160505,15.3770774 C2.28292539,14.4983977 2.28292539,13.0737765 3.16160505,12.1950969 L12.6878888,2.66881311 C13.5665685,1.79013346 14.9911897,1.79013346 15.8698693,2.66881311 Z M5.70859531,11.7678034 L4.22226522,13.255757 C3.929372,13.5486503 3.929372,14.023524 4.22226522,14.3164172 L9.19079085,19.2849428 C9.33723746,19.4313895 9.5291792,19.5046128 9.72112094,19.5046128 L9.75,19.5 L9.78849588,19.5015989 C9.95740385,19.4864544 10.1221581,19.4142357 10.251451,19.2849428 L11.7375953,17.7978034 L5.70859531,11.7678034 Z M13.748549,3.72947329 L6.76959531,10.7068034 L12.7985953,16.7368034 L19.7777348,9.75865909 C20.070628,9.46576587 20.070628,8.99089214 19.7777348,8.69799892 L14.8092091,3.72947329 C14.5163159,3.43658007 14.0414422,3.43658007 13.748549,3.72947329 Z</StreamGeometry>
+        <StreamGeometry x:Key="upload_regular">M5.25021713,20.5 L18.2502171,20.5037635 C18.6644307,20.5038835 19,20.8397671 19,21.2539806 C19,21.6336764 18.7176637,21.9473899 18.3515577,21.9969463 L18.2497829,22.0037635 L5.24978287,22 C4.83556933,21.9998801 4.5,21.6639964 4.5,21.2497829 C4.5,20.8700871 4.78233634,20.5563736 5.1484423,20.5068172 L5.25021713,20.5 Z M6.21972471,7.21846694 L11.21737,2.22185426 C11.4835159,1.95576328 11.8999028,1.93145946 12.1934928,2.14902198 L12.2776129,2.2215468 L17.2810585,7.21815948 C17.5741518,7.5108525 17.5744763,7.98572612 17.2817833,8.2788194 C17.0156987,8.54526784 16.5990517,8.56975859 16.3052914,8.35210481 L16.2211234,8.27954415 L12.5,4.56423913 L12.5,18.2488622 C12.5,18.6285579 12.2178461,18.9423531 11.8517706,18.9920156 L11.75,18.9988622 C11.3703042,18.9988622 11.056509,18.7167083 11.0068466,18.3506327 L11,18.2488622 L11,4.55923913 L7.28027529,8.27923669 C7.01398122,8.54547574 6.59731504,8.56963874 6.30372605,8.35175395 L6.21961512,8.27912711 C5.95337607,8.01283303 5.92921307,7.59616685 6.14709787,7.30257787 L6.21972471,7.21846694 L11.21737,2.22185426 L6.21972471,7.21846694 Z</StreamGeometry>
 
         <StreamGeometry x:Key="add_square_regular">M12 7C12.4142 7 12.75 7.33579 12.75 7.75V11.25H16.25C16.6642 11.25 17 11.5858 17 12C17 12.4142 16.6642 12.75 16.25 12.75H12.75V16.25C12.75 16.6642 12.4142 17 12 17C11.5858 17 11.25 16.6642 11.25 16.25V12.75H7.75C7.33579 12.75 7 12.4142 7 12C7 11.5858 7.33579 11.25 7.75 11.25H11.25V7.75C11.25 7.33579 11.5858 7 12 7Z M3 6.25C3 4.45507 4.45507 3 6.25 3H17.75C19.5449 3 21 4.45507 21 6.25V17.75C21 19.5449 19.5449 21 17.75 21H6.25C4.45507 21 3 19.5449 3 17.75V6.25ZM6.25 4.5C5.2835 4.5 4.5 5.2835 4.5 6.25V17.75C4.5 18.7165 5.2835 19.5 6.25 19.5H17.75C18.7165 19.5 19.5 18.7165 19.5 17.75V6.25C19.5 5.2835 18.7165 4.5 17.75 4.5H6.25Z</StreamGeometry>
-        <StreamGeometry x:Key="folder_open_regular">M12 7C12.4142 7 12.75 7.33579 12.75 7.75V11.25H16.25C16.6642 11.25 17 11.5858 17 12C17 12.4142 16.6642 12.75 16.25 12.75H12.75V16.25C12.75 16.6642 12.4142 17 12 17C11.5858 17 11.25 16.6642 11.25 16.25V12.75H7.75C7.33579 12.75 7 12.4142 7 12C7 11.5858 7.33579 11.25 7.75 11.25H11.25V7.75C11.25 7.33579 11.5858 7 12 7Z M3 6.25C3 4.45507 4.45507 3 6.25 3H17.75C19.5449 3 21 4.45507 21 6.25V17.75C21 19.5449 19.5449 21 17.75 21H6.25C4.45507 21 3 19.5449 3 17.75V6.25ZM6.25 4.5C5.2835 4.5 4.5 5.2835 4.5 6.25V17.75C4.5 18.7165 5.2835 19.5 6.25 19.5H17.75C18.7165 19.5 19.5 18.7165 19.5 17.75V6.25C19.5 5.2835 18.7165 4.5 17.75 4.5H6.25Z</StreamGeometry>
+        <StreamGeometry x:Key="folder_open_regular">M20 9.50195V8.74985C20 7.50721 18.9926 6.49985 17.75 6.49985H12.0247L9.64368 4.51995C9.23959 4.18393 8.73063 3.99997 8.20509 3.99997H4.24957C3.00724 3.99997 2 5.00686 1.99957 6.24919L1.99561 17.7492C1.99518 18.9921 3.00266 20 4.24561 20H4.27196C4.27607 20 4.28019 20 4.28431 20H18.4693C19.2723 20 19.9723 19.4535 20.167 18.6745L21.9169 11.6765C22.1931 10.5719 21.3577 9.50195 20.2192 9.50195H20ZM4.24957 5.49997H8.20509C8.38027 5.49997 8.54993 5.56129 8.68462 5.6733L11.2741 7.82652C11.4088 7.93852 11.5784 7.99985 11.7536 7.99985H17.75C18.1642 7.99985 18.5 8.33563 18.5 8.74985V9.50195H6.42385C5.39136 9.50195 4.49137 10.2047 4.241 11.2064L3.49684 14.1837L3.49957 6.24971C3.49971 5.8356 3.83546 5.49997 4.24957 5.49997ZM5.69623 11.5701C5.77969 11.2362 6.07969 11.002 6.42385 11.002H20.2192C20.3819 11.002 20.5012 11.1548 20.4617 11.3126L18.7119 18.3107C18.684 18.4219 18.584 18.5 18.4693 18.5H4.28431C4.12167 18.5 4.00233 18.3472 4.04177 18.1894L5.69623 11.5701Z</StreamGeometry>
 
     </Window.Resources>
 
@@ -40,7 +41,7 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <Grid ShowGridLines="True">
+    <Grid ShowGridLines="False">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="250" />
             <ColumnDefinition Width="0.65*" MinWidth="300" />
@@ -62,6 +63,7 @@
             Grid.Row="0"
             Grid.Column="1"
             Margin="0,0,0,0" />
+
 
         <TextBlock
             Grid.Row="0"
@@ -114,18 +116,22 @@
                 IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
         </StackPanel>
 
-        <Grid Grid.Row="0" Grid.Column="0">
+        <Grid
+            Grid.Row="0"
+            Grid.Column="0"
+            ShowGridLines="True">
             <Grid.RowDefinitions>
-                <RowDefinition Height="0.33*" />
-                <RowDefinition Height="0.33*" />
-                <RowDefinition Height="0.33*" />
+                <RowDefinition Height="0.15*" />
+                <RowDefinition Height="0.15*" />
+                <RowDefinition Height="0.15*" />
+                <RowDefinition Height="0.4*" />
             </Grid.RowDefinitions>
 
             <!--  Верхний ряд - Передающая антенна  -->
             <StackPanel
                 Grid.Row="0"
                 Margin="10"
-                VerticalAlignment="Center">
+                VerticalAlignment="Top">
                 <TextBlock
                     Margin="0,0,0,5"
                     FontWeight="Bold"
@@ -151,14 +157,13 @@
                     Foreground="Red"
                     Text="{CompiledBinding TransmitterMoveAngleError}" />
                 <Button
-                    Width="100"
                     Margin="0,0,0,10"
                     HorizontalAlignment="Left"
                     Command="{CompiledBinding MoveTransmitterToAngleCommand}"
-                    Content="Переместить в"
+                    Content="Переместить"
                     IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
 
-                <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
+                <!--<StackPanel Margin="0,0,0,5" Orientation="Horizontal">
                     <TextBlock
                         Margin="0,0,5,0"
                         VerticalAlignment="Center"
@@ -168,7 +173,7 @@
                         FormatString="0.0"
                         Increment="1"
                         KeyDown="NumericUpDown_KeyDown"
-                        Maximum="359"
+                        Maximum="359.9"
                         Minimum="0"
                         Watermark="0-359"
                         Value="{CompiledBinding TransmitterSetAngle,
@@ -178,43 +183,51 @@
                 <TextBlock
                     FontSize="12"
                     Foreground="Red"
-                    Text="{CompiledBinding TransmitterSetAngleError}" />
-                <Button
+                    Text="{CompiledBinding TransmitterSetAngleError}" />-->
+                <!--<Button
                     Width="100"
                     HorizontalAlignment="Left"
                     Command="{CompiledBinding SetTransmitterAngleCommand}"
                     Content="Задать"
-                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
+                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />-->
+
             </StackPanel>
 
+            <ScottPlot:AvaPlot
+                x:Name="AvaPlot2"
+                Grid.Row="1"
+                Margin="10"
+                VerticalAlignment="Stretch" />
+            <TextBlock
+                Grid.Row="1"
+                Margin="1"
+                FontSize="26"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                Text="{CompiledBinding TransmitterAngleDegStr}" />
+
             <!--  Средний ряд - Существующие текстовые блоки  -->
-            <StackPanel Grid.Row="1" VerticalAlignment="Center">
-                <TextBlock Text="Receiver Angle:" />
-                <TextBlock Margin="2" Text="{CompiledBinding ReceiverAngleDegStr}" />
+            <StackPanel Grid.Row="2" VerticalAlignment="Center">
+                <!--<TextBlock Text="Receiver Angle:" />
+                <TextBlock Margin="1" Text="{CompiledBinding ReceiverAngleDegStr}" />
 
                 <TextBlock Text="Transmitter Angle:" />
-                <TextBlock Margin="2" Text="{CompiledBinding TransmitterAngleDegStr}" />
+                <TextBlock Margin="1" Text="{CompiledBinding TransmitterAngleDegStr}" />-->
 
                 <TextBlock Text="Power (dBm):" />
-                <TextBlock Margin="2" Text="{CompiledBinding PowerDbmStr}" />
+                <TextBlock Margin="1" Text="{CompiledBinding PowerDbmStr}" />
 
                 <TextBlock Text="Antenna Type:" />
-                <TextBlock Margin="2" Text="{CompiledBinding AntennaTypeStr}" />
+                <TextBlock Margin="1" Text="{CompiledBinding AntennaTypeStr}" />
 
-                <TextBlock Text="Rx Antenna Counter:" />
-                <TextBlock Margin="2" Text="{CompiledBinding RxAntennaCounterStr}" />
+                <!--<TextBlock Text="Rx Antenna Counter:" />
+                <TextBlock Margin="1" Text="{CompiledBinding RxAntennaCounterStr}" />-->
 
-                <ToggleSwitch
-                    Margin="10,0,0,0"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Top"
-                    Content="Тёмная тема"
-                    IsChecked="{CompiledBinding IsDarkTheme,
-                                                Mode=TwoWay}" />
+
             </StackPanel>
 
             <!--  Нижний ряд - Приемная антенна  -->
-            <StackPanel Grid.Row="2" VerticalAlignment="Center">
+            <StackPanel Grid.Row="3" VerticalAlignment="Center">
                 <TextBlock
                     Margin="0,0,0,5"
                     FontWeight="Bold"
@@ -282,7 +295,7 @@
             Grid.Row="0"
             Grid.Column="3"
             Margin="5"
-            ShowGridLines="True">
+            ShowGridLines="False">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -297,44 +310,46 @@
                 <Button
                     Margin="5"
                     Command="{CompiledBinding AddTabCommand}"
-                    Content="Добавить"
-                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
+                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                    ToolTip.Tip="Добавить таблицу">
                     <PathIcon Data="{StaticResource add_square_regular}" />
                 </Button>
 
                 <Button
                     Margin="5"
                     Command="{CompiledBinding RemoveTabCommand}"
-                    Content="Удалить"
-                    IsEnabled="{CompiledBinding CanRemoveTabWhenPortOpen}">
+                    IsEnabled="{CompiledBinding CanRemoveTabWhenPortOpen}"
+                    ToolTip.Tip="Удалить таблицу">
                     <PathIcon Data="{StaticResource delete_forever_regular}" />
                 </Button>
                 <Button
                     Margin="5"
                     Command="{CompiledBinding ClearTableCommand}"
-                    Content="Очистить"
-                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
+                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                    ToolTip.Tip="Очистить таблицу">
                     <PathIcon Data="{StaticResource erase_regular}" />
                 </Button>
                 <Button
                     x:Name="ImportButton"
                     Margin="5"
-                    Content="Загрузить"
+                    Click="ImportButton_Click"
                     IsEnabled="{CompiledBinding CanUseWhenHasTabs}"
-                    Click="ImportButton_Click">
+                    ToolTip.Tip="Загрузить из файла">
                     <PathIcon Data="{StaticResource folder_open_regular}" />
                 </Button>
                 <Button
                     x:Name="ExportButton"
                     Margin="5"
-                    IsEnabled="{CompiledBinding CanUseWhenHasTabs}">
+                    IsEnabled="{CompiledBinding CanUseWhenHasTabs}"
+                    ToolTip.Tip="Сохранить в файл">
                     <PathIcon Data="{StaticResource save_as_regular}" />
                 </Button>
                 <Button
                     x:Name="TogglePlotVisibilityButton"
                     Margin="5"
                     Click="TogglePlotVisibility_Click"
-                    IsEnabled="{CompiledBinding CanUseWhenHasTabs}">
+                    IsEnabled="{CompiledBinding CanUseWhenHasTabs}"
+                    ToolTip.Tip="Показать/скрыть график">
                     <Button.Content>
                         <Grid>
                             <PathIcon Data="{StaticResource eye_show_regular}" IsVisible="{CompiledBinding SelectedTab.Plot.IsVisible}" />
@@ -388,7 +403,7 @@
             <Grid
                 Grid.Row="2"
                 Margin="0,8,0,0"
-                ShowGridLines="True">
+                ShowGridLines="False">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -493,6 +508,15 @@
                         IsChecked="{CompiledBinding ShowSector,
                                                     Mode=TwoWay}" />
                 </StackPanel>
+                <ToggleSwitch
+                    Grid.Row="2"
+                    Grid.Column="3"
+                    Margin="0,0,10,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Content="Тёмная тема"
+                    IsChecked="{CompiledBinding IsDarkTheme,
+                                                Mode=TwoWay}" />
 
                 <!--  Кнопки построения и прерывания диаграммы  -->
                 <Button

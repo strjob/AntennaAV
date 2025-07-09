@@ -140,19 +140,19 @@ namespace AntennaAV.ViewModels
 
         [ObservableProperty]
         private string? transmitterMoveAngleError;
-
+        /*
         [ObservableProperty]
         private string transmitterSetAngle = "0";
 
         [ObservableProperty]
         private string transmitterSetAngleError = "";
-
+        */
         [ObservableProperty]
         private string receiverMoveAngle = "0";
 
         [ObservableProperty]
         private string receiverMoveAngleError = "";
-
+        
         [ObservableProperty]
         private string receiverSetAngle = "0";
 
@@ -495,10 +495,9 @@ namespace AntennaAV.ViewModels
         private void OnUiTimerTick()
         {
             bool dataReceived = false;
-            bool needRedraw = false;
 
-            
-            
+
+          
             if (_comPortService.IsOpen && !Design.IsDesignMode)
             {
                 AntennaData? lastData = null;
@@ -571,11 +570,12 @@ namespace AntennaAV.ViewModels
                 if (tab.IsPlotColorDirty)
                 {
                     tab.IsPlotColorDirty = false;
-                    needRedraw = true;
+                    RequestPlotRedraw?.Invoke();
+
                 }
             }
-            if (needRedraw)
-                RequestPlotRedraw?.Invoke();
+            
+                
         }
         [RelayCommand]
         public void Set120Degrees()
@@ -618,7 +618,7 @@ namespace AntennaAV.ViewModels
                 _comPortService.SetAntennaAngle(angle, "T", "G");
             }
         }
-
+        /*
         partial void OnTransmitterSetAngleChanged(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
@@ -628,13 +628,13 @@ namespace AntennaAV.ViewModels
             else
                 TransmitterSetAngleError = "";
         }
-
+        */
         [RelayCommand]
         public void SetTransmitterAngle()
         {
-            if (string.IsNullOrWhiteSpace(TransmitterSetAngle) || !string.IsNullOrEmpty(TransmitterSetAngleError) || !_comPortService.IsOpen)
+            if (string.IsNullOrWhiteSpace(TransmitterMoveAngle) || !string.IsNullOrEmpty(TransmitterMoveAngle) || !_comPortService.IsOpen)
                 return;
-            if (double.TryParse(TransmitterSetAngle, out var angle) && angle >= 0 && angle <= 360)
+            if (double.TryParse(TransmitterMoveAngle, out var angle) && angle >= 0 && angle <= 360)
             {
                 _comPortService.SetAntennaAngle(angle, "T", "S");
             }
@@ -747,7 +747,7 @@ namespace AntennaAV.ViewModels
 
                 // Выбираем начальную точку (ближайшую к текущему положению)
                 double startAngle, endAngle;
-                if (Math.Abs(currentAngle - from) <= Math.Abs(currentAngle - to))
+                if (AngleDiff(currentAngle, from) <= AngleDiff(currentAngle, to))
                 {
                     startAngle = from;
                     endAngle = to;

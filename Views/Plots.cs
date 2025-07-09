@@ -58,6 +58,44 @@ namespace AntennaAV.Views
             return polarAxis;
         }
 
+        public static ScottPlot.Plottables.PolarAxis InitializeSmall(AvaPlot avaPlot, bool isDark)
+        {
+            var polarAxis = avaPlot.Plot.Add.PolarAxis(radius: 100);
+            polarAxis.Rotation = Angle.FromDegrees(270);
+            var labels = CreateListofAngles(90);// { "0", "30", "60", "90", "120", "150", "180", "210", "240", "270", "300", "330" };
+            polarAxis.SetSpokes(labels, 100, true);
+
+            // Цвета для темной и светлой темы
+            var lineColor = isDark ? ScottPlot.Color.FromHex("#777777") : ScottPlot.Color.FromHex("#BBBBBB");
+            var circleColor = isDark ? ScottPlot.Color.FromHex("#bbbbbb") : ScottPlot.Color.FromHex("#666666");
+            var labelColor = isDark ? ScottPlot.Color.FromHex("#eeeeee") : ScottPlot.Color.FromHex("#111111");
+
+
+            for (int i = 0; i < polarAxis.Spokes.Count; i++)
+            {
+                polarAxis.Spokes[i].LineWidth = 0;
+                //polarAxis.Spokes[i].LabelPaddingFraction = 0.05;
+                polarAxis.Spokes[i].Length = 100;
+                polarAxis.Spokes[i].LinePattern = LinePattern.Dotted;
+                polarAxis.Spokes[i].LineColor = lineColor;
+                polarAxis.Spokes[i].LabelStyle.ForeColor = labelColor;
+            }
+
+            polarAxis.SetCircles(100, 1);
+
+            // Не создаём круги вручную — они будут обновляться в AutoUpdatePolarAxisCircles
+
+            avaPlot.Plot.Add.Palette = isDark
+                ? new ScottPlot.Palettes.Penumbra()
+                : new ScottPlot.Palettes.Category10();
+            avaPlot.Plot.Axes.Margins(0.05, 0.05);
+
+            avaPlot.UserInputProcessor.IsEnabled = false;
+            avaPlot.Refresh();
+            AddCustomSpokeLinesSmall(avaPlot, polarAxis, isDark);
+            return polarAxis;
+        }
+
         public static double[] GetCircularRange(double from, double to)
         {
             int start = ((int)from % 360 + 360) % 360;
@@ -79,6 +117,28 @@ namespace AntennaAV.Views
             
 
             return result.ToArray();
+        }
+
+        public static void AddCustomSpokeLinesSmall(AvaPlot avaPlot, ScottPlot.Plottables.PolarAxis polarAxis, bool isDark)
+        {
+
+            double rStart = 95;
+            double rEnd = 105;
+            var lineColor = isDark ? ScottPlot.Color.FromHex("#777777") : ScottPlot.Color.FromHex("#BBBBBB");
+
+            for (double angle = 0; angle < 360; angle += 30)
+            {
+                double angleRad = Math.PI * angle / 180.0;
+                double x1 = rStart * Math.Cos(angleRad);
+                double y1 = rStart * Math.Sin(angleRad);
+                double x2 = rEnd * Math.Cos(angleRad);
+                double y2 = rEnd * Math.Sin(angleRad);
+                var line = avaPlot.Plot.Add.Line(x1, y1, x2, y2);
+                line.Color = lineColor;
+                line.LineWidth = 1;
+                line.LinePattern = ScottPlot.LinePattern.Solid;
+                _customSpokeLines.Add(line);
+            }
         }
 
         public static void AddCustomSpokeLines(AvaPlot avaPlot, ScottPlot.Plottables.PolarAxis polarAxis, bool isDark)
@@ -109,9 +169,7 @@ namespace AntennaAV.Views
                 line.LineWidth = 1;
                 line.LinePattern = ScottPlot.LinePattern.Dotted;
                 _customSpokeLines.Add(line);
-            }
-          
-               
+            }  
         }
 
         public static void AutoUpdatePolarAxisCircles(
