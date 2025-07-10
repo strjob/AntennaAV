@@ -94,9 +94,9 @@ public class TestComPortService : IComPortService, IDisposable
             var data = new AntennaData
             {
                 ReceiverAngleDeg = angle,
-                TransmitterAngleDeg = transmitterAngle,
+                TransmitterAngleDeg = angle,
                 ReceiverAngleDeg10 = angle10,
-                TransmitterAngleDeg10 = transmitterAngle10,
+                TransmitterAngleDeg10 = angle10,
                 PowerDbm = powerDbm,
                 AntennaType = _antennaType,
                 RxAntennaCounter = _counter,

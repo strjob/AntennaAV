@@ -10,7 +10,9 @@
 
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
+	  <Page Include="Views\SplashWindow.axaml" />
   </ItemGroup>
+	
 
   <ItemGroup>
     <AvaloniaXaml Remove="ViewModels\a\**" />

@@ -212,6 +212,7 @@ namespace AntennaAV.Services
              StopMessaging();
             _reading = false;
             _readThread?.Join();
+            _readThread = null;
             _port?.DiscardInBuffer();
             _port?.Close();
         }

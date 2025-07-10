@@ -9,10 +9,13 @@
     xmlns:treegrid="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.TreeDataGrid"
     xmlns:vm="using:AntennaAV.ViewModels"
     Title="AntennaAV"
+    Width="1366"
+    Height="720"
     d:DesignHeight="720"
     d:DesignWidth="1366"
     x:DataType="vm:MainWindowViewModel"
     Icon="/Assets/avalonia-logo.ico"
+    WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
 
     <Window.Resources>
@@ -43,9 +46,12 @@
 
     <Grid ShowGridLines="False">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250" />
-            <ColumnDefinition Width="0.65*" MinWidth="300" />
-            <ColumnDefinition Width="0.35*" MinWidth="200" />
+            <ColumnDefinition
+                Width="0.2*"
+                MinWidth="230"
+                MaxWidth="280" />
+            <ColumnDefinition Width="0.62*" MinWidth="300" />
+            <ColumnDefinition Width="0.38*" MinWidth="200" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -196,14 +202,15 @@
             <ScottPlot:AvaPlot
                 x:Name="AvaPlot2"
                 Grid.Row="1"
+                MinHeight="150"
                 Margin="10"
                 VerticalAlignment="Stretch" />
             <TextBlock
                 Grid.Row="1"
                 Margin="1"
-                FontSize="26"
-                VerticalAlignment="Center"
                 HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                FontSize="24"
                 Text="{CompiledBinding TransmitterAngleDegStr}" />
 
             <!--  Средний ряд - Существующие текстовые блоки  -->
@@ -475,19 +482,22 @@
                         Height="28"
                         Margin="0,0,0,6"
                         Command="{CompiledBinding Set120DegreesCommand}"
-                        Content="120°" />
+                        Content="120°"
+                        IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
                     <Button
                         Width="60"
                         Height="28"
                         Margin="0,0,0,6"
                         Command="{CompiledBinding Set180DegreesCommand}"
-                        Content="180°" />
+                        Content="180°"
+                        IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
                     <Button
                         Width="60"
                         Height="28"
                         Margin="0,0,0,6"
                         Command="{CompiledBinding Set360DegreesCommand}"
-                        Content="360°" />
+                        Content="360°"
+                        IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
                 </StackPanel>
                 <StackPanel
                     Grid.Row="0"

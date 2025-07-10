@@ -12,6 +12,9 @@ namespace AntennaAV.Views
     {
         private static List<IPlottable> _customSpokeLines = new();
 
+        private static List<IPlottable> _customSpokeLinesSmall = new();
+
+
         private static string[] CreateListofAngles(int step)
         {
             string[] ret = new string[360 / step];
@@ -74,7 +77,7 @@ namespace AntennaAV.Views
             for (int i = 0; i < polarAxis.Spokes.Count; i++)
             {
                 polarAxis.Spokes[i].LineWidth = 0;
-                //polarAxis.Spokes[i].LabelPaddingFraction = 0.05;
+                polarAxis.Spokes[i].LabelPaddingFraction = 0.35;
                 polarAxis.Spokes[i].Length = 100;
                 polarAxis.Spokes[i].LinePattern = LinePattern.Dotted;
                 polarAxis.Spokes[i].LineColor = lineColor;
@@ -82,13 +85,15 @@ namespace AntennaAV.Views
             }
 
             polarAxis.SetCircles(100, 1);
+            polarAxis.Circles[0].LineWidth = 0;
+
 
             // Не создаём круги вручную — они будут обновляться в AutoUpdatePolarAxisCircles
 
             avaPlot.Plot.Add.Palette = isDark
                 ? new ScottPlot.Palettes.Penumbra()
                 : new ScottPlot.Palettes.Category10();
-            avaPlot.Plot.Axes.Margins(0.05, 0.05);
+            //avaPlot.Plot.Axes.Margins(0.05, 0.05);
 
             avaPlot.UserInputProcessor.IsEnabled = false;
             avaPlot.Refresh();
@@ -122,12 +127,26 @@ namespace AntennaAV.Views
         public static void AddCustomSpokeLinesSmall(AvaPlot avaPlot, ScottPlot.Plottables.PolarAxis polarAxis, bool isDark)
         {
 
-            double rStart = 95;
-            double rEnd = 105;
-            var lineColor = isDark ? ScottPlot.Color.FromHex("#777777") : ScottPlot.Color.FromHex("#BBBBBB");
+            double rStart = 97;
+            double rEnd = 103;
+            var lineColor = isDark ? ScottPlot.Color.FromHex("#BBBBBB") : ScottPlot.Color.FromHex("#333333");
 
-            for (double angle = 0; angle < 360; angle += 30)
+            foreach (var line in _customSpokeLinesSmall)
+                avaPlot.Plot.Remove(line);
+            _customSpokeLinesSmall.Clear();
+
+            for (double angle = 7.5; angle <= 360; angle += 7.5)
             {
+                if (angle % 30 == 0)
+                {
+                    rStart = 94;
+                    rEnd = 106;
+                }
+                else
+                {
+                    rStart = 97;
+                    rEnd = 103;
+                }
                 double angleRad = Math.PI * angle / 180.0;
                 double x1 = rStart * Math.Cos(angleRad);
                 double y1 = rStart * Math.Sin(angleRad);
@@ -137,7 +156,7 @@ namespace AntennaAV.Views
                 line.Color = lineColor;
                 line.LineWidth = 1;
                 line.LinePattern = ScottPlot.LinePattern.Solid;
-                _customSpokeLines.Add(line);
+                _customSpokeLinesSmall.Add(line);
             }
         }
 
@@ -180,7 +199,7 @@ namespace AntennaAV.Views
             double maxValue,
             bool isDark,
             int minCircles = 3,
-            int maxCircles = 8)
+            int maxCircles = 7)
         {
             // Оставить только внешний круг (последний)
             while (polarAxis.Circles.Count > 1)
@@ -227,8 +246,8 @@ namespace AntennaAV.Views
             circleValues = circleValues
                 .Where(v => v == niceMax || ((niceMax - niceMin) > 0 ? 100 * (v - niceMin) / (niceMax - niceMin) : 100) >= 10)
                 .ToList();
-            // 7. Если получилось >=2 кругов — используем их, иначе строим стандартные 3 круга
-            if (circleValues.Count >= 2)
+            // 7. Если получилось >2 кругов — используем их, иначе строим стандартные 3 круга
+            if (circleValues.Count > 2)
             {
                 int n = circleValues.Count;
                 double r0 = ((niceMax - niceMin) > 0) ? 100 * (circleValues[0] - niceMin) / (niceMax - niceMin) : 100;
@@ -251,12 +270,14 @@ namespace AntennaAV.Views
             }
             else
             {
-                double value50 = (minValue + maxValue) / 2;
+                double value70 = minValue + (maxValue - minValue) * 0.7;
+                double value40 = minValue + (maxValue - minValue) * 0.4;
                 double value10 = minValue + (maxValue - minValue) * 0.1;
-                positions = new double[] { 10, 50, 100 };
+                positions = new double[] { 10, 40, 70, 100 };
                 labels = new string[] {
                     isLogScale ? $"{Math.Round(value10, 1)} дБ" : $"{Math.Round(value10, 1)}",
-                    isLogScale ? $"{Math.Round(value50, 1)} дБ" : $"{Math.Round(value50, 1)}",
+                    isLogScale ? $"{Math.Round(value40, 1)} дБ" : $"{Math.Round(value40, 1)}",
+                    isLogScale ? $"{Math.Round(value70, 1)} дБ" : $"{Math.Round(value70, 1)}",
                     "" // внешний круг без подписи
                 };
             }

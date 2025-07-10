@@ -4,10 +4,12 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Colormaps;
+using ScottPlot.Hatches;
 using ScottPlot.Plottables;
 using System;
 using System.Collections;
@@ -15,7 +17,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Markup;
-using Avalonia.Styling;
 
 namespace AntennaAV.Views
 {
@@ -144,7 +145,10 @@ namespace AntennaAV.Views
                         else if (e.PropertyName == nameof(vm.DataFlowStatus))
                         {
                             if (vm.DataFlowStatus.Contains("Данные идут"))
+                            {
+                                DrawTransmitterAnglePoint(vm.TransmitterAngleDeg);
                                 DrawReceiverAngleArrow(vm.ReceiverAngleDeg);
+                            }
                         }
                         else if (e.PropertyName == nameof(vm.IsPowerNormSelected))
                         {
@@ -159,6 +163,10 @@ namespace AntennaAV.Views
                                     Plots.AutoUpdatePolarAxisCircles(AvaPlot1, _polarAxis, false, 0, 1, isDark);
                                 AvaPlot1.Refresh();
                             }
+                        }
+                        else if (e.PropertyName == nameof(vm.TransmitterAngleDeg))
+                        {
+                            DrawTransmitterAnglePoint(vm.TransmitterAngleDeg);
                         }
                     };
 
@@ -225,7 +233,7 @@ namespace AntennaAV.Views
                             {
                                 // Показываем стрелку антенны
                                 _angleArrow.ArrowLineWidth = 3;
-                                _angleArrow.ArrowFillColor = Colors.Black;
+                                _angleArrow.ArrowFillColor = ScottPlot.Color.FromHex("#0073cf");
                             }
                             else
                             {
@@ -244,7 +252,7 @@ namespace AntennaAV.Views
                             if (show)
                             {
                                 // Показываем сектор
-                                _sectorPolygon.FillColor = Colors.DarkGray.WithAlpha(.7);
+                                _sectorPolygon.FillColor = Colors.DarkGray.WithAlpha(.5);
                                 _sectorPolygon.LineWidth = 0;
                             }
                             else
@@ -275,7 +283,6 @@ namespace AntennaAV.Views
             {
                 if (this.DataContext is MainWindowViewModel vm)
                 {
-                    // Уже есть подписка на PropertyChanged
                     vm.PropertyChanged += (s2, e2) =>
                     {
                         if (e2.PropertyName == nameof(vm.SelectedTabIndex) || e2.PropertyName == nameof(vm.IsDiagramAcquisitionRunning))
@@ -284,19 +291,7 @@ namespace AntennaAV.Views
                                 DrawTabPlot(vm.SelectedTab);
                             //DrawAllVisiblePlots();
                         }
-                       /* if (e2.PropertyName == nameof(vm.SelectedTab))
-                        {
-                            if (vm.SelectedTab?.Plot != null)
-                            {
-                                vm.SelectedTab.Plot.PropertyChanged += (s3, e3) =>
-                                {
-                                    if (e3.PropertyName == nameof(vm.SelectedTab.Plot.ColorHex))
-                                        DrawTabPlot(vm.SelectedTab);
-                                };
-                            }
-                        }*/
                     };
-                    // Добавлено: подписка на изменение коллекции вкладок
                     vm.Tabs.CollectionChanged += (s2, e2) =>
                     {
                         DrawAllVisiblePlots();
@@ -309,7 +304,8 @@ namespace AntennaAV.Views
                 }
             };
             Application.Current!.ActualThemeVariantChanged += OnThemeChanged;
-            SetScottPlotTheme(Application.Current!.ActualThemeVariant == ThemeVariant.Dark);
+            // Теперь применяем тему ко всем графикам только после инициализации
+            SetScottPlotTheme(Application.Current!.ActualThemeVariant == ThemeVariant.Dark, AvaPlot1, AvaPlot2);
         }
 
         private void DrawReceiverAngleArrow(double angleDeg)
@@ -331,8 +327,8 @@ namespace AntennaAV.Views
             }
 
             _angleArrow.ArrowLineWidth = 1;
-            _angleArrow.ArrowFillColor = Colors.CornflowerBlue;
-            _angleArrow.ArrowLineColor = Colors.CornflowerBlue;
+            _angleArrow.ArrowFillColor = ScottPlot.Color.FromHex("#0073cf");
+            _angleArrow.ArrowLineColor = ScottPlot.Color.FromHex("#0073cf");
             _angleArrow.ArrowWidth = 3;
             _angleArrow.ArrowheadWidth = 6;
 
@@ -411,6 +407,11 @@ namespace AntennaAV.Views
             {
                 AvaPlot1.Plot.Axes.AutoScale();
                 AvaPlot1.Refresh();
+            }
+            if (AvaPlot2 != null)
+            {
+                AvaPlot2.Plot.Axes.AutoScale();
+                AvaPlot2.Refresh();
             }
         }
 
@@ -581,49 +582,87 @@ namespace AntennaAV.Views
         private void OnThemeChanged(object? sender, EventArgs e)
         {
             var isDark = Application.Current!.ActualThemeVariant == ThemeVariant.Dark;
-            SetScottPlotTheme(isDark);
             // Удаляем старую полярную ось и создаём новую с нужной темой
             if (_polarAxis != null)
             {
                 AvaPlot1.Plot.Remove(_polarAxis);
                 _polarAxis = null;
             }
+            if (_polarAxisTx != null)
+            {
+                AvaPlot2.Plot.Remove(_polarAxisTx);
+                _polarAxisTx = null;
+            }
             if (this.DataContext is MainWindowViewModel vm)
             {
                 _polarAxis = Plots.Initialize(AvaPlot1, isDark);
                 bool isLogScale = vm.IsPowerNormSelected;
                 Plots.AutoUpdatePolarAxisCircles(AvaPlot1, _polarAxis, isLogScale, -50, 0, isDark);
+                _polarAxisTx = Plots.InitializeSmall(AvaPlot2, isDark);
+            }
+            // Теперь применяем тему ко всем графикам
+            SetScottPlotTheme(isDark, AvaPlot1, AvaPlot2);
+        }
+
+        private static void SetScottPlotTheme(bool isDark, params AvaPlot[] plots)
+        {
+            foreach (var avaPlot in plots)
+            {
+                if (avaPlot?.Plot != null)
+                {
+                    if (isDark)
+                    {
+                        avaPlot.Plot.FigureBackground.Color = ScottPlot.Color.FromHex("#181818");
+                        avaPlot.Plot.DataBackground.Color = ScottPlot.Color.FromHex("#1f1f1f");
+                        avaPlot.Plot.Axes.Color(ScottPlot.Color.FromHex("#d7d7d7"));
+                        avaPlot.Plot.Grid.MajorLineColor = ScottPlot.Color.FromHex("#404040");
+                        avaPlot.Plot.Legend.BackgroundColor = ScottPlot.Color.FromHex("#404040");
+                        avaPlot.Plot.Legend.FontColor = ScottPlot.Color.FromHex("#d7d7d7");
+                        avaPlot.Plot.Legend.OutlineColor = ScottPlot.Color.FromHex("#d7d7d7");
+                        avaPlot.Plot.Add.Palette = new ScottPlot.Palettes.Penumbra();
+                    }
+                    else
+                    {
+                        avaPlot.Plot.FigureBackground.Color = ScottPlot.Color.FromHex("#ffffff");
+                        avaPlot.Plot.DataBackground.Color = ScottPlot.Color.FromHex("#ffffff");
+                        avaPlot.Plot.Axes.Color(ScottPlot.Color.FromHex("#222222"));
+                        avaPlot.Plot.Grid.MajorLineColor = ScottPlot.Color.FromHex("#e5e5e5");
+                        avaPlot.Plot.Legend.BackgroundColor = ScottPlot.Color.FromHex("#f0f0f0");
+                        avaPlot.Plot.Legend.FontColor = ScottPlot.Color.FromHex("#222222");
+                        avaPlot.Plot.Legend.OutlineColor = ScottPlot.Color.FromHex("#222222");
+                        avaPlot.Plot.Add.Palette = new ScottPlot.Palettes.Category10();
+                    }
+                    avaPlot.Refresh();
+                }
             }
         }
 
-        private void SetScottPlotTheme(bool isDark)
+        private ScottPlot.Plottables.Marker? _transmitterMarker;
+        private void DrawTransmitterAnglePoint(double angleDeg)
         {
-            if (AvaPlot1?.Plot != null)
+            double radius = 100;
+            double angleRad = (-angleDeg + 270) * Math.PI / 180.0;
+            double x = radius * Math.Cos(angleRad);
+            double y = radius * Math.Sin(angleRad);
+
+            if (_transmitterMarker == null)
             {
-                if (isDark)
-                {
-                    AvaPlot1.Plot.FigureBackground.Color = ScottPlot.Color.FromHex("#181818");
-                    AvaPlot1.Plot.DataBackground.Color = ScottPlot.Color.FromHex("#1f1f1f");
-                    AvaPlot1.Plot.Axes.Color(ScottPlot.Color.FromHex("#d7d7d7"));
-                    AvaPlot1.Plot.Grid.MajorLineColor = ScottPlot.Color.FromHex("#404040");
-                    AvaPlot1.Plot.Legend.BackgroundColor = ScottPlot.Color.FromHex("#404040");
-                    AvaPlot1.Plot.Legend.FontColor = ScottPlot.Color.FromHex("#d7d7d7");
-                    AvaPlot1.Plot.Legend.OutlineColor = ScottPlot.Color.FromHex("#d7d7d7");
-                    AvaPlot1.Plot.Add.Palette = new ScottPlot.Palettes.Penumbra();
-                }
-                else
-                {
-                    AvaPlot1.Plot.FigureBackground.Color = ScottPlot.Color.FromHex("#ffffff");
-                    AvaPlot1.Plot.DataBackground.Color = ScottPlot.Color.FromHex("#ffffff");
-                    AvaPlot1.Plot.Axes.Color(ScottPlot.Color.FromHex("#222222"));
-                    AvaPlot1.Plot.Grid.MajorLineColor = ScottPlot.Color.FromHex("#e5e5e5");
-                    AvaPlot1.Plot.Legend.BackgroundColor = ScottPlot.Color.FromHex("#f0f0f0");
-                    AvaPlot1.Plot.Legend.FontColor = ScottPlot.Color.FromHex("#222222");
-                    AvaPlot1.Plot.Legend.OutlineColor = ScottPlot.Color.FromHex("#222222");
-                    AvaPlot1.Plot.Add.Palette = new ScottPlot.Palettes.Category10();
-                }
-                AvaPlot1.Refresh();
+                // Добавляем маркер впервые
+                _transmitterMarker = AvaPlot2.Plot.Add.Marker(
+                    x: x,
+                    y: y,
+                    color: ScottPlot.Color.FromHex("#0073cf"),
+                    size: 10
+                );
             }
+            else
+            {
+                // Обновляем координаты существующего маркера
+                _transmitterMarker.X = x;
+                _transmitterMarker.Y = y;
+            }
+
+            AvaPlot2.Refresh();
         }
 
         private async void ImportButton_Click(object? sender, RoutedEventArgs e)

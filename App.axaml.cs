@@ -8,6 +8,9 @@ using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using System.Linq;
 using Avalonia.Styling;
+using System.Threading.Tasks;
+using Avalonia.Threading;
+using System.Threading;
 
 namespace AntennaAV
 {
@@ -27,19 +30,29 @@ namespace AntennaAV
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                // ������ ��������� �������
-                IComPortService comPortService = new ComPortManager();
+                // Показываем SplashWindow
+                var splash = new SplashWindow();
+                splash.Show();
 
-                //IComPortService comPortService = new TestComPortService();
-
-                // ������ ViewModel � ��������� �����������
-                var mainViewModel = new MainWindowViewModel(comPortService);
-
-                // ����������� �������� ������ ����
-                desktop.MainWindow = new MainWindow
+                // Имитация прогресса (можно заменить на реальные этапы)
+                Task.Run(async () =>
                 {
-                    DataContext = mainViewModel
-                };
+                    await Task.Delay(1000);
+
+                Dispatcher.UIThread.Post(()  =>
+                    {
+                        IComPortService comPortService = new TestComPortService();
+                        //IComPortService comPortService = new ComPortManager();
+                        var mainViewModel = new MainWindowViewModel(comPortService);
+                        var mainWindow = new MainWindow
+                        {
+                            DataContext = mainViewModel
+                        };
+                        desktop.MainWindow = mainWindow;
+                        mainWindow.Show();
+                        splash.Close();
+                    });
+                });
             }
 
             base.OnFrameworkInitializationCompleted();
