@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Markup;
+using System.Timers;
 
 namespace AntennaAV.Views
 {
@@ -27,10 +28,19 @@ namespace AntennaAV.Views
         private ScottPlot.Plottables.Polygon? _sectorPolygon;
         private ScottPlot.Plottables.Arrow? _angleArrow;
 
+        private bool _needsAvaPlot2Refresh = false;
+        private Timer? _avaPlot2RefreshTimer;
+
         public MainWindow()
         {
             InitializeComponent();
             this.Closing += MainWindow_Closing;
+            this.AddHandler(InputElement.PointerPressedEvent, OnPointerPressed, RoutingStrategies.Tunnel);
+            AvaPlot2.PointerMoved += AvaPlot2_PointerMoved;
+            AvaPlot2.PointerPressed += AvaPlot2_PointerPressed;
+
+
+
             // Удаляем старую ось, если есть (на старте не нужно, но для универсальности)
             if (_polarAxis != null)
             {
@@ -306,6 +316,20 @@ namespace AntennaAV.Views
             Application.Current!.ActualThemeVariantChanged += OnThemeChanged;
             // Теперь применяем тему ко всем графикам только после инициализации
             SetScottPlotTheme(Application.Current!.ActualThemeVariant == ThemeVariant.Dark, AvaPlot1, AvaPlot2);
+            _avaPlot2RefreshTimer = new Timer(100); // 10 Гц
+            _avaPlot2RefreshTimer.Elapsed += (s, e) =>
+            {
+                if (_needsAvaPlot2Refresh)
+                {
+                    _needsAvaPlot2Refresh = false;
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        if (AvaPlot2 != null && AvaPlot2.Plot != null)
+                            AvaPlot2.Refresh();
+                    });
+                }
+            };
+            _avaPlot2RefreshTimer.Start();
         }
 
         private void DrawReceiverAngleArrow(double angleDeg)
@@ -345,6 +369,96 @@ namespace AntennaAV.Views
             AvaPlot1.Refresh();
         }
 
+        private ScottPlot.Plottables.Marker? _hoverMarker;
+        private double _hoverAngleDeg = double.NaN;
+
+
+
+        private void AvaPlot2_PointerMoved(object? sender, PointerEventArgs e)
+        {
+            if (AvaPlot2 == null || AvaPlot2.Plot == null)
+                return;
+            var point = e.GetPosition(AvaPlot2);
+
+            // Центр контрола
+            double centerX = AvaPlot2.Bounds.Width / 2.0;
+            double centerY = AvaPlot2.Bounds.Height / 2.0;
+
+            // Вектор от центра к мыши
+            double dx = point.X - centerX;
+            double dy = point.Y - centerY; // тут не инвертируем, просто расстояние
+
+            // Радиус (расстояние от центра до мыши) в пикселях
+            double rPix = Math.Sqrt(dx * dx + dy * dy);
+
+            // Радиус внешнего круга в пикселях (например, 90% от половины минимального размера)
+            double plotRadiusPix = 0.6 * Math.Min(AvaPlot2.Bounds.Width, AvaPlot2.Bounds.Height) / 2.0;
+
+            // Порог: мышь должна быть в пределах ±10 пикселей от внешнего круга
+            double threshold = 20.0;
+            if (Math.Abs(rPix - plotRadiusPix) > threshold)
+            {
+                // Скрыть маркер, если он есть
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (_hoverMarker != null && AvaPlot2.Plot.GetPlottables().Contains(_hoverMarker))
+                    {
+                        AvaPlot2.Plot.Remove(_hoverMarker);
+                        _hoverMarker = null;
+                        RequestAvaPlot2Refresh();
+                    }
+                });
+                _hoverAngleDeg = double.NaN;
+                if (DataContext is MainWindowViewModel vm)
+                    DrawTransmitterAnglePoint(vm.TransmitterAngleDeg);
+                return;
+            }
+
+            // Угол (0° вверх, по часовой стрелке)
+            double angleRad = Math.Atan2(dx, -dy); // -dy, чтобы 0° было вверх
+            double angleDeg = (angleRad * 180.0 / Math.PI + 360) % 360;
+
+            // ОТЗЕРКАЛИВАЕМ и ПОВОРАЧИВАЕМ на 90° по часовой
+            double mirroredAngle = (360 - angleDeg + 180) % 360;
+            // Округление к ближайшим 10°
+            double snapStep = 10.0;
+            double snappedAngle = Math.Round(mirroredAngle / snapStep) * snapStep;
+            snappedAngle = snappedAngle % 360;
+            _hoverAngleDeg = snappedAngle;
+
+            // Координаты на внешнем круге (радиус 100 в координатах графика)
+            double r = 100;
+            if (_polarAxisTx == null) return;
+            var coord = _polarAxisTx.GetCoordinates(r, snappedAngle);
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (_hoverMarker == null)
+                    _hoverMarker = AvaPlot2.Plot.Add.Marker(coord.X, coord.Y, color: ScottPlot.Color.FromHex("#FF0000"), size: 8);
+                else
+                {
+                    _hoverMarker.X = coord.X;
+                    _hoverMarker.Y = coord.Y;
+                }
+                RequestAvaPlot2Refresh();
+            });
+        }
+
+        private void AvaPlot2_PointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            // Клик срабатывает только если маркер есть и угол валиден
+            if (_hoverMarker != null && !double.IsNaN(_hoverAngleDeg))
+            {
+                double selectedAngle = _hoverAngleDeg;
+                if (DataContext is MainWindowViewModel vm)
+                {
+                    vm.OnTransmitterAngleSelected?.Invoke((360 - selectedAngle) % 360);
+                }
+            }
+            // иначе — ничего не делаем
+        }
+
+
         private void Header_DoubleTapped(object sender, RoutedEventArgs e)
         {
             if (sender is TextBlock tb && tb.DataContext is TabViewModel vm)
@@ -363,7 +477,21 @@ namespace AntennaAV.Views
                 vm.IsEditingHeader = false;
         }
 
-
+        private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            // Если клик не по TextBox
+            if (e.Source is not TextBox)
+            {
+                if (DataContext is MainWindowViewModel vm)
+                {
+                    foreach (var tab in vm.Tabs)
+                    {
+                        if (tab.IsEditingHeader)
+                            tab.IsEditingHeader = false;
+                    }
+                }
+            }
+        }
 
         private void NumericUpDown_KeyDown(object? sender, KeyEventArgs e)
         {
@@ -582,12 +710,14 @@ namespace AntennaAV.Views
         private void OnThemeChanged(object? sender, EventArgs e)
         {
             var isDark = Application.Current!.ActualThemeVariant == ThemeVariant.Dark;
-            // Удаляем старую полярную ось и создаём новую с нужной темой
-            if (_polarAxis != null)
-            {
-                AvaPlot1.Plot.Remove(_polarAxis);
-                _polarAxis = null;
+             if (_polarAxis != null)
+             {
+                Plots.UpdatePolarAxisTheme(_polarAxis, isDark);
+                Plots.AddCustomSpokeLines(AvaPlot1, _polarAxis, isDark);
+
+                AvaPlot1?.Refresh();
             }
+            
             if (_polarAxisTx != null)
             {
                 AvaPlot2.Plot.Remove(_polarAxisTx);
@@ -595,13 +725,17 @@ namespace AntennaAV.Views
             }
             if (this.DataContext is MainWindowViewModel vm)
             {
-                _polarAxis = Plots.Initialize(AvaPlot1, isDark);
-                bool isLogScale = vm.IsPowerNormSelected;
-                Plots.AutoUpdatePolarAxisCircles(AvaPlot1, _polarAxis, isLogScale, -50, 0, isDark);
+                //_polarAxis = Plots.Initialize(AvaPlot1, isDark);
+                //bool isLogScale = vm.IsPowerNormSelected;
+                //Plots.AutoUpdatePolarAxisCircles(AvaPlot1, _polarAxis, isLogScale, -50, 0, isDark);
                 _polarAxisTx = Plots.InitializeSmall(AvaPlot2, isDark);
+
+                _transmitterMarker = null;
+                DrawTransmitterAnglePoint(vm.TransmitterAngleDeg);
             }
             // Теперь применяем тему ко всем графикам
-            SetScottPlotTheme(isDark, AvaPlot1, AvaPlot2);
+            if(AvaPlot1 != null && AvaPlot2 != null)
+                SetScottPlotTheme(isDark, AvaPlot1, AvaPlot2);
         }
 
         private static void SetScottPlotTheme(bool isDark, params AvaPlot[] plots)
@@ -640,29 +774,32 @@ namespace AntennaAV.Views
         private ScottPlot.Plottables.Marker? _transmitterMarker;
         private void DrawTransmitterAnglePoint(double angleDeg)
         {
+            if (AvaPlot2 == null || AvaPlot2.Plot == null)
+                return;
             double radius = 100;
             double angleRad = (-angleDeg + 270) * Math.PI / 180.0;
             double x = radius * Math.Cos(angleRad);
             double y = radius * Math.Sin(angleRad);
-
-            if (_transmitterMarker == null)
+            Dispatcher.UIThread.Post(() =>
             {
-                // Добавляем маркер впервые
-                _transmitterMarker = AvaPlot2.Plot.Add.Marker(
-                    x: x,
-                    y: y,
-                    color: ScottPlot.Color.FromHex("#0073cf"),
-                    size: 10
-                );
-            }
-            else
-            {
-                // Обновляем координаты существующего маркера
-                _transmitterMarker.X = x;
-                _transmitterMarker.Y = y;
-            }
-
-            AvaPlot2.Refresh();
+                if (_transmitterMarker == null)
+                {
+                    // Добавляем маркер впервые
+                    _transmitterMarker = AvaPlot2.Plot.Add.Marker(
+                        x: x,
+                        y: y,
+                        color: ScottPlot.Color.FromHex("#0073cf"),
+                        size: 10
+                    );
+                }
+                else
+                {
+                    // Обновляем координаты существующего маркера
+                    _transmitterMarker.X = x;
+                    _transmitterMarker.Y = y;
+                }
+                RequestAvaPlot2Refresh();
+            });
         }
 
         private async void ImportButton_Click(object? sender, RoutedEventArgs e)
@@ -673,6 +810,11 @@ namespace AntennaAV.Views
                 if (vm.SelectedTab != null)
                     DrawTabPlot(vm.SelectedTab);
             }
+        }
+
+        private void RequestAvaPlot2Refresh()
+        {
+            _needsAvaPlot2Refresh = true;
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls;
 using ScottPlot;
 using ScottPlot.Avalonia;
+using ScottPlot.Plottables;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +36,7 @@ namespace AntennaAV.Views
 
             // Цвета для темной и светлой темы
             var lineColor = isDark ? ScottPlot.Color.FromHex("#777777") : ScottPlot.Color.FromHex("#BBBBBB");
-            var circleColor = isDark ? ScottPlot.Color.FromHex("#bbbbbb") : ScottPlot.Color.FromHex("#666666");
+            //var circleColor = isDark ? ScottPlot.Color.FromHex("#bbbbbb") : ScottPlot.Color.FromHex("#666666");
             var labelColor = isDark ? ScottPlot.Color.FromHex("#eeeeee") : ScottPlot.Color.FromHex("#111111");
 
             
@@ -61,6 +62,20 @@ namespace AntennaAV.Views
             return polarAxis;
         }
 
+        public static class ThemeColors
+        {
+            public static ScottPlot.Color GetLineColor(bool isDark) =>
+                isDark ? ScottPlot.Color.FromHex("#777777") : ScottPlot.Color.FromHex("#BBBBBB");
+
+            public static ScottPlot.Color GetCircleColor(bool isDark) =>
+                isDark ? ScottPlot.Color.FromHex("#bbbbbb") : ScottPlot.Color.FromHex("#666666");
+
+            public static ScottPlot.Color GetLabelColor(bool isDark) =>
+                isDark ? ScottPlot.Color.FromHex("#eeeeee") : ScottPlot.Color.FromHex("#111111");
+        }
+
+
+
         public static ScottPlot.Plottables.PolarAxis InitializeSmall(AvaPlot avaPlot, bool isDark)
         {
             var polarAxis = avaPlot.Plot.Add.PolarAxis(radius: 100);
@@ -69,9 +84,9 @@ namespace AntennaAV.Views
             polarAxis.SetSpokes(labels, 100, true);
 
             // Цвета для темной и светлой темы
-            var lineColor = isDark ? ScottPlot.Color.FromHex("#777777") : ScottPlot.Color.FromHex("#BBBBBB");
-            var circleColor = isDark ? ScottPlot.Color.FromHex("#bbbbbb") : ScottPlot.Color.FromHex("#666666");
-            var labelColor = isDark ? ScottPlot.Color.FromHex("#eeeeee") : ScottPlot.Color.FromHex("#111111");
+            var lineColor = ThemeColors.GetLineColor(isDark);
+            var circleColor = ThemeColors.GetCircleColor(isDark);
+            var labelColor = ThemeColors.GetLabelColor(isDark);
 
 
             for (int i = 0; i < polarAxis.Spokes.Count; i++)
@@ -190,6 +205,33 @@ namespace AntennaAV.Views
                 _customSpokeLines.Add(line);
             }  
         }
+
+        public static void UpdatePolarAxisTheme(ScottPlot.Plottables.PolarAxis polarAxis, bool isDark)
+        {
+            if (polarAxis == null) return;
+
+            var lineColor = ThemeColors.GetLineColor(isDark);
+            var circleColor = ThemeColors.GetCircleColor(isDark);
+            var labelColor = ThemeColors.GetLabelColor(isDark);
+
+
+            foreach (var spoke in polarAxis.Spokes)
+            {
+                spoke.LineColor = lineColor;
+                spoke.LabelStyle.ForeColor = labelColor;
+            }
+
+            foreach (var circle in polarAxis.Circles)
+            {
+                circle.LineColor = lineColor;
+                circle.LabelStyle.ForeColor = labelColor;
+            }
+
+            polarAxis.Circles[^1].LineColor = circleColor;
+
+        }
+
+
 
         public static void AutoUpdatePolarAxisCircles(
             AvaPlot avaPlot,

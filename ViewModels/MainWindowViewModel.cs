@@ -30,11 +30,8 @@ namespace AntennaAV.ViewModels
     {
         private readonly IComPortService _comPortService;
 
-        [ObservableProperty]
         private double receiverAngleDeg;
-
-        [ObservableProperty]
-        private double transmitterAngleDeg;
+        //private double transmitterAngleDeg;
         private double powerDbm;
         private int antennaType;
         private int rxAntennaCounter;
@@ -73,8 +70,12 @@ namespace AntennaAV.ViewModels
         [ObservableProperty]
         private string connectionStatus = "⏳ Не подключено";
 
+        public double ReceiverAngleDeg { get => receiverAngleDeg; set => receiverAngleDeg = value; }
         [ObservableProperty]
         private string receiverAngleDegStr = string.Empty;
+
+        [ObservableProperty]
+        private double transmitterAngleDeg;
 
         [ObservableProperty]
         private string transmitterAngleDegStr = string.Empty;
@@ -88,12 +89,18 @@ namespace AntennaAV.ViewModels
         private string antennaTypeStr = string.Empty;
 
         public int RxAntennaCounter { get => rxAntennaCounter; set => rxAntennaCounter = value; }
+        public int TxAntennaCounter { get => rxAntennaCounter; set => rxAntennaCounter = value; }
         [ObservableProperty]
         private string rxAntennaCounterStr = string.Empty;
 
-        public DateTime Timestamp { get => timestamp; set => timestamp = value; }
         [ObservableProperty]
-        private string timestampStr = string.Empty;
+        private string txAntennaCounterStr = string.Empty;
+
+
+        public DateTime Timestamp { get => timestamp; set => timestamp = value; }
+        
+        //[ObservableProperty]
+        //private string timestampStr = string.Empty;
 
         [ObservableProperty]
         private bool isDiagramAcquisitionRunning;
@@ -141,19 +148,19 @@ namespace AntennaAV.ViewModels
 
         [ObservableProperty]
         private string? transmitterMoveAngleError;
-        /*
-        [ObservableProperty]
-        private string transmitterSetAngle = "0";
 
-        [ObservableProperty]
-        private string transmitterSetAngleError = "";
-        */
+        //[ObservableProperty]
+        //private string transmitterSetAngle = "0";
+
+        //[ObservableProperty]
+        //private string transmitterSetAngleError = "";
+
         [ObservableProperty]
         private string receiverMoveAngle = "0";
 
         [ObservableProperty]
         private string receiverMoveAngleError = "";
-        
+
         [ObservableProperty]
         private string receiverSetAngle = "0";
 
@@ -161,7 +168,8 @@ namespace AntennaAV.ViewModels
         private string receiverSetAngleError = "";
 
         [ObservableProperty]
-        private string transmitterAngle2Error = "";
+        private string txAntennaCounterErrorStr = "";
+        // private string transmitterAngle2Error = "";
 
         private DispatcherTimer? _tableUpdateTimer;
 
@@ -177,7 +185,6 @@ namespace AntennaAV.ViewModels
         private string dataFlowStatus = "🔴 Нет данных";
 
         private DateTime _lastDataReceived = DateTime.MinValue;
-        private bool isBuildRadarNeeded = false;
 
         partial void OnSectorSizeChanged(string value)
         {
@@ -205,8 +212,9 @@ namespace AntennaAV.ViewModels
                     SectorSize = "360";
                     return;
                 }
-                isBuildRadarNeeded = true;
+
                 // Если значение в допустимых пределах, обновляем график
+                BuildRadar();
             }
             else
             {
@@ -263,6 +271,28 @@ namespace AntennaAV.ViewModels
 
         public event Action<double, double>? OnBuildRadar;
 
+        public Action<double>? OnTransmitterAngleSelected;
+
+
+
+
+        /*
+                [RelayCommand]
+                private void BuildDiagram()
+                {
+                    // SectorSize и SectorCenter уже содержат введённые пользователем значения
+                    // Можно преобразовать в число:
+                    if (double.TryParse(SectorSize, out var size) && double.TryParse(SectorCenter, out var center))
+                    {
+                        // Вычисляем from и to из размера и центра сектора
+                        var (from, to) = CalculateSectorRange(size, center);
+
+                        // Здесь можно добавить логику для построения диаграммы
+                        // Например, вызвать OnBuildRadarPlot с данными
+                        OnBuildRadarPlot?.Invoke(new double[] { from, to }, new double[] { 0, 0 });
+                    }
+                }
+        */
         public event Action<double[], double[]>? OnBuildRadarPlot;
 
 
@@ -395,11 +425,11 @@ namespace AntennaAV.ViewModels
             ConnectionStatus = $"✅ Таблица загружена: {file.Name}";
         }
 
-        //private void DrawAllVisiblePlotsIfNeeded()
-        //{
-        //    // Для вызова из ViewModel через событие или напрямую из View
-        //    OnBuildRadarPlot?.Invoke(Array.Empty<double>(), Array.Empty<double>()); // Сбросить график
-        //}
+        private void DrawAllVisiblePlotsIfNeeded()
+        {
+            // Для вызова из ViewModel через событие или напрямую из View
+            OnBuildRadarPlot?.Invoke(Array.Empty<double>(), Array.Empty<double>()); // Сбросить график
+        }
 
         private void UpdateTabCommands()
         {
@@ -448,6 +478,12 @@ namespace AntennaAV.ViewModels
             _uiTimer.Interval = TimeSpan.FromMilliseconds(100);
             _uiTimer.Tick += (_, _) => OnUiTimerTick();
             _uiTimer.Start();
+
+
+            OnTransmitterAngleSelected += angle =>
+            {
+                _comPortService.SetAntennaAngle(angle, "T", "G");
+            };
         }
 
 
@@ -480,21 +516,10 @@ namespace AntennaAV.ViewModels
         private void OnUiTimerTick()
         {
             bool dataReceived = false;
+            bool needRedraw = false;
 
-            if(isBuildRadarNeeded)
-            {
-                BuildRadar();
-                isBuildRadarNeeded = false;
-
-            }
-
-            if(isThemeChangedFlag)
-            {
-                ((App)Avalonia.Application.Current!).SetTheme(
-                    IsDarkTheme ? ThemeVariant.Dark : ThemeVariant.Light);
-                isThemeChangedFlag = false;
-            }
-
+            
+            
             if (_comPortService.IsOpen && !Design.IsDesignMode)
             {
                 AntennaData? lastData = null;
@@ -524,15 +549,31 @@ namespace AntennaAV.ViewModels
                 if (lastData != null)
                 {
                     ReceiverAngleDeg = lastData.ReceiverAngleDeg;
-                    ReceiverAngleDegStr = ReceiverAngleDeg.ToString("F1") + "°";
+                    OnPropertyChanged(nameof(ReceiverAngleDeg));
+                    ReceiverAngleDegStr = ReceiverAngleDeg.ToString("F1");
                     TransmitterAngleDeg = lastData.TransmitterAngleDeg;
-                    TransmitterAngleDegStr = TransmitterAngleDeg.ToString("F1") + "°";
+                    TransmitterAngleDegStr = TransmitterAngleDeg.ToString("F1");
                     PowerDbm = lastData.PowerDbm;
                     PowerDbmStr = PowerDbm.ToString("F2");
                     AntennaType = lastData.AntennaType;
+                    AntennaTypeStr = AntennaType.ToString();
                     RxAntennaCounter = lastData.RxAntennaCounter;
+                    TxAntennaCounter = lastData.TxAntennaCounter;
+                    TxAntennaCounterStr = TxAntennaCounter.ToString();
+                    //RxAntennaCounterStr = RxAntennaCounter.ToString();
                     Timestamp = lastData.Timestamp;
+                    //TimestampStr = Timestamp.ToString("HH:mm:ss.fff");
                 }
+
+                if (Math.Abs(TxAntennaCounter) >= 5400)
+                {
+                    TxAntennaCounterErrorStr = "Защита от перекручивания кабеля";
+                }
+                else
+                {
+                    TxAntennaCounterErrorStr = "";
+                }
+
             }
             // Статус потока данных: только по текущему срабатыванию таймера
             if (dataReceived)
@@ -563,12 +604,11 @@ namespace AntennaAV.ViewModels
                 if (tab.IsPlotColorDirty)
                 {
                     tab.IsPlotColorDirty = false;
-                    RequestPlotRedraw?.Invoke();
-
+                    needRedraw = true;
                 }
             }
-            
-                
+            if (needRedraw)
+                RequestPlotRedraw?.Invoke();
         }
         [RelayCommand]
         public void Set120Degrees()
@@ -625,7 +665,7 @@ namespace AntennaAV.ViewModels
         [RelayCommand]
         public void SetTransmitterAngle()
         {
-            if (string.IsNullOrWhiteSpace(TransmitterMoveAngle) || !string.IsNullOrEmpty(TransmitterMoveAngle) || !_comPortService.IsOpen)
+            if (string.IsNullOrWhiteSpace(TransmitterMoveAngle) || !string.IsNullOrEmpty(TransmitterMoveAngleError) || !_comPortService.IsOpen)
                 return;
             if (double.TryParse(TransmitterMoveAngle, out var angle) && angle >= 0 && angle <= 360)
             {
@@ -1071,12 +1111,10 @@ namespace AntennaAV.ViewModels
         [ObservableProperty]
         private bool isDarkTheme;
 
-        private bool isThemeChangedFlag = false;
-
         partial void OnIsDarkThemeChanged(bool value)
         {
-
-            isThemeChangedFlag = true;
+            ((App)Avalonia.Application.Current!).SetTheme(
+                value ? ThemeVariant.Dark : ThemeVariant.Light);
         }
 
 
