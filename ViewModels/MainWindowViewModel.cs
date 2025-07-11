@@ -20,6 +20,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using static AntennaAV.Services.ComPortManager;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 
@@ -30,12 +31,14 @@ namespace AntennaAV.ViewModels
     {
         private readonly IComPortService _comPortService;
 
-        private double receiverAngleDeg;
+       // private double receiverAngleDeg;
         //private double transmitterAngleDeg;
         private double powerDbm;
         private int antennaType;
         private int rxAntennaCounter;
-        private DateTime timestamp;
+        
+        //private DateTime timestamp;
+        private int? _firstSystick = null;
 
         public MainWindowViewModel()
     : this(Design.IsDesignMode ? new MockComPortService() : throw new InvalidOperationException("Этот конструктор используется только в дизайнере"))
@@ -47,7 +50,6 @@ namespace AntennaAV.ViewModels
                 PowerDbm = -30.1;
                 AntennaType = 2;
                 RxAntennaCounter = 7;
-                Timestamp = DateTime.Now;
             }
         }
 
@@ -70,7 +72,8 @@ namespace AntennaAV.ViewModels
         [ObservableProperty]
         private string connectionStatus = "⏳ Не подключено";
 
-        public double ReceiverAngleDeg { get => receiverAngleDeg; set => receiverAngleDeg = value; }
+        [ObservableProperty]
+        private double receiverAngleDeg;
         [ObservableProperty]
         private string receiverAngleDegStr = string.Empty;
 
@@ -97,7 +100,7 @@ namespace AntennaAV.ViewModels
         private string txAntennaCounterStr = string.Empty;
 
 
-        public DateTime Timestamp { get => timestamp; set => timestamp = value; }
+        //public DateTime Timestamp { get => timestamp; set => timestamp = value; }
         
         //[ObservableProperty]
         //private string timestampStr = string.Empty;
@@ -357,7 +360,7 @@ namespace AntennaAV.ViewModels
             await using var writer = new StreamWriter(stream, Encoding.UTF8);
             await writer.WriteAsync(sb.ToString());
 
-            ConnectionStatus = $"✅ Файл сохранён: {file.Name}";
+            LastEvent = $"✅ Файл сохранён: {file.Name}";
         }
 
         public async Task ImportTableFromCsvAsync(Window window)
@@ -422,14 +425,10 @@ namespace AntennaAV.ViewModels
             SelectedTab.Plot.VoltageNormValues = voltageNormArr;
             // Обновить график по новым данным
             OnPropertyChanged(nameof(SelectedTabIndex));
-            ConnectionStatus = $"✅ Таблица загружена: {file.Name}";
+            LastEvent = $"✅ Таблица загружена: {file.Name}";
         }
 
-        private void DrawAllVisiblePlotsIfNeeded()
-        {
-            // Для вызова из ViewModel через событие или напрямую из View
-            OnBuildRadarPlot?.Invoke(Array.Empty<double>(), Array.Empty<double>()); // Сбросить график
-        }
+       
 
         private void UpdateTabCommands()
         {
@@ -464,6 +463,10 @@ namespace AntennaAV.ViewModels
             _comPortService = comPortService;
             _availablePorts = _comPortService.GetAvailablePortNames();
 
+            // Синхронизация состояния переключателя с реальной темой
+            var actualTheme = Avalonia.Application.Current?.ActualThemeVariant;
+            IsDarkTheme = actualTheme == Avalonia.Styling.ThemeVariant.Dark;
+
             Tabs.CollectionChanged += (_, _) =>
             {
                 OnPropertyChanged(nameof(HasTabs));
@@ -472,6 +475,9 @@ namespace AntennaAV.ViewModels
             };
 
             AddTab();
+
+            
+
 
             _ = ConnectToPortAsync();
 
@@ -531,10 +537,17 @@ namespace AntennaAV.ViewModels
                         double angle = data.ReceiverAngleDeg;
                         if (IsAngleInRange(angle, _acquisitionFrom, _acquisitionTo))
                         {
-                            _collector.AddPoint(data.ReceiverAngleDeg10, data.PowerDbm, data.Timestamp);
+                            //_collector.AddPoint(data.ReceiverAngleDeg10, data.PowerDbm, data.Timestamp);
+                            if (_firstSystick == null)
+                                _firstSystick = data.Systick;
+
+                            int deltaMs = data.Systick - _firstSystick.Value;
+                            DateTime timestamp = DateTime.MinValue.AddMilliseconds(deltaMs);
+                            _collector.AddPoint(data.ReceiverAngleDeg10, data.PowerDbm, timestamp);
                         }
                         lastData = data;
                         dataReceived = true;
+
                     }
 
                 }
@@ -549,10 +562,9 @@ namespace AntennaAV.ViewModels
                 if (lastData != null)
                 {
                     ReceiverAngleDeg = lastData.ReceiverAngleDeg;
-                    OnPropertyChanged(nameof(ReceiverAngleDeg));
                     ReceiverAngleDegStr = ReceiverAngleDeg.ToString("F1");
                     TransmitterAngleDeg = lastData.TransmitterAngleDeg;
-                    TransmitterAngleDegStr = TransmitterAngleDeg.ToString("F1");
+                    TransmitterAngleDegStr = TransmitterAngleDeg.ToString("F1") + "°";
                     PowerDbm = lastData.PowerDbm;
                     PowerDbmStr = PowerDbm.ToString("F2");
                     AntennaType = lastData.AntennaType;
@@ -561,7 +573,7 @@ namespace AntennaAV.ViewModels
                     TxAntennaCounter = lastData.TxAntennaCounter;
                     TxAntennaCounterStr = TxAntennaCounter.ToString();
                     //RxAntennaCounterStr = RxAntennaCounter.ToString();
-                    Timestamp = lastData.Timestamp;
+                    //Timestamp = lastData.Timestamp;
                     //TimestampStr = Timestamp.ToString("HH:mm:ss.fff");
                 }
 
@@ -683,6 +695,11 @@ namespace AntennaAV.ViewModels
                 ReceiverSetAngleError = "";
         }
 
+        public void AddPointForWarmup(int angle, double powerDbm, DateTime time)
+        {
+            _collector.AddPoint(angle, powerDbm, time);
+        }
+
 
 
         [RelayCommand]
@@ -754,7 +771,6 @@ namespace AntennaAV.ViewModels
             _isDiagramDataCollecting = false;
             _collector.FinalizeData();
             UpdatePlotWithNormalizedData();
-            UpdateTable();
             _comPortService.StopAntenna("R");
         }
 
@@ -892,9 +908,24 @@ namespace AntennaAV.ViewModels
                 _comPortService.SetAntennaAngle(endAngle, "R", direction);
 
 
+                // Перед циклом ожидания
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
                 while (AngleDiff(tempRxAntennaAngle, ReceiverAngleDeg) < 5.0)
                 {
                     await Task.Delay(10, cancellationToken);
+                    // Проверка на превышение времени ожидания
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        Debug.WriteLine("❌ Отмена при ожидании начальной точки");
+                        break;
+                    }
+                    if (stopwatch.Elapsed.TotalSeconds > 2)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        LastEvent = "Антенна не начала движение. Отмена";
+                        _acquisitionCts?.Cancel();
+                        break;
+                    }
                 }
 
                 _comPortService.SetAntennaAngle(overshootEnd, "R", direction);
@@ -920,7 +951,8 @@ namespace AntennaAV.ViewModels
 
                 Debug.WriteLine($"🔄 Завершение сбора данных");
                 _isDiagramDataCollecting = false;
-                UpdateTable();
+
+                //UpdateTable();
                 StopTableUpdateTimer();
                 _collector.FinalizeData();
                 UpdatePlotWithNormalizedData();
@@ -1011,39 +1043,52 @@ namespace AntennaAV.ViewModels
             _tableUpdateTimer?.Stop();
         }
 
+        private bool _isFinalizingDiagram = false;
+        private readonly object _dataLock = new();
         private void UpdateTable()
         {
-            if (SelectedTab != null && IsRealtimeMode)
+            lock (_dataLock)
             {
-                var newData = _collector.GetTableData();
-                SelectedTab.AntennaDataCollection.ReplaceRange(newData);
-            }
-            if (OnBuildRadarPlot != null && IsRealtimeMode)
-            {
-                var angles = _collector.GetGraphAngles();
-                double[] values;
-                if (IsPowerNormSelected)
-                    values = _collector.GetGraphValues(d => d.PowerDbm);
-                else
-                    values = _collector.GetGraphValues(d => d.Voltage);
-                OnBuildRadarPlot.Invoke(angles, values);
-                // Сохраняем сырые данные для графика в PlotData активной вкладки
-                if (SelectedTab != null)
+                if (_isFinalizingDiagram)
+                    return;
+                if (SelectedTab != null && IsRealtimeMode)
                 {
-                    SelectedTab.Plot.Angles = angles;
-                    SelectedTab.Plot.PowerNormValues = _collector.GetGraphValues(d => d.PowerDbm);
-                    SelectedTab.Plot.VoltageNormValues = _collector.GetGraphValues(d => d.Voltage);
+                    var newData = _collector.GetTableData();
+                    SelectedTab.AntennaDataCollection.ReplaceRange(newData);
+                }
+                if (OnBuildRadarPlot != null && IsRealtimeMode)
+                {
+                    var angles = _collector.GetGraphAngles();
+                    double[] values;
+                    if (IsPowerNormSelected)
+                        values = _collector.GetGraphValues(d => d.PowerDbm);
+                    else
+                        values = _collector.GetGraphValues(d => d.Voltage);
+                    OnBuildRadarPlot.Invoke(angles, values);
+                    // Сохраняем сырые данные для графика в PlotData активной вкладки
+                    if (SelectedTab != null)
+                    {
+                        SelectedTab.Plot.Angles = angles;
+                        SelectedTab.Plot.PowerNormValues = _collector.GetGraphValues(d => d.PowerDbm);
+                        SelectedTab.Plot.VoltageNormValues = _collector.GetGraphValues(d => d.Voltage);
+                    }
                 }
             }
         }
 
         private void UpdatePlotWithNormalizedData()
         {
-            if (SelectedTab != null)
+            lock (_dataLock)
             {
-                SelectedTab.Plot.Angles = _collector.GetGraphAngles();
-                SelectedTab.Plot.PowerNormValues = _collector.GetGraphValues(d => d.PowerNorm);
-                SelectedTab.Plot.VoltageNormValues = _collector.GetGraphValues(d => d.VoltageNorm);
+                _isFinalizingDiagram = true;
+                if (SelectedTab != null)
+                {
+                    SelectedTab.Plot.Angles = _collector.GetGraphAngles();
+                    SelectedTab.Plot.PowerNormValues = _collector.GetGraphValues(d => d.PowerNorm);
+                    SelectedTab.Plot.VoltageNormValues = _collector.GetGraphValues(d => d.VoltageNorm);
+                    RequestPlotRedraw?.Invoke();
+                }
+                _isFinalizingDiagram = false;
             }
         }
 
@@ -1117,6 +1162,8 @@ namespace AntennaAV.ViewModels
                 value ? ThemeVariant.Dark : ThemeVariant.Light);
         }
 
+        [ObservableProperty]
+        private string lastEvent = "";
 
 
     }

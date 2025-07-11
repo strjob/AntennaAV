@@ -86,7 +86,7 @@ public class TestComPortService : IComPortService, IDisposable
             // PowerDbm: плавное изменение с двумя знаками после запятой
             _powerPhase += 0.05; // скорость изменения
             if (_powerPhase > Math.PI * 2) _powerPhase -= Math.PI * 2;
-            double basePower = -35 + 20 * Math.Sin(_powerPhase); // от -55 до -15
+            double basePower = -65 + 20 * Math.Sin(_powerPhase); // от -55 до -15
             double noise = (rand.NextDouble() - 0.5) * 2.0; // небольшой шум
            //double powerDbm = Math.Round(basePower + noise, 2);
            double powerDbm = -angle/10;
@@ -102,7 +102,7 @@ public class TestComPortService : IComPortService, IDisposable
                 RxAntennaCounter = _counter,
                 TxAntennaCounter = _counter * 2,
                 ModeAutoHand = _modeAutoHand,
-                Timestamp = DateTime.Now
+                Systick = _counter*20 + 4534543
             };
             _queue.Enqueue(data);
             _counter++;

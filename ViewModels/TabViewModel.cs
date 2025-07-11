@@ -115,7 +115,6 @@ namespace AntennaAV.ViewModels
 
         [ObservableProperty]
         private string colorHex = "#0000FF";
-        public string colorHexPrev = "#0000FF";
 
         [ObservableProperty]
         private bool isVisible = true;

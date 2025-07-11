@@ -37,7 +37,8 @@ public class MockComPortService : IComPortService
                 AntennaType = 1,
                 RxAntennaCounter = 7,
                 ReceiverAngleDeg = 123.4,
-                TransmitterAngleDeg = 321.0
+                TransmitterAngleDeg = 321.0,
+                Systick = 10
             }
         };
 
@@ -49,7 +50,8 @@ public class MockComPortService : IComPortService
             TransmitterAngleDeg = 270.0,
             PowerDbm = -30.1,
             AntennaType = 2,
-            RxAntennaCounter = 3
+            RxAntennaCounter = 3,
+            Systick = 10
         };
         return true;
     }
