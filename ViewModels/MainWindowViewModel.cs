@@ -29,16 +29,27 @@ namespace AntennaAV.ViewModels
 
     public partial class MainWindowViewModel : ViewModelBase
     {
-        private readonly IComPortService _comPortService;
+        // Константы
+        private const int MinSectorSize = 10;
+        private const int MaxTabCount = 10;
 
-       // private double receiverAngleDeg;
-        //private double transmitterAngleDeg;
+        // Приватные поля
+        private readonly IComPortService _comPortService;
         private double powerDbm;
         private int antennaType;
         private int rxAntennaCounter;
-        
-        //private DateTime timestamp;
         private int? _firstSystick = null;
+        private readonly DispatcherTimer _uiTimer = new();
+        private DispatcherTimer? _tableUpdateTimer;
+        private AntennaDiagramCollector _collector = new();
+        private bool _isDiagramDataCollecting = false;
+        private double _acquisitionFrom;
+        private double _acquisitionTo;
+        private CancellationTokenSource? _acquisitionCts;
+        private bool _isReconnecting = false;
+        private bool _isFinalizingDiagram = false;
+        private readonly object _dataLock = new();
+        private IEnumerable<string> _availablePorts = Array.Empty<string>();
 
         public MainWindowViewModel()
     : this(Design.IsDesignMode ? new MockComPortService() : throw new InvalidOperationException("Этот конструктор используется только в дизайнере"))
@@ -55,9 +66,6 @@ namespace AntennaAV.ViewModels
 
 
         partial void OnSelectedTabChanged(TabViewModel? oldValue, TabViewModel? newValue);
-        private readonly DispatcherTimer _uiTimer = new();
-
-        public bool IsDiagramRecording = false;
 
         public bool HasTabs => Tabs.Count > 0;
         public bool CanRemoveTab => Tabs.Count > 1;
@@ -174,39 +182,24 @@ namespace AntennaAV.ViewModels
         private string txAntennaCounterErrorStr = "";
         // private string transmitterAngle2Error = "";
 
-        private DispatcherTimer? _tableUpdateTimer;
-
-        private AntennaDiagramCollector _collector = new();
-
-        private bool _isDiagramDataCollecting = false;
-        private double _acquisitionFrom;
-        private double _acquisitionTo;
-
-        private CancellationTokenSource? _acquisitionCts;
-
-        [ObservableProperty]
-        private string dataFlowStatus = "🔴 Нет данных";
-
-        private DateTime _lastDataReceived = DateTime.MinValue;
-
         partial void OnSectorSizeChanged(string value)
         {
             // Проверяем на пустые значения
             if (string.IsNullOrWhiteSpace(value))
             {
                 // Если значение пустое, устанавливаем минимальное значение
-                SectorSize = "10";
+                SectorSize = MinSectorSize.ToString();
                 return;
             }
 
             if (double.TryParse(value, out double d))
             {
                 // Проверяем границы
-                if (d < 10)
+                if (d < MinSectorSize)
                 {
                     // Если значение меньше 10, устанавливаем 10 и выходим
                     // Это вызовет повторный вызов OnSectorSizeChanged с новым значением
-                    SectorSize = "10";
+                    SectorSize = MinSectorSize.ToString();
                     return;
                 }
                 else if (d > 360)
@@ -222,7 +215,7 @@ namespace AntennaAV.ViewModels
             else
             {
                 // Если не удалось распарсить число, устанавливаем минимальное значение
-                SectorSize = "10";
+                SectorSize = MinSectorSize.ToString();
             }
         }
 
@@ -276,46 +269,26 @@ namespace AntennaAV.ViewModels
 
         public Action<double>? OnTransmitterAngleSelected;
 
-
-
-
-        /*
-                [RelayCommand]
-                private void BuildDiagram()
-                {
-                    // SectorSize и SectorCenter уже содержат введённые пользователем значения
-                    // Можно преобразовать в число:
-                    if (double.TryParse(SectorSize, out var size) && double.TryParse(SectorCenter, out var center))
-                    {
-                        // Вычисляем from и to из размера и центра сектора
-                        var (from, to) = CalculateSectorRange(size, center);
-
-                        // Здесь можно добавить логику для построения диаграммы
-                        // Например, вызвать OnBuildRadarPlot с данными
-                        OnBuildRadarPlot?.Invoke(new double[] { from, to }, new double[] { 0, 0 });
-                    }
-                }
-        */
         public event Action<double[], double[]>? OnBuildRadarPlot;
 
 
         private static readonly string[] DefaultColors = new[]
         {
-            "#FF0000", // Красный
-            "#00FF00", // Зелёный
-            "#0000FF", // Синий
-            "#FFA500", // Оранжевый
+            "#E60000", // Красный
+            "#00E600", // Зелёный
+            "#0000E6", // Синий
+            "#E69400", // Оранжевый
             "#800080", // Фиолетовый
             "#00FFFF", // Голубой
             "#FFC0CB", // Розовый
-            "#FFFF00", // Жёлтый
+            "#E6E600", // Жёлтый
             // ... можно добавить больше цветов
         };
 
         [RelayCommand]
         private void AddTab()
         {
-            if (Tabs.Count >= 10)
+            if (Tabs.Count >= MaxTabCount)
                 return;
             int colorIndex = Tabs.Count % DefaultColors.Length;
             var tab = new TabViewModel { Header = $"Антенна {Tabs.Count + 1}" };
@@ -331,101 +304,115 @@ namespace AntennaAV.ViewModels
 
         public async Task ExportSelectedTabAsync(Window window)
         {
-            if (SelectedTab is null || window is null)
-                return;
-
-            var file = await window.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+            try
             {
-                Title = "Сохранить таблицу",
-                SuggestedFileName = $"Вкладка_{SelectedTab.Header}.csv",
-                FileTypeChoices = new List<FilePickerFileType>
-        {
-            new("CSV файл") { Patterns = new[] { "*.csv" } }
-        },
-                DefaultExtension = "csv"
-            });
+                if (SelectedTab is null || window is null)
+                    return;
 
-            if (file is null)
-                return; // пользователь отменил
-
-            var sb = new StringBuilder();
-            sb.AppendLine("Angle,PowerDbm,Voltage,PowerNorm,VoltageNorm,Time");
-
-            foreach (var row in SelectedTab.AntennaDataCollection)
+                var file = await window.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+                {
+                    Title = "Сохранить таблицу",
+                    SuggestedFileName = $"Вкладка_{SelectedTab.Header}.csv",
+                    FileTypeChoices = new List<FilePickerFileType>
             {
-                sb.AppendLine($"{row.AngleStr},{row.PowerDbmStr},{row.VoltageStr},{row.PowerNormStr},{row.VoltageNormStr},{row.TimeStr}");
+                new("CSV файл") { Patterns = new[] { "*.csv" } }
+            },
+                    DefaultExtension = "csv"
+                });
+
+                if (file is null)
+                    return; // пользователь отменил
+
+                var sb = new StringBuilder();
+                sb.AppendLine("Angle,PowerDbm,Voltage,PowerNorm,VoltageNorm,Time");
+
+                foreach (var row in SelectedTab.AntennaDataCollection.ToArray())
+                {
+                    sb.AppendLine($"{row.AngleStr},{row.PowerDbmStr},{row.VoltageStr},{row.PowerNormStr},{row.VoltageNormStr},{row.TimeStr}");
+                }
+
+                await using var stream = await file.OpenWriteAsync();
+                await using var writer = new StreamWriter(stream, Encoding.UTF8);
+                await writer.WriteAsync(sb.ToString());
+
+                LastEvent = $"✅ Файл сохранён: {file.Name}";
             }
-
-            await using var stream = await file.OpenWriteAsync();
-            await using var writer = new StreamWriter(stream, Encoding.UTF8);
-            await writer.WriteAsync(sb.ToString());
-
-            LastEvent = $"✅ Файл сохранён: {file.Name}";
+            catch (Exception ex)
+            {
+                LastEvent = $"Ошибка экспорта: {ex.Message}";
+            }
         }
 
         public async Task ImportTableFromCsvAsync(Window window)
         {
-            if (SelectedTab is null || window is null)
-                return;
-
-            var files = await window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            try
             {
-                Title = "Загрузить таблицу из CSV",
-                AllowMultiple = false,
-                FileTypeFilter = new List<FilePickerFileType>
-                {
-                    new("CSV файл") { Patterns = new[] { "*.csv" } }
-                }
-            });
+                if (SelectedTab is null || window is null)
+                    return;
 
-            var file = files?.FirstOrDefault();
-            if (file is null)
-                return;
-
-            var newRows = new List<GridAntennaData>();
-            using (var stream = await file.OpenReadAsync())
-            using (var reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                string? line;
-                bool isFirst = true;
-                while ((line = await reader.ReadLineAsync()) != null)
+                var files = await window.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
                 {
-                    if (isFirst)
+                    Title = "Загрузить таблицу из CSV",
+                    AllowMultiple = false,
+                    FileTypeFilter = new List<FilePickerFileType>
                     {
-                        isFirst = false; // пропускаем заголовок
-                        continue;
+                        new("CSV файл") { Patterns = new[] { "*.csv" } }
                     }
-                    var parts = line.Split(',');
-                    if (parts.Length < 6) continue;
-                    if (!double.TryParse(parts[0], out var angle)) continue;
-                    if (!double.TryParse(parts[1], out var powerDbm)) continue;
-                    if (!double.TryParse(parts[2], out var voltage)) continue;
-                    if (!double.TryParse(parts[3], out var powerNorm)) continue;
-                    if (!double.TryParse(parts[4], out var voltageNorm)) continue;
-                    if (!DateTime.TryParse(parts[5], out var time)) time = DateTime.Now;
-                    newRows.Add(new GridAntennaData
+                });
+
+                var file = files?.FirstOrDefault();
+                if (file is null)
+                    return;
+
+                var newRows = new List<GridAntennaData>();
+                using (var stream = await file.OpenReadAsync())
+                using (var reader = new StreamReader(stream, Encoding.UTF8))
+                {
+                    string? line;
+                    bool isFirst = true;
+                    while ((line = await reader.ReadLineAsync()) != null)
                     {
-                        Angle = angle,
-                        PowerDbm = powerDbm,
-                        Voltage = voltage,
-                        PowerNorm = powerNorm,
-                        VoltageNorm = voltageNorm,
-                        Time = time
-                    });
+                        if (isFirst)
+                        {
+                            isFirst = false; // пропускаем заголовок
+                            continue;
+                        }
+                        var parts = line.Split(',');
+                        if (parts.Length < 6) continue;
+                        if (!double.TryParse(parts[0], out var angle)) continue;
+                        if (!double.TryParse(parts[1], out var powerDbm)) continue;
+                        if (!double.TryParse(parts[2], out var voltage)) continue;
+                        if (!double.TryParse(parts[3], out var powerNorm)) continue;
+                        if (!double.TryParse(parts[4], out var voltageNorm)) continue;
+                        if (!DateTime.TryParse(parts[5], out var time)) time = DateTime.Now;
+                        newRows.Add(new GridAntennaData
+                        {
+                            Angle = angle,
+                            PowerDbm = powerDbm,
+                            Voltage = voltage,
+                            PowerNorm = powerNorm,
+                            VoltageNorm = voltageNorm,
+                            Time = time
+                        });
+                    }
                 }
+                SelectedTab.ClearTableData();
+                SelectedTab.AddAntennaData(newRows.ToArray());
+                // Формируем PlotData по новым данным
+                var anglesArr = newRows.Select(x => x.Angle).ToArray();
+                var powerNormArr = newRows.Select(x => x.PowerNorm).ToArray();
+                var voltageNormArr = newRows.Select(x => x.VoltageNorm).ToArray();
+                SelectedTab.Plot.Angles = anglesArr;
+                SelectedTab.Plot.PowerNormValues = powerNormArr;
+                SelectedTab.Plot.VoltageNormValues = voltageNormArr;
+                // Обновить график по новым данным
+                OnPropertyChanged(nameof(SelectedTabIndex));
+                LastEvent = $"✅ Таблица загружена: {file.Name}";
             }
-            SelectedTab.ClearTableData();
-            SelectedTab.AddAntennaData(newRows);
-            // Формируем PlotData по новым данным
-            var anglesArr = newRows.Select(x => x.Angle).ToArray();
-            var powerNormArr = newRows.Select(x => x.PowerNorm).ToArray();
-            var voltageNormArr = newRows.Select(x => x.VoltageNorm).ToArray();
-            SelectedTab.Plot.Angles = anglesArr;
-            SelectedTab.Plot.PowerNormValues = powerNormArr;
-            SelectedTab.Plot.VoltageNormValues = voltageNormArr;
-            // Обновить график по новым данным
-            OnPropertyChanged(nameof(SelectedTabIndex));
-            LastEvent = $"✅ Таблица загружена: {file.Name}";
+            catch (Exception ex)
+            {
+                LastEvent = $"Ошибка импорта: {ex.Message}";
+            }
         }
 
        
@@ -494,8 +481,6 @@ namespace AntennaAV.ViewModels
 
 
 
-        private bool _isReconnecting = false;
-
         private async Task ConnectToPortAsync()
         {
             var result = await Task.Run(() => _comPortService.AutoDetectAndConnect());
@@ -553,6 +538,7 @@ namespace AntennaAV.ViewModels
                 }
                 else
                 {
+                    _firstSystick = null;
                     while (_comPortService.TryDequeue(out var data))
                     {
                         lastData = data;
@@ -776,19 +762,20 @@ namespace AntennaAV.ViewModels
 
         public async Task StartDiagramAcquisitionAsync(double from, double to, CancellationToken cancellationToken)
         {
-            Debug.WriteLine($"Начинаем сбор диаграммы: размер сектора = {to - from:F1}°, центр = {(from + to) / 2:F1}°");
-
-            if (IsDiagramAcquisitionRunning)
-            {
-                Debug.WriteLine("❌ Диаграмма уже запущена, выход");
-                return;
-            }
-
-            IsDiagramAcquisitionRunning = true;
-            _isDiagramDataCollecting = false;
-
             try
             {
+                Debug.WriteLine($"Начинаем сбор диаграммы: размер сектора = {to - from:F1}°, центр = {(from + to) / 2:F1}°");
+
+                if (IsDiagramAcquisitionRunning)
+                {
+                    Debug.WriteLine("❌ Диаграмма уже запущена, выход");
+                    return;
+                }
+
+                IsDiagramAcquisitionRunning = true;
+                _isDiagramDataCollecting = false;
+                if (SelectedTab != null && !SelectedTab.Plot.IsVisible)
+                    SelectedTab.Plot.IsVisible = true;
                 // Определяем текущее положение антенны
                 double currentAngle = ReceiverAngleDeg;
                 int currentCounter = RxAntennaCounter;
@@ -974,6 +961,7 @@ namespace AntennaAV.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"💥 Неожиданная ошибка: {ex.Message}");
+                LastEvent = $"Ошибка сбора диаграммы: {ex.Message}";
                 _isDiagramDataCollecting = false;
                 StopTableUpdateTimer();
             }
@@ -1011,7 +999,6 @@ namespace AntennaAV.ViewModels
 
         }
 
-        private IEnumerable<string> _availablePorts = Array.Empty<string>();
         public IEnumerable<string> AvailablePorts
         {
             get => _availablePorts;
@@ -1043,8 +1030,6 @@ namespace AntennaAV.ViewModels
             _tableUpdateTimer?.Stop();
         }
 
-        private bool _isFinalizingDiagram = false;
-        private readonly object _dataLock = new();
         private void UpdateTable()
         {
             lock (_dataLock)
@@ -1055,22 +1040,27 @@ namespace AntennaAV.ViewModels
                 {
                     var newData = _collector.GetTableData();
                     SelectedTab.AntennaDataCollection.ReplaceRange(newData);
+                    _collector.FinalizeData();  //
+
                 }
                 if (OnBuildRadarPlot != null && IsRealtimeMode)
                 {
                     var angles = _collector.GetGraphAngles();
                     double[] values;
                     if (IsPowerNormSelected)
-                        values = _collector.GetGraphValues(d => d.PowerDbm);
+                        values = _collector.GetGraphValues(d => d.PowerNorm);
                     else
-                        values = _collector.GetGraphValues(d => d.Voltage);
-                    OnBuildRadarPlot.Invoke(angles, values);
+                        values = _collector.GetGraphValues(d => d.VoltageNorm);
+                    OnBuildRadarPlot.Invoke(angles.ToArray(), values.ToArray());
                     // Сохраняем сырые данные для графика в PlotData активной вкладки
                     if (SelectedTab != null)
                     {
                         SelectedTab.Plot.Angles = angles;
-                        SelectedTab.Plot.PowerNormValues = _collector.GetGraphValues(d => d.PowerDbm);
-                        SelectedTab.Plot.VoltageNormValues = _collector.GetGraphValues(d => d.Voltage);
+                        //SelectedTab.Plot.PowerNormValues = _collector.GetGraphValues(d => d.PowerDbm);
+                        //SelectedTab.Plot.VoltageNormValues = _collector.GetGraphValues(d => d.Voltage);
+
+                        SelectedTab.Plot.PowerNormValues = _collector.GetGraphValues(d => d.PowerNorm);
+                        SelectedTab.Plot.VoltageNormValues = _collector.GetGraphValues(d => d.VoltageNorm);
                     }
                 }
             }
@@ -1095,6 +1085,8 @@ namespace AntennaAV.ViewModels
         public event Action<bool>? ShowAntennaChanged;
         public event Action<bool>? ShowSectorChanged;
         public event Action? RequestPlotRedraw;
+        public event Action? RequestClearCurrentPlot;
+
 
         public void StopMessaging()
         {
@@ -1121,7 +1113,7 @@ namespace AntennaAV.ViewModels
         {
             if (string.IsNullOrWhiteSpace(ReceiverMoveAngle) || !string.IsNullOrEmpty(ReceiverMoveAngleError) || !_comPortService.IsOpen)
                 return;
-            if (double.TryParse(ReceiverMoveAngle, out var angle) && angle >= 0 && angle <= 360)
+            if (double.TryParse(ReceiverMoveAngle, out var angle) && angle >= 0 && angle <= 359.9)
             {
                 _comPortService.SetAntennaAngle(angle, "R", "G");
             }
@@ -1150,7 +1142,8 @@ namespace AntennaAV.ViewModels
                 SelectedTab.Plot.VoltageNormValues = Array.Empty<double>();
             }
             // Сообщить View, чтобы график исчез
-            OnBuildRadarPlot?.Invoke(Array.Empty<double>(), Array.Empty<double>());
+            //OnBuildRadarPlot?.Invoke(Array.Empty<double>(), Array.Empty<double>());
+            RequestClearCurrentPlot?.Invoke();
         }
 
         [ObservableProperty]
@@ -1164,6 +1157,9 @@ namespace AntennaAV.ViewModels
 
         [ObservableProperty]
         private string lastEvent = "";
+
+        [ObservableProperty]
+        private string dataFlowStatus = "🔴 Нет данных";
 
 
     }

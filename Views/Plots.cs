@@ -166,6 +166,10 @@ namespace AntennaAV.Views
 
         public static void AddCustomSpokeLines(AvaPlot avaPlot, ScottPlot.Plottables.PolarAxis polarAxis, bool isDark)
         {
+            // Защита от недостаточного количества кругов
+            if (polarAxis.Circles.Count < 2)
+                return;
+
             // Удаляем старые кастомные линии
             foreach (var line in _customSpokeLines)
                 avaPlot.Plot.Remove(line);
@@ -609,14 +613,14 @@ namespace AntennaAV.Views
         }
 
         // Новый: один полигон для сектора
-        public static ScottPlot.Plottables.Polygon InitializeSectorPolygon(AvaPlot avaPlot)
-        {
-            var poly = avaPlot.Plot.Add.Polygon(new ScottPlot.Coordinates[] { });
-            poly.FillColor = Colors.DarkGray.WithAlpha(.5);
-            poly.LineWidth = 0;
-            poly.IsVisible = false;
-            return poly;
-        }
+        //public static ScottPlot.Plottables.Polygon InitializeSectorPolygon(AvaPlot avaPlot)
+        //{
+        //    var poly = avaPlot.Plot.Add.Polygon(new ScottPlot.Coordinates[] { });
+        //    poly.FillColor = Colors.DarkGray.WithAlpha(.5);
+        //    poly.LineWidth = 0;
+        //    poly.IsVisible = false;
+        //    return poly;
+        //}
 
         /// <summary>
         /// Создаёт и добавляет новый секторный полигон на график (старый нужно удалить вручную!)

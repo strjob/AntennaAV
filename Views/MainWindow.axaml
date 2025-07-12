@@ -47,7 +47,7 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <Grid ShowGridLines="True">
+    <Grid ShowGridLines="False">
         <Grid.ColumnDefinitions>
             <ColumnDefinition
                 Width="0.2*"
@@ -130,7 +130,7 @@
             Grid.Column="0"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
-            ShowGridLines="True">
+            ShowGridLines="False">
             <Grid.RowDefinitions>
 				<RowDefinition Height="0.15*" MinHeight="150"/>
 				<RowDefinition Height="0.15*" />
@@ -371,7 +371,7 @@
             Grid.Row="0"
             Grid.Column="2"
             Margin="5"
-            ShowGridLines="True">
+            ShowGridLines="False">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -479,7 +479,7 @@
             <Grid
                 Grid.Row="2"
                 Margin="0,8,0,0"
-                ShowGridLines="True">
+                ShowGridLines="False">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
