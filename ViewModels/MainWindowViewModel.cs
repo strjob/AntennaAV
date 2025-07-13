@@ -71,6 +71,16 @@ namespace AntennaAV.ViewModels
         public bool CanRemoveTab => Tabs.Count > 1;
         public bool CanRemoveTabWhenPortOpen => CanRemoveTab && CanUseWhenPortOpen;
 
+        //public string GetIconPath(string iconName)
+        //    => IsDarkTheme
+        //        ? $"/Assets/{iconName}-dark.svg"
+        //        : $"/Assets/{iconName}-light.svg";
+
+        public string this[string iconName] =>
+            IsDarkTheme
+        ? $"/Assets/{iconName}-dark.svg"
+        : $"/Assets/{iconName}-light.svg";
+
         [ObservableProperty]
         private ObservableCollection<TabViewModel> tabs = new();
 
@@ -1149,10 +1159,33 @@ namespace AntennaAV.ViewModels
         [ObservableProperty]
         private bool isDarkTheme;
 
+
+        public string ChevronRightIconPath => IsDarkTheme
+            ? "/Assets/chevron-right-dark.svg"
+            : "/Assets/chevron-right-light.svg";
+
+        public string ChevronLeftIconPath => IsDarkTheme
+            ? "/Assets/chevron-left-dark.svg"
+            : "/Assets/chevron-left-light.svg";
+
+        public string ChevronsRightIconPath => IsDarkTheme
+            ? "/Assets/chevrons-right-dark.svg"
+            : "/Assets/chevrons-right-light.svg";
+
+        public string ChevronsLeftIconPath => IsDarkTheme
+            ? "/Assets/chevrons-left-dark.svg"
+            : "/Assets/chevrons-left-light.svg";
+
         partial void OnIsDarkThemeChanged(bool value)
         {
             ((App)Avalonia.Application.Current!).SetTheme(
                 value ? ThemeVariant.Dark : ThemeVariant.Light);
+            OnPropertyChanged(nameof(ChevronRightIconPath));
+            OnPropertyChanged(nameof(ChevronLeftIconPath));
+            OnPropertyChanged(nameof(ChevronsRightIconPath));
+            OnPropertyChanged(nameof(ChevronsLeftIconPath));
+
+
         }
 
         [ObservableProperty]

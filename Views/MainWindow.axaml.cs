@@ -25,7 +25,7 @@ namespace AntennaAV.Views
         private const double PointerThreshold = 20.0;
         private const int HeaderEditKeyEnter = (int)Key.Enter;
 
-
+        private double _lastSnappedAngle;
         public MainWindow()
         {
             InitializeComponent();
@@ -109,26 +109,21 @@ namespace AntennaAV.Views
                 double threshold = PointerThreshold;
                 double snappedAngle;
                 _plotManager.UpdateHoverMarker(AvaPlot2, point.X, point.Y, plotRadiusPix, threshold, out snappedAngle);
-                // snappedAngle можно использовать локально, если нужно
+                _lastSnappedAngle = snappedAngle;
             });
         }
 
         private void AvaPlot2_PointerPressed(object? sender, PointerPressedEventArgs e)
         {
-            // Клик срабатывает только если маркер видим
             if (_plotManager.IsHoverMarkerVisible())
             {
-                // Получить угол можно из последнего snappedAngle, если нужно хранить — добавить в ViewModel
-                // Здесь для примера просто не используем угол
                 if (DataContext is MainWindowViewModel vm)
                 {
-                    // Можно добавить хранение snappedAngle в ViewModel, если нужно
-                    // vm.OnTransmitterAngleSelected?.Invoke((360 - snappedAngle) % 360);
+                    vm.OnTransmitterAngleSelected?.Invoke((360 - _lastSnappedAngle) % 360);
                 }
             }
-            // иначе — ничего не делаем
-        }
 
+        }
 
         private void Header_DoubleTapped(object sender, RoutedEventArgs e)
         {
@@ -191,7 +186,6 @@ namespace AntennaAV.Views
             }
         }
 
-
         private void NumericUpDown_LostFocus(object? sender, RoutedEventArgs e)
         {
             if (sender is NumericUpDown numericUpDown && DataContext is MainWindowViewModel vm)
@@ -213,8 +207,6 @@ namespace AntennaAV.Views
                 }
             }
         }
-
-
 
         private void MainWindow_Closing(object? sender, WindowClosingEventArgs e)
         {
@@ -263,8 +255,6 @@ namespace AntennaAV.Views
             });
         }
 
-        
-
         private void DrawTransmitterAnglePoint(double angleDeg)
         {
             Dispatcher.UIThread.Post(() =>
@@ -294,6 +284,12 @@ namespace AntennaAV.Views
             }
         }
 
+        private async void ExportButton_Click(object? sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm)
+                if (vm.SelectedTab != null)
+                    await vm.ExportSelectedTabAsync(this);
+        }
 
         private void SubscribeToViewModelEvents(MainWindowViewModel vm)
         {

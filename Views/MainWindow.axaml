@@ -231,36 +231,35 @@
                         Command="{CompiledBinding MoveTransmitterToAngleCommand}"
                         ToolTip.Tip ="Переместить"
                         IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
-                        <PathIcon Data="{StaticResource arrow_right_regular}" />
+                      <Svg Path="{CompiledBinding ChevronsLeftIconPath}" />
                     </Button>
                     <Button
-                        Margin="2"
+                        Margin="1"
                         HorizontalAlignment="Left"
                         Command="{CompiledBinding SetTransmitterAngleCommand}"
                         ToolTip.Tip="Задать угол"
                         IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
-                        <PathIcon Data="{StaticResource arrow_download_regular}" />
-						
+                      <Svg Path="{CompiledBinding ChevronLeftIconPath}" />
+
                     </Button>
 					<Button
-                        Margin="2"
+                        Margin="1"
                         HorizontalAlignment="Left"
                         Command="{CompiledBinding MoveTransmitterToAngleCommand}"
                         Content="Переместить"
                         IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
-						<PathIcon Data="{StaticResource arrow_right_regular}" />
-					</Button>
+            <Svg Path="{CompiledBinding ChevronRightIconPath}" />
+          </Button>
 					<Button
-                        Margin="2"
+                        Margin="1"
                         HorizontalAlignment="Left"
                         Command="{CompiledBinding SetTransmitterAngleCommand}"
-                        Content="Задать"
+                        Content="Задать"      
                         IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
-						<PathIcon Data="{StaticResource arrow_download_regular}" />
-
-					</Button>
+            <Svg Path="{CompiledBinding ChevronsRightIconPath}" />
+          </Button>
 					<Button
-                        Margin="2"
+                        Margin="1"
                         HorizontalAlignment="Left"
                         Command="{CompiledBinding SetTransmitterAngleCommand}"
                         Content="Стоп"
@@ -416,6 +415,7 @@
                 <Button
                     x:Name="ExportButton"
                     Margin="5"
+                    Click="ExportButton_Click"
                     IsEnabled="{CompiledBinding CanUseWhenHasTabs}"
                     ToolTip.Tip="Сохранить в файл">
                     <PathIcon Data="{StaticResource save_as_regular}" />

@@ -236,38 +236,6 @@ namespace AntennaAV.Services
             }
         }
 
-        public void DrawReceiverAngleArrow(AvaPlot? plot, ref ScottPlot.Plottables.Arrow? arrow, double angleDeg)
-        {
-            if (plot == null || plot.Plot == null)
-                return;
-            lock (_plot1Lock)
-            {
-                double radius = DefaultPlotRadius;
-                double angleRad = (-angleDeg + 90) * Math.PI / 180.0;
-                double x = radius * Math.Cos(angleRad);
-                double y = radius * Math.Sin(angleRad);
-
-                if (arrow == null)
-                {
-                    arrow = plot.Plot.Add.Arrow(
-                        new ScottPlot.Coordinates(0, 0),
-                        new ScottPlot.Coordinates(x, y)
-                    );
-                    arrow.ArrowLineWidth = 0;
-                    arrow.ArrowWidth = ArrowWidth;
-                    arrow.ArrowheadWidth = ArrowheadWidth;
-                    arrow.ArrowFillColor = ScottPlot.Color.FromHex("#0073cf");
-                }
-                else
-                {
-                    arrow.Base = new ScottPlot.Coordinates(0, 0);
-                    arrow.Tip = new ScottPlot.Coordinates(x, y);
-                }
-                plot.Refresh();
-                _avaPlot1NeedsRefresh = true;
-            }
-        }
-
         public void ResetPlotAxes(params AvaPlot?[] plots)
         {
             foreach (var avaPlot in plots)
@@ -318,9 +286,6 @@ namespace AntennaAV.Services
                 _pendingSectorEnd = end;
                 _pendingSectorVisible = isVisible;
                 _sectorUpdatePending = true;
-                // Не обновляем полигон сразу, только откладываем
-                // _avaPlot1NeedsRefresh выставляется внутри InternalUpdateSectorPolygon
-                // return сразу
                 return;
             }
         }
@@ -328,55 +293,67 @@ namespace AntennaAV.Services
         // Новый приватный метод для реального обновления полигона
         private void InternalUpdateSectorPolygon(AvaPlot? plot, double start, double end, bool isVisible)
         {
-            // Старая логика из CreateOrUpdateSectorPolygon
-            // Вычисляем новые точки для сектора
-            var points = new List<ScottPlot.Coordinates>();
-            double radius = 100;
-            // Проверка на полный круг (размер 0 или 360)
-            double sectorSize = (end - start + 360) % 360;
-            if (!isVisible || sectorSize == 0)
+            lock(_plot1Lock)
             {
-                if (_sectorPolygon != null)
-                    _sectorPolygon.IsVisible = false;
+                // Старая логика из CreateOrUpdateSectorPolygon
+                // Вычисляем новые точки для сектора
+                var points = new List<ScottPlot.Coordinates>();
+                double radius = 100;
+                // Проверка на полный круг (размер 0 или 360)
+                double sectorSize = (end - start + 360) % 360;
+                if (sectorSize == 0)
+                {
+                    if (_sectorPolygon != null && plot != null)
+                    {
+                        plot.Plot.Remove(_sectorPolygon);
+                        _sectorPolygon = null;
+                        _avaPlot1NeedsRefresh = true;
+                        return;
+                    }
+
+
+
+                }
+                points.Add(new ScottPlot.Coordinates(0, 0));
+                double step = 1; // 1 градус
+                if (start < end)
+                {
+                    for (double angle = start; angle <= end; angle += step)
+                    {
+                        double theta = (angle + 90) * Math.PI / 180.0;
+                        points.Add(new ScottPlot.Coordinates(-radius * Math.Cos(theta), radius * Math.Sin(theta)));
+                    }
+                }
+                else // сектор через 0°
+                {
+                    for (double angle = start; angle < 360; angle += step)
+                    {
+                        double theta = (angle + 90) * Math.PI / 180.0;
+                        points.Add(new ScottPlot.Coordinates(-radius * Math.Cos(theta), radius * Math.Sin(theta)));
+                    }
+                    for (double angle = 0; angle <= end; angle += step)
+                    {
+                        double theta = (angle + 90) * Math.PI / 180.0;
+                        points.Add(new ScottPlot.Coordinates(-radius * Math.Cos(theta), radius * Math.Sin(theta)));
+                    }
+                }
+                if (_sectorPolygon == null)
+                {
+                    if (plot != null)
+                    {
+                        _sectorPolygon = plot.Plot.Add.Polygon(points.ToArray());
+                        _sectorPolygon.FillColor = Colors.DarkGray.WithAlpha(.5);
+                        _sectorPolygon.LineWidth = 0;
+                        _sectorPolygon.IsVisible = isVisible;
+                    }
+                }
+                else
+                {
+                    _sectorPolygon.UpdateCoordinates(points.ToArray());
+                    _sectorPolygon.IsVisible = isVisible;
+                }
                 _avaPlot1NeedsRefresh = true;
-                return;
             }
-            points.Add(new ScottPlot.Coordinates(0, 0));
-            double step = 1; // 1 градус
-            if (start < end)
-            {
-                for (double angle = start; angle <= end; angle += step)
-                {
-                    double theta = (angle + 90) * Math.PI / 180.0;
-                    points.Add(new ScottPlot.Coordinates(-radius * Math.Cos(theta), radius * Math.Sin(theta)));
-                }
-            }
-            else // сектор через 0°
-            {
-                for (double angle = start; angle < 360; angle += step)
-                {
-                    double theta = (angle + 90) * Math.PI / 180.0;
-                    points.Add(new ScottPlot.Coordinates(-radius * Math.Cos(theta), radius * Math.Sin(theta)));
-                }
-                for (double angle = 0; angle <= end; angle += step)
-                {
-                    double theta = (angle + 90) * Math.PI / 180.0;
-                    points.Add(new ScottPlot.Coordinates(-radius * Math.Cos(theta), radius * Math.Sin(theta)));
-                }
-            }
-            if (_sectorPolygon == null)
-            {
-                _sectorPolygon = plot.Plot.Add.Polygon(points.ToArray());
-                _sectorPolygon.FillColor = ScottPlot.Color.FromHex("#A9A9A9").WithAlpha(.5); // аналог Colors.DarkGray
-                _sectorPolygon.LineWidth = 0;
-                _sectorPolygon.IsVisible = true;
-            }
-            else
-            {
-                _sectorPolygon.UpdateCoordinates(points.ToArray());
-                _sectorPolygon.IsVisible = true;
-            }
-            _avaPlot1NeedsRefresh = true;
         }
 
         public void UpdateHoverMarker(AvaPlot? plot, double mouseX, double mouseY, double plotRadiusPix, double threshold, out double snappedAngle)
@@ -417,16 +394,6 @@ namespace AntennaAV.Services
             }
         }
 
-        public void SetHoverMarkerVisibility(bool isVisible)
-        {
-            lock (_plot2Lock)
-            {
-                if (_hoverMarker != null)
-                    _hoverMarker.IsVisible = isVisible;
-            }
-            _avaPlot2NeedsRefresh = true;
-        }
-
         public void SetTransmitterMarkerVisibility(bool isVisible)
         {
             lock (_plot2Lock)
@@ -448,20 +415,6 @@ namespace AntennaAV.Services
         }
 
 
-
-        public void RemoveSectorPolygon(AvaPlot plot)
-        {
-            lock (_plot1Lock)
-            {
-                if (_sectorPolygon != null)
-                {
-                    plot.Plot.Remove(_sectorPolygon);
-                    _sectorPolygon = null;
-                }
-            }
-            _avaPlot1NeedsRefresh = true;
-        }
-
         public void SetSectorVisibility(bool isVisible)
         {
             lock (_plot1Lock)
@@ -471,27 +424,6 @@ namespace AntennaAV.Services
             }
             _avaPlot1NeedsRefresh = true;
         }
-
-        public void MoveArrowToFront(AvaPlot plot, ScottPlot.Plottables.Arrow? arrow)
-        {
-            lock (_plot1Lock)
-            {
-                if (arrow != null)
-                    plot.Plot.MoveToFront(arrow);
-            }
-            _avaPlot1NeedsRefresh = true;
-        }
-
-        public void AutoScaleAxes(AvaPlot plot)
-        {
-            lock (_plot1Lock)
-            {
-                plot.Plot.Axes.AutoScale();
-            }
-            _avaPlot1NeedsRefresh = true;
-        }
-
-
 
         public void AutoScaleAxes2(AvaPlot plot)
         {
@@ -578,15 +510,6 @@ namespace AntennaAV.Services
                 }
             };
             _avaPlot2RefreshTimer.Start();
-        }
-
-        public void StopPlot1Timer()
-        {
-            _avaPlot1RefreshTimer?.Stop();
-        }
-        public void StopPlot2Timer()
-        {
-            _avaPlot2RefreshTimer?.Stop();
         }
 
         public void CreateOrUpdateAngleArrow(AvaPlot? plot, double angleDeg, bool isVisible)

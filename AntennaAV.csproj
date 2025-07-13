@@ -26,6 +26,7 @@
     <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.2" />
     <PackageReference Include="Avalonia.Controls.TreeDataGrid" Version="11.1.1" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.0" />
+    <PackageReference Include="Avalonia.Skia" Version="11.3.2" />
     <PackageReference Include="Avalonia.Svg.Skia" Version="11.3.0" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.0" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.0" />
@@ -39,6 +40,7 @@
     <PackageReference Include="Material.Icons.Avalonia" Version="2.4.1" />
     <PackageReference Include="RJCP.SerialPortStream" Version="3.0.3" />
     <PackageReference Include="ScottPlot.Avalonia" Version="5.0.55" />
+    <PackageReference Include="Svg.Controls.Skia.Avalonia" Version="11.3.0.1" />
     <PackageReference Include="System.Reactive" Version="6.0.1" />
   </ItemGroup>
 </Project>

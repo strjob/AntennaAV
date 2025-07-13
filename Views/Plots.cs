@@ -44,12 +44,7 @@ namespace AntennaAV.Views
                 polarAxis.Spokes[i].Length = 100;
                 polarAxis.Spokes[i].LabelStyle.ForeColor = labelColor;
             }
-            
-            // Не создаём круги вручную — они будут обновляться в AutoUpdatePolarAxisCircles
 
-            avaPlot.Plot.Add.Palette = isDark
-                ? new ScottPlot.Palettes.Penumbra()
-                : new ScottPlot.Palettes.Category10();
             avaPlot.Plot.Axes.Margins(0.05, 0.05);
 
             avaPlot.UserInputProcessor.IsEnabled = false;
@@ -252,137 +247,15 @@ namespace AntennaAV.Views
 
 
 
-        //public static void AutoUpdatePolarAxisCircles(
-        //    AvaPlot avaPlot,
-        //    ScottPlot.Plottables.PolarAxis polarAxis,
-        //    bool isLogScale,
-        //    double minValue,
-        //    double maxValue,
-        //    bool isDark,
-        //    int minCircles = 3,
-        //    int maxCircles = 7)
-        //{
-        //    // Оставить только внешний круг (последний)
-        //    while (polarAxis.Circles.Count > 1)
-        //        polarAxis.Circles.RemoveAt(polarAxis.Circles.Count - 2); // удаляем все, кроме последнего
-        //    // Проверка относительной разницы между minValue и maxValue
-        //    double relDiff = Math.Abs(maxValue - minValue) / Math.Max(Math.Max(Math.Abs(maxValue), Math.Abs(minValue)), 1);
-        //    double[] positions = Array.Empty<double>();
-        //    string[] labels = Array.Empty<string>();
-
-        //    var lineColor = ThemeColors.GetLineColor(isDark);
-        //    var labelColor = ThemeColors.GetLabelColor(isDark);
-        //    var circleColor = ThemeColors.GetCircleColor(isDark);
-
-
-
-        //    // 1. Пытаемся построить красивые круги
-        //    double[] possibleSteps = {0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 30000, 50000, 100000 };
-        //    double range = maxValue - minValue;
-        //    // 2. Находим красивый шаг (только целые или стандартные значения)
-        //    double step = possibleSteps
-        //        .Select(s => new { s, count = Math.Ceiling(range / s) })
-        //        .Where(x => x.count >= minCircles && x.count <= maxCircles)
-        //        .OrderBy(x => Math.Abs(x.count - (minCircles + maxCircles) / 2))
-        //        .Select(x => x.s)
-        //        .FirstOrDefault(10);
-        //    // 3. Округляем minValue вниз, maxValue вверх к красивым значениям по модулю
-        //    double NiceFloor(double value, double s)
-        //    {
-        //        if (value >= 0)
-        //            return Math.Floor(value / s) * s;
-        //        else
-        //            return -Math.Ceiling(Math.Abs(value) / s) * s;
-        //    }
-        //    double NiceCeil(double value, double s)
-        //    {
-        //        if (value >= 0)
-        //            return Math.Ceiling(value / s) * s;
-        //        else
-        //            return -Math.Floor(Math.Abs(value) / s) * s;
-        //    }
-        //    double niceMin = NiceFloor(minValue, step);
-        //    double niceMax = NiceCeil(maxValue, step);
-        //    // 4. Генерируем красивые значения строго по шагу, с защитой от накопления ошибок
-        //    List<double> circleValues = new();
-        //    for (double v = niceMin; v <= niceMax + step * 0.1; v += step)
-        //        circleValues.Add(Math.Round(v, 6));
-        //    // 5. Сортируем значения
-        //    circleValues = circleValues.OrderBy(v => v).ToList();
-        //    // 6. Фильтруем по радиусу >= 10% (кроме niceMax)
-        //    circleValues = circleValues
-        //        .Where(v => v == niceMax || ((niceMax - niceMin) > 0 ? 100 * (v - niceMin) / (niceMax - niceMin) : 100) >= 10)
-        //        .ToList();
-        //    // 7. Если получилось >2 кругов — используем их, иначе строим стандартные 3 круга
-        //    if (circleValues.Count > 2)
-        //    {
-        //        int n = circleValues.Count;
-        //        double r0 = ((niceMax - niceMin) > 0) ? 100 * (circleValues[0] - niceMin) / (niceMax - niceMin) : 100;
-        //        double rN = 100;
-        //        positions = new double[n];
-        //        labels = new string[n];
-        //        for (int i = 0; i < n; i++)
-        //        {
-        //            double value = circleValues[i];
-        //            double r;
-        //            if (i == 0)
-        //                r = r0;
-        //            else if (i == n - 1)
-        //                r = rN;
-        //            else
-        //                r = r0 + (rN - r0) * i / (n - 1);
-        //            positions[i] = r;
-        //            labels[i] = (i == n - 1) ? "" : (isLogScale ? $"{Math.Round(value, 1)} дБ" : $"{Math.Round(value, 1)}");
-        //        }
-        //    }
-        //    else
-        //    {
-        //        double value70 = minValue + (maxValue - minValue) * 0.7;
-        //        double value40 = minValue + (maxValue - minValue) * 0.4;
-        //        double value10 = minValue + (maxValue - minValue) * 0.1;
-        //        positions = new double[] { 10, 40, 70, 100 };
-        //        labels = new string[] {
-        //            isLogScale ? $"{Math.Round(value10, 1)} дБ" : $"{Math.Round(value10, 1)}",
-        //            isLogScale ? $"{Math.Round(value40, 1)} дБ" : $"{Math.Round(value40, 1)}",
-        //            isLogScale ? $"{Math.Round(value70, 1)} дБ" : $"{Math.Round(value70, 1)}",
-        //            "" // внешний круг без подписи
-        //        };
-        //    }
-        //    if (positions.Length == 0 || labels.Length == 0)
-        //        return;
-        //    polarAxis.SetCircles(positions, labels);
-        //    // Стилизация кругов
-        //    for (int i = 0; i < polarAxis.Circles.Count; i++)
-        //    {
-        //        polarAxis.Circles[i].LabelStyle.ForeColor = labelColor;
-        //        if (i == polarAxis.Circles.Count - 1)
-        //        {
-        //            // Внешний круг: всегда радиус 100, нужный стиль
-        //            polarAxis.Circles[i].Radius = 100;
-        //            polarAxis.Circles[i].LineWidth = 2;
-        //            polarAxis.Circles[i].LinePattern = ScottPlot.LinePattern.Solid;
-        //            polarAxis.Circles[i].LineColor = circleColor;
-        //        }
-        //        else
-        //        {
-        //            polarAxis.Circles[i].LineWidth = 1;
-        //            polarAxis.Circles[i].LinePattern = ScottPlot.LinePattern.Dotted;
-        //            polarAxis.Circles[i].LineColor = lineColor;
-        //        }
-        //    }
-        //    // Добавляем кастомные спицы-отрезки
-        //    AddCustomSpokeLines(avaPlot, polarAxis, isDark);
-        //}
-
         public static void AutoUpdatePolarAxisCircles(
-    AvaPlot avaPlot,
-    ScottPlot.Plottables.PolarAxis polarAxis,
-    bool isLogScale,
-    double minValue,
-    double maxValue,
-    bool isDark,
-    int minCircles = 3,
-    int maxCircles = 7)
+            AvaPlot avaPlot,
+            ScottPlot.Plottables.PolarAxis polarAxis,
+            bool isLogScale,
+            double minValue,
+            double maxValue,
+            bool isDark,
+            int minCircles = 3,
+            int maxCircles = 7)
         {
             // Оставляем только внешний круг
             while (polarAxis.Circles.Count > 1)
@@ -612,57 +485,6 @@ namespace AntennaAV.Views
             }
         }
 
-        // Новый: один полигон для сектора
-        //public static ScottPlot.Plottables.Polygon InitializeSectorPolygon(AvaPlot avaPlot)
-        //{
-        //    var poly = avaPlot.Plot.Add.Polygon(new ScottPlot.Coordinates[] { });
-        //    poly.FillColor = Colors.DarkGray.WithAlpha(.5);
-        //    poly.LineWidth = 0;
-        //    poly.IsVisible = false;
-        //    return poly;
-        //}
 
-        /// <summary>
-        /// Создаёт и добавляет новый секторный полигон на график (старый нужно удалить вручную!)
-        /// </summary>
-        public static ScottPlot.Plottables.Polygon? CreateSectorPolygon(AvaPlot avaPlot, double start, double end, bool showSector, double radius = 100)
-        {
-            if (!showSector)
-                return null;
-            // Проверка на полный круг (размер 0 или 360)
-            double sectorSize = (end - start + 360) % 360;
-            if (sectorSize == 0)
-                return null;
-            // Формируем точки сектора
-            var points = new List<ScottPlot.Coordinates>();
-            points.Add(new ScottPlot.Coordinates(0, 0));
-            double step = 1; // 1 градус
-            if (start < end)
-            {
-                for (double angle = start; angle <= end; angle += step)
-                {
-                    double theta = (angle + 90) * Math.PI / 180.0;
-                    points.Add(new ScottPlot.Coordinates(-radius * Math.Cos(theta), radius * Math.Sin(theta)));
-                }
-            }
-            else // сектор через 0°
-            {
-                for (double angle = start; angle < 360; angle += step)
-                {
-                    double theta = (angle + 90) * Math.PI / 180.0;
-                    points.Add(new ScottPlot.Coordinates(-radius * Math.Cos(theta), radius * Math.Sin(theta)));
-                }
-                for (double angle = 0; angle <= end; angle += step)
-                {
-                    double theta = (angle + 90) * Math.PI / 180.0;
-                    points.Add(new ScottPlot.Coordinates(-radius * Math.Cos(theta), radius * Math.Sin(theta)));
-                }
-            }
-            var poly = avaPlot.Plot.Add.Polygon(points.ToArray());
-            poly.FillColor = Colors.DarkGray.WithAlpha(.5);
-            poly.LineWidth = 0;
-            poly.IsVisible = true;
-            return poly;
-        }
     }
 }
