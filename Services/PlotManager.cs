@@ -268,6 +268,18 @@ namespace AntennaAV.Services
             }
         }
 
+        public void ResetPlotAxes(params AvaPlot?[] plots)
+        {
+            foreach (var avaPlot in plots)
+            {
+                if (avaPlot?.Plot != null)
+                {
+                    avaPlot.Plot.Axes.AutoScale();
+                    avaPlot.Refresh();
+                }
+            }
+        }
+
         public void DrawTransmitterAnglePoint(AvaPlot? plot, double angleDeg)
         {
             if (plot == null || plot.Plot == null)

@@ -342,7 +342,7 @@ namespace AntennaAV.ViewModels
                 LastEvent = $"Ошибка экспорта: {ex.Message}";
             }
         }
-
+        
         public async Task ImportTableFromCsvAsync(Window window)
         {
             try

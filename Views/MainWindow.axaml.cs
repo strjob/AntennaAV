@@ -46,7 +46,7 @@ namespace AntennaAV.Views
 
             //OnThemeChanged(this, EventArgs.Empty);
 
-
+            this.GetObservable(Window.ClientSizeProperty).Subscribe(_ => _plotManager.ResetPlotAxes(AvaPlot1, AvaPlot2));
             NumericUpDownSectorSize.AddHandler(InputElement.KeyDownEvent, NumericUpDown_KeyDown, RoutingStrategies.Tunnel);
             NumericUpDownSectorCenter.AddHandler(InputElement.KeyDownEvent, NumericUpDown_KeyDown, RoutingStrategies.Tunnel);
 
@@ -56,14 +56,13 @@ namespace AntennaAV.Views
                 {
                     SubscribeToViewModelEvents(vm);
                     vm.BuildRadar();
+                    
                 }
             };
 
             Application.Current!.ActualThemeVariantChanged += OnThemeChanged;
 
         }
-
-        
 
         private void DrawCurrentTabPlot(MainWindowViewModel vm)
         {
