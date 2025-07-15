@@ -21,7 +21,6 @@ namespace AntennaAV.Services
         private bool _avaPlot1NeedsRefresh = false;
         private bool _avaPlot2NeedsRefresh = false;
 
-        // Магические числа вынесены в константы
         private const double DefaultPlotRadius = 100.0;
         private const double Plot2RadiusFactor = 0.6;
         private const double PointerThreshold = 20.0;

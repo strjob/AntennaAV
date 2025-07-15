@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Rendering;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using System;
@@ -213,6 +214,8 @@ namespace AntennaAV.Views
             if (this.DataContext is MainWindowViewModel vm)
             {
                 vm.StopMessaging();
+                System.Threading.Thread.Sleep(100);
+                vm.StopAntennas();
             }
         }
 

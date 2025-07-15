@@ -5,6 +5,7 @@
     xmlns:ScottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:AntennaAV"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:treegrid="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.TreeDataGrid"
     xmlns:vm="using:AntennaAV.ViewModels"
@@ -31,10 +32,10 @@
         <StreamGeometry x:Key="paint_brush_arrow_down_regular">M8.35607 17.0075C8.76612 17.0661 9.05105 17.446 8.99247 17.8561C8.85756 18.8004 8.5899 19.6665 8.36001 20.2905C8.2444 20.6043 8.13672 20.8612 8.05711 21.0414C8.01726 21.1316 7.98434 21.2028 7.96082 21.2526C7.94906 21.2774 7.93964 21.297 7.93287 21.3109L7.92474 21.3275L7.92224 21.3326L7.92139 21.3343L7.92094 21.3352C7.92094 21.3352 7.92082 21.3354 7.25 21L7.92094 21.3352C7.7357 21.7057 7.28507 21.8561 6.91459 21.6708C6.54432 21.4857 6.39411 21.0356 6.57885 20.6652L6.57957 20.6638L6.5841 20.6545C6.58844 20.6456 6.59537 20.6312 6.60461 20.6117C6.62308 20.5726 6.6507 20.513 6.68508 20.4352C6.75391 20.2794 6.84935 20.0519 6.95249 19.772C7.1601 19.2085 7.39245 18.4496 7.50754 17.6439C7.56612 17.2339 7.94602 16.949 8.35607 17.0075Z M10.9127 18.0179C11.317 18.1077 11.572 18.5083 11.4821 18.9127L10.9821 21.1627C10.8923 21.567 10.4917 21.822 10.0873 21.7321C9.68295 21.6423 9.428 21.2417 9.51786 20.8373L10.0179 18.5873C10.1077 18.183 10.5083 17.928 10.9127 18.0179Z M18 13H6V11.5H18V13Z M12 2C10.6193 2 9.5 3.11929 9.5 4.5V7.5H7.11173C5.93802 7.5 5.03485 8.49324 5.07218 9.63137C5.11456 10.9233 5.11662 12.9871 4.85477 15.1143C4.59044 17.2617 4.06766 19.3785 3.12032 20.8426C2.97106 21.0732 2.95988 21.3671 3.09118 21.6084C3.22249 21.8498 3.47525 22 3.75 22H15.5251L14.5126 20.9874C14.3667 20.8416 14.2519 20.6763 14.1683 20.5H5.00972C5.73187 18.9257 6.12717 17.0553 6.34353 15.2976C6.61845 13.0642 6.61511 10.9156 6.57137 9.58219C6.56068 9.25616 6.82048 9 7.11173 9H10.25C10.6642 9 11 8.66421 11 8.25V4.5C11 3.94772 11.4477 3.5 12 3.5C12.5523 3.5 13 3.94772 13 4.5V8.25C13 8.66421 13.3358 9 13.75 9H16.75C17.1642 9 17.5 9.33579 17.5 9.75V14.193C17.7397 14.0697 18.0116 14 18.2998 14C18.5488 14 18.7856 14.052 19 14.1457V9.75C19 8.50736 17.9926 7.5 16.75 7.5H14.5V4.5C14.5 3.11929 13.3807 2 12 2Z M16.2803 19.2197C15.9874 18.9268 15.5126 18.9268 15.2197 19.2197C14.9268 19.5126 14.9268 19.9874 15.2197 20.2803L17.7197 22.7803C17.8603 22.921 18.0511 23 18.25 23C18.4489 23 18.6397 22.921 18.7803 22.7803L21.2803 20.2803C21.5732 19.9874 21.5732 19.5126 21.2803 19.2197C20.9874 18.9268 20.5125 18.9268 20.2197 19.2197L19.0498 20.3895V15.75C19.0498 15.3358 18.714 15 18.2998 15C17.8856 15 17.5498 15.3358 17.5498 15.75V20.4892L16.2803 19.2197Z</StreamGeometry>
         <StreamGeometry x:Key="arrow_right_regular">M15.2685,4.20949 C14.97,3.92233 14.4952,3.93153 14.208,4.23005 C13.9209,4.52857 13.9301,5.00335 14.2286,5.29051 L22.5028,13.25 L3.75,13.25 C3.33579,13.25 3,13.5858 3,13.9999982 C3,14.4142 3.33579,14.75 3.75,14.75 L22.5018,14.75 L14.2286,22.7085 C13.9301,22.9957 13.9209,23.4705 14.208,23.769 C14.4952,24.0675 14.97,24.0767 15.2685,23.7896 L24.6965,14.7202 C25.1054,14.3268 25.1054,13.6723 24.6965,13.2788 L15.2685,4.20949 Z</StreamGeometry>
         <StreamGeometry x:Key="arrow_download_regular">M12.25,39.5 L35.75,39.5 C36.4403559,39.5 37,40.0596441 37,40.75 C37,41.3972087 36.5081253,41.9295339 35.8778052,41.9935464 L35.75,42 L12.25,42 C11.5596441,42 11,41.4403559 11,40.75 C11,40.1027913 11.4918747,39.5704661 12.1221948,39.5064536 L12.25,39.5 L35.75,39.5 L12.25,39.5 Z M23.6221948,6.00645361 L23.75,6 C24.3972087,6 24.9295339,6.49187466 24.9935464,7.12219476 L25,7.25 L25,31.54 L30.6466793,25.8942911 C31.1348346,25.4061358 31.9262909,25.4061358 32.4144462,25.8942911 C32.9026016,26.3824465 32.9026016,27.1739027 32.4144462,27.6620581 L24.6362716,35.4402327 C24.1481163,35.928388 23.35666,35.928388 22.8685047,35.4402327 L15.0903301,27.6620581 C14.6021747,27.1739027 14.6021747,26.3824465 15.0903301,25.8942911 C15.5784855,25.4061358 16.3699417,25.4061358 16.858097,25.8942911 L22.5,31.536 L22.5,7.25 C22.5,6.60279131 22.9918747,6.0704661 23.6221948,6.00645361 L23.75,6 L23.6221948,6.00645361 Z</StreamGeometry>
-		<StreamGeometry x:Key="stop_regular">M19.25 4.5C19.3881 4.5 19.5 4.61193 19.5 4.75V19.25C19.5 19.3881 19.3881 19.5 19.25 19.5H4.75C4.61193 19.5 4.5 19.3881 4.5 19.25V4.75C4.5 4.61193 4.61193 4.5 4.75 4.5H19.25ZM4.75 3C3.7835 3 3 3.7835 3 4.75V19.25C3 20.2165 3.7835 21 4.75 21H19.25C20.2165 21 21 20.2165 21 19.25V4.75C21 3.7835 20.2165 3 19.25 3H4.75Z</StreamGeometry>
+        <StreamGeometry x:Key="stop_regular">M19.25 4.5C19.3881 4.5 19.5 4.61193 19.5 4.75V19.25C19.5 19.3881 19.3881 19.5 19.25 19.5H4.75C4.61193 19.5 4.5 19.3881 4.5 19.25V4.75C4.5 4.61193 4.61193 4.5 4.75 4.5H19.25ZM4.75 3C3.7835 3 3 3.7835 3 4.75V19.25C3 20.2165 3.7835 21 4.75 21H19.25C20.2165 21 21 20.2165 21 19.25V4.75C21 3.7835 20.2165 3 19.25 3H4.75Z</StreamGeometry>
 
 
-		<StreamGeometry x:Key="add_square_regular">M12 7C12.4142 7 12.75 7.33579 12.75 7.75V11.25H16.25C16.6642 11.25 17 11.5858 17 12C17 12.4142 16.6642 12.75 16.25 12.75H12.75V16.25C12.75 16.6642 12.4142 17 12 17C11.5858 17 11.25 16.6642 11.25 16.25V12.75H7.75C7.33579 12.75 7 12.4142 7 12C7 11.5858 7.33579 11.25 7.75 11.25H11.25V7.75C11.25 7.33579 11.5858 7 12 7Z M3 6.25C3 4.45507 4.45507 3 6.25 3H17.75C19.5449 3 21 4.45507 21 6.25V17.75C21 19.5449 19.5449 21 17.75 21H6.25C4.45507 21 3 19.5449 3 17.75V6.25ZM6.25 4.5C5.2835 4.5 4.5 5.2835 4.5 6.25V17.75C4.5 18.7165 5.2835 19.5 6.25 19.5H17.75C18.7165 19.5 19.5 18.7165 19.5 17.75V6.25C19.5 5.2835 18.7165 4.5 17.75 4.5H6.25Z</StreamGeometry>
+        <StreamGeometry x:Key="add_square_regular">M12 7C12.4142 7 12.75 7.33579 12.75 7.75V11.25H16.25C16.6642 11.25 17 11.5858 17 12C17 12.4142 16.6642 12.75 16.25 12.75H12.75V16.25C12.75 16.6642 12.4142 17 12 17C11.5858 17 11.25 16.6642 11.25 16.25V12.75H7.75C7.33579 12.75 7 12.4142 7 12C7 11.5858 7.33579 11.25 7.75 11.25H11.25V7.75C11.25 7.33579 11.5858 7 12 7Z M3 6.25C3 4.45507 4.45507 3 6.25 3H17.75C19.5449 3 21 4.45507 21 6.25V17.75C21 19.5449 19.5449 21 17.75 21H6.25C4.45507 21 3 19.5449 3 17.75V6.25ZM6.25 4.5C5.2835 4.5 4.5 5.2835 4.5 6.25V17.75C4.5 18.7165 5.2835 19.5 6.25 19.5H17.75C18.7165 19.5 19.5 18.7165 19.5 17.75V6.25C19.5 5.2835 18.7165 4.5 17.75 4.5H6.25Z</StreamGeometry>
         <StreamGeometry x:Key="folder_open_regular">M20 9.50195V8.74985C20 7.50721 18.9926 6.49985 17.75 6.49985H12.0247L9.64368 4.51995C9.23959 4.18393 8.73063 3.99997 8.20509 3.99997H4.24957C3.00724 3.99997 2 5.00686 1.99957 6.24919L1.99561 17.7492C1.99518 18.9921 3.00266 20 4.24561 20H4.27196C4.27607 20 4.28019 20 4.28431 20H18.4693C19.2723 20 19.9723 19.4535 20.167 18.6745L21.9169 11.6765C22.1931 10.5719 21.3577 9.50195 20.2192 9.50195H20ZM4.24957 5.49997H8.20509C8.38027 5.49997 8.54993 5.56129 8.68462 5.6733L11.2741 7.82652C11.4088 7.93852 11.5784 7.99985 11.7536 7.99985H17.75C18.1642 7.99985 18.5 8.33563 18.5 8.74985V9.50195H6.42385C5.39136 9.50195 4.49137 10.2047 4.241 11.2064L3.49684 14.1837L3.49957 6.24971C3.49971 5.8356 3.83546 5.49997 4.24957 5.49997ZM5.69623 11.5701C5.77969 11.2362 6.07969 11.002 6.42385 11.002H20.2192C20.3819 11.002 20.5012 11.1548 20.4617 11.3126L18.7119 18.3107C18.684 18.4219 18.584 18.5 18.4693 18.5H4.28431C4.12167 18.5 4.00233 18.3472 4.04177 18.1894L5.69623 11.5701Z</StreamGeometry>
 
     </Window.Resources>
@@ -132,8 +133,8 @@
             VerticalAlignment="Stretch"
             ShowGridLines="False">
             <Grid.RowDefinitions>
-				<RowDefinition Height="0.15*" MinHeight="150"/>
-				<RowDefinition Height="0.15*" />
+                <RowDefinition Height="0.15*" MinHeight="150" />
+                <RowDefinition Height="0.15*" />
                 <RowDefinition Height="0.15*" />
                 <RowDefinition Height="0.4*" />
             </Grid.RowDefinitions>
@@ -143,20 +144,20 @@
             <!--  Верхний ряд - Передающая антенна  -->
 
 
-			<ScottPlot:AvaPlot
+            <ScottPlot:AvaPlot
                 x:Name="AvaPlot2"
                 Grid.Row="0"
                 MinHeight="150"
-				VerticalAlignment="Stretch"
-                Margin="10" />
-			<TextBlock
+                Margin="10"
+                VerticalAlignment="Stretch" />
+            <TextBlock
                 Grid.Row="0"
                 Margin="1"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 FontSize="24"
                 Text="{CompiledBinding TransmitterAngleDegStr}" />
-			<TextBlock
+            <TextBlock
                 Grid.Row="0"
                 Margin="2"
                 HorizontalAlignment="Center"
@@ -164,62 +165,62 @@
                 FontSize="12"
                 Foreground="Red"
                 Text="{CompiledBinding TxAntennaCounterErrorStr}" />
-			<TextBlock
-                    Margin="0,5,0,10"
-					Grid.Row="0"
-                    HorizontalAlignment="Center"
-                    FontSize="16"
-                    Text="Передающая антенна" />
-			
-			<StackPanel
+            <TextBlock
+                Grid.Row="0"
+                Margin="0,5,0,10"
+                HorizontalAlignment="Center"
+                FontSize="16"
+                Text="Передающая антенна" />
+
+            <StackPanel
                 Grid.Row="1"
                 Margin="10"
                 VerticalAlignment="Top">
-				<StackPanel Margin="0,0,0,5" Orientation="Horizontal">
-					<TextBlock
+                <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
+                    <TextBlock
                         Margin="10,0,0,0"
                         VerticalAlignment="Center"
                         Text="Угол:" />
 
-					<TextBlock
-						FontSize="12"
-						VerticalAlignment="Bottom"
-						Margin="5,0,0,0"
-						Foreground="Red"
-						Text="{CompiledBinding TransmitterMoveAngleError}" />
-					
-					</StackPanel>
-				
+                    <TextBlock
+                        Margin="5,0,0,0"
+                        VerticalAlignment="Bottom"
+                        FontSize="12"
+                        Foreground="Red"
+                        Text="{CompiledBinding TransmitterMoveAngleError}" />
+
+                </StackPanel>
+
                 <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
 
                     <NumericUpDown
                         Width="125"
+                        Margin="5,0,5,0"
                         VerticalAlignment="Center"
                         FormatString="0.0"
                         Increment="1"
-						Margin="5,0,5,0"
                         KeyDown="NumericUpDown_KeyDown"
                         Maximum="359"
                         Minimum="0"
                         Watermark="0-359"
                         Value="{CompiledBinding TransmitterMoveAngle,
                                                 Mode=TwoWay}" />
-					<Button
+                    <Button
                         Margin="2"
                         HorizontalAlignment="Left"
                         Command="{CompiledBinding MoveTransmitterToAngleCommand}"
                         Content="Переместить"
                         IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
-						<PathIcon Data="{StaticResource arrow_right_regular}" />
-					</Button>
-					<Button
+                        <PathIcon Data="{StaticResource arrow_right_regular}" />
+                    </Button>
+                    <Button
                         Margin="2"
                         HorizontalAlignment="Left"
                         Command="{CompiledBinding SetTransmitterAngleCommand}"
                         Content="Задать"
                         IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
-						<PathIcon Data="{StaticResource arrow_download_regular}" />
-					</Button>
+                        <PathIcon Data="{StaticResource arrow_download_regular}" />
+                    </Button>
                 </StackPanel>
                 <StackPanel
                     Margin="2,0,0,5"
@@ -229,55 +230,57 @@
                         Margin="2"
                         HorizontalAlignment="Left"
                         Command="{CompiledBinding MoveTransmitterToAngleCommand}"
-                        ToolTip.Tip ="Переместить"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
-                      <Svg Path="{CompiledBinding ChevronsLeftIconPath}" />
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                        ToolTip.Tip="Переместить">
+                        <Svg Path="{CompiledBinding ChevronsLeftIconPath}" />
                     </Button>
                     <Button
                         Margin="1"
                         HorizontalAlignment="Left"
                         Command="{CompiledBinding SetTransmitterAngleCommand}"
-                        ToolTip.Tip="Задать угол"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
-                      <Svg Path="{CompiledBinding ChevronLeftIconPath}" />
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                        ToolTip.Tip="Задать угол">
+                        <Svg Path="{CompiledBinding ChevronLeftIconPath}" />
 
                     </Button>
-					<Button
+                    <Button
                         Margin="1"
                         HorizontalAlignment="Left"
                         Command="{CompiledBinding MoveTransmitterToAngleCommand}"
                         Content="Переместить"
                         IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
-            <Svg Path="{CompiledBinding ChevronRightIconPath}" />
-          </Button>
-					<Button
+                        <Svg Path="{CompiledBinding ChevronRightIconPath}" />
+                    </Button>
+                    <Button
                         Margin="1"
                         HorizontalAlignment="Left"
-                        Command="{CompiledBinding SetTransmitterAngleCommand}"
-                        Content="Задать"      
+                        Command="{CompiledBinding MoveTxAntennaToRelativeAngleCommand}"
+                        CommandParameter="{CompiledBinding MoveTxPlus10}"
+                        Content="Задать"
                         IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
-            <Svg Path="{CompiledBinding ChevronsRightIconPath}" />
-          </Button>
-					<Button
+                        <Svg Path="{CompiledBinding ChevronsRightIconPath}" />
+                    </Button>
+                    <Button
                         Margin="1"
                         HorizontalAlignment="Left"
                         Command="{CompiledBinding SetTransmitterAngleCommand}"
                         Content="Стоп"
                         IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
-						<Button.Styles>
-							<Style>
-								<Style.Resources>
-									<SolidColorBrush x:Key="ThemeBorderMidBrush">Red</SolidColorBrush>
-									<SolidColorBrush x:Key="ThemeControlHighBrush">DarkRed</SolidColorBrush>
-									<SolidColorBrush x:Key="ButtonBorderBrush">Red</SolidColorBrush>
-									<SolidColorBrush x:Key="ButtonBackground">OrangeRed</SolidColorBrush>
-									<SolidColorBrush x:Key="ButtonBackgroundPointerOver">Red</SolidColorBrush>
-									<SolidColorBrush x:Key="ButtonBackgroundPressed">OrangeRed</SolidColorBrush>								</Style.Resources>
-							</Style>
-						</Button.Styles>
-						<!--<PathIcon Data="{StaticResource stop_regular}" />-->
-					</Button>
-				</StackPanel>
+                        <Button.Styles>
+                            <Style>
+                                <Style.Resources>
+                                    <SolidColorBrush x:Key="ThemeBorderMidBrush">Red</SolidColorBrush>
+                                    <SolidColorBrush x:Key="ThemeControlHighBrush">DarkRed</SolidColorBrush>
+                                    <SolidColorBrush x:Key="ButtonBorderBrush">Red</SolidColorBrush>
+                                    <SolidColorBrush x:Key="ButtonBackground">OrangeRed</SolidColorBrush>
+                                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver">Red</SolidColorBrush>
+                                    <SolidColorBrush x:Key="ButtonBackgroundPressed">OrangeRed</SolidColorBrush>								
+                                </Style.Resources>
+                            </Style>
+                        </Button.Styles>
+                        <!--<PathIcon Data="{StaticResource stop_regular}" />-->
+                    </Button>
+                </StackPanel>
             </StackPanel>
 
 

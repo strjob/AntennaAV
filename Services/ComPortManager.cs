@@ -246,7 +246,7 @@ namespace AntennaAV.Services
         {
             if (_port != null && _port.IsOpen)
             { 
-                WriteCommand($"W/{value.ToString("0.###", CultureInfo.InvariantCulture)}", "AA");
+                WriteCommand($"W/{value.ToString("0.####", CultureInfo.InvariantCulture)}", "AA");
                 return true;
             }
             return false;
