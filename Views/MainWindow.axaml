@@ -5,8 +5,8 @@
     xmlns:ScottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:AntennaAV"
-    xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:treegrid="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.TreeDataGrid"
     xmlns:vm="using:AntennaAV.ViewModels"
     Title="AntennaAV"
@@ -48,11 +48,11 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <Grid ShowGridLines="False">
+    <Grid ShowGridLines="True">
         <Grid.ColumnDefinitions>
             <ColumnDefinition
                 Width="0.2*"
-                MinWidth="240"
+                MinWidth="250"
                 MaxWidth="280" />
             <ColumnDefinition Width="0.62*" MinWidth="300" />
             <ColumnDefinition Width="0.38*" MinWidth="200" />
@@ -61,15 +61,8 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock
-            Grid.Row="0"
-            Margin="5"
-            VerticalAlignment="Bottom"
-            FontSize="14"
-            Text="{CompiledBinding ConnectionStatus}" />
-
         <ScottPlot:AvaPlot
-            x:Name="AvaPlot1"
+            x:Name="AvaPlotMain"
             Grid.Row="0"
             Grid.Column="1"
             Margin="0,0,0,0" />
@@ -131,25 +124,25 @@
             Grid.Column="0"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
-            ShowGridLines="False">
+            ShowGridLines="True">
             <Grid.RowDefinitions>
-                <RowDefinition Height="0.15*" MinHeight="150" />
-                <RowDefinition Height="0.15*" />
-                <RowDefinition Height="0.15*" />
-                <RowDefinition Height="0.4*" />
-            </Grid.RowDefinitions>
-
-
+                <RowDefinition Height="0.2*" MinHeight="160" />
+                <RowDefinition Height="0.15*" MinHeight="120" MaxHeight="140" />
+                <RowDefinition Height="100"/>
+                <RowDefinition Height="0.2*" MinHeight="160" />
+                <RowDefinition Height="0.2*" MinHeight="120" MaxHeight="140"/>
+				<RowDefinition Height="20" MinHeight="20"/>
+			</Grid.RowDefinitions>
 
             <!--  Верхний ряд - Передающая антенна  -->
 
-
             <ScottPlot:AvaPlot
-                x:Name="AvaPlot2"
+                x:Name="AvaPlotTx"
                 Grid.Row="0"
                 MinHeight="150"
                 Margin="10"
-                VerticalAlignment="Stretch" />
+                VerticalAlignment="Stretch" 
+				HorizontalAlignment="Stretch"/>
             <TextBlock
                 Grid.Row="0"
                 Margin="1"
@@ -175,8 +168,9 @@
             <StackPanel
                 Grid.Row="1"
                 Margin="10"
-                VerticalAlignment="Top">
-                <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
+                VerticalAlignment="Top"
+				HorizontalAlignment="Center">
+                <StackPanel Margin="0,0,0,5" Orientation="Horizontal" >
                     <TextBlock
                         Margin="10,0,0,0"
                         VerticalAlignment="Center"
@@ -187,11 +181,10 @@
                         VerticalAlignment="Bottom"
                         FontSize="12"
                         Foreground="Red"
-                        Text="{CompiledBinding TransmitterMoveAngleError}" />
-
+                        Text="{CompiledBinding TransmitterAngleError}" />
                 </StackPanel>
 
-                <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
+                <StackPanel Margin="0,0,0,5" Orientation="Horizontal" HorizontalAlignment="Center">
 
                     <NumericUpDown
                         Width="125"
@@ -203,67 +196,72 @@
                         Maximum="359"
                         Minimum="0"
                         Watermark="0-359"
-                        Value="{CompiledBinding TransmitterMoveAngle,
-                                                Mode=TwoWay}" />
-                    <Button
-                        Margin="2"
-                        HorizontalAlignment="Left"
-                        Command="{CompiledBinding MoveTransmitterToAngleCommand}"
-                        Content="Переместить"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
-                        <PathIcon Data="{StaticResource arrow_right_regular}" />
-                    </Button>
-                    <Button
-                        Margin="2"
-                        HorizontalAlignment="Left"
-                        Command="{CompiledBinding SetTransmitterAngleCommand}"
-                        Content="Задать"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
-                        <PathIcon Data="{StaticResource arrow_download_regular}" />
-                    </Button>
-                </StackPanel>
-                <StackPanel
-                    Margin="2,0,0,5"
-                    HorizontalAlignment="Left"
-                    Orientation="Horizontal">
+                        Value="{CompiledBinding TransmitterAngle,
+                                                Mode=TwoWay,
+                                                UpdateSourceTrigger=PropertyChanged}" />
                     <Button
                         Margin="2"
                         HorizontalAlignment="Left"
                         Command="{CompiledBinding MoveTransmitterToAngleCommand}"
                         IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
                         ToolTip.Tip="Переместить">
+                        <PathIcon Data="{StaticResource arrow_right_regular}" />
+                    </Button>
+                    <Button
+                        Margin="2"
+                        HorizontalAlignment="Left"
+                        Command="{CompiledBinding SetTransmitterAngleCommand}"
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                        ToolTip.Tip="Задать угол (без перемещения)">
+                        <PathIcon Data="{StaticResource arrow_download_regular}" />
+                    </Button>
+                </StackPanel>
+                <StackPanel
+                    Margin="2,0,0,5"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal">
+                    <Button
+                        Margin="2"
+                        HorizontalAlignment="Left"
+                        Command="{CompiledBinding MoveTxAntennaToRelativeAngleCommand}"
+                        CommandParameter="{CompiledBinding MoveMinus1}"
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                        ToolTip.Tip="Переместить на -1°">
                         <Svg Path="{CompiledBinding ChevronsLeftIconPath}" />
                     </Button>
                     <Button
                         Margin="1"
                         HorizontalAlignment="Left"
-                        Command="{CompiledBinding SetTransmitterAngleCommand}"
+                        Command="{CompiledBinding MoveTxAntennaToRelativeAngleCommand}"
+                        CommandParameter="{CompiledBinding MoveMinus01}"
                         IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
-                        ToolTip.Tip="Задать угол">
+                        ToolTip.Tip="Переместить на -0.1°">
                         <Svg Path="{CompiledBinding ChevronLeftIconPath}" />
 
                     </Button>
                     <Button
                         Margin="1"
                         HorizontalAlignment="Left"
-                        Command="{CompiledBinding MoveTransmitterToAngleCommand}"
-                        Content="Переместить"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
+                        Command="{CompiledBinding MoveTxAntennaToRelativeAngleCommand}"
+                        CommandParameter="{CompiledBinding MovePlus01}"
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                        ToolTip.Tip="Переместить на +0.1°">
                         <Svg Path="{CompiledBinding ChevronRightIconPath}" />
                     </Button>
                     <Button
                         Margin="1"
                         HorizontalAlignment="Left"
                         Command="{CompiledBinding MoveTxAntennaToRelativeAngleCommand}"
-                        CommandParameter="{CompiledBinding MoveTxPlus10}"
-                        Content="Задать"
-                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
+                        CommandParameter="{CompiledBinding MovePlus1}"
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                        ToolTip.Tip="Переместить на +1°">
                         <Svg Path="{CompiledBinding ChevronsRightIconPath}" />
                     </Button>
                     <Button
                         Margin="1"
                         HorizontalAlignment="Left"
-                        Command="{CompiledBinding SetTransmitterAngleCommand}"
+                        Command="{CompiledBinding StopAntennaCommand}"
+                        CommandParameter="T"
                         Content="Стоп"
                         IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
                         <Button.Styles>
@@ -274,7 +272,7 @@
                                     <SolidColorBrush x:Key="ButtonBorderBrush">Red</SolidColorBrush>
                                     <SolidColorBrush x:Key="ButtonBackground">OrangeRed</SolidColorBrush>
                                     <SolidColorBrush x:Key="ButtonBackgroundPointerOver">Red</SolidColorBrush>
-                                    <SolidColorBrush x:Key="ButtonBackgroundPressed">OrangeRed</SolidColorBrush>								
+                                    <SolidColorBrush x:Key="ButtonBackgroundPressed">OrangeRed</SolidColorBrush>
                                 </Style.Resources>
                             </Style>
                         </Button.Styles>
@@ -285,18 +283,50 @@
 
 
             <!--  Средний ряд - Существующие текстовые блоки  -->
-            <StackPanel Grid.Row="4" VerticalAlignment="Center">
+            <StackPanel
+                Grid.Row="2"
+                Margin="5"
+                VerticalAlignment="Top">
                 <!--<TextBlock Text="Receiver Angle:" />
                 <TextBlock Margin="1" Text="{CompiledBinding ReceiverAngleDegStr}" />
 
                 <TextBlock Text="Transmitter Angle:" />
                 <TextBlock Margin="1" Text="{CompiledBinding TransmitterAngleDegStr}" />-->
+                <StackPanel
+                    Grid.Row="2"
+                    Margin="2"
+                    VerticalAlignment="Top"
+                    Orientation="Horizontal"
+					HorizontalAlignment="Stretch">
 
-                <TextBlock Text="Power (dBm):" />
-                <TextBlock Margin="1" Text="{CompiledBinding PowerDbmStr}" />
-
-                <TextBlock Text="Antenna Type:" />
-                <TextBlock Margin="1" Text="{CompiledBinding AntennaTypeStr}" />
+                    <TextBlock FontSize="16" Text="Режим: " />
+                    <TextBlock
+                        Margin="1"
+                        FontSize="16"
+                        Text="{CompiledBinding AntennaTypeStr}" />
+                </StackPanel>
+                <StackPanel
+                    Grid.Row="2"
+                    Margin="2"
+                    VerticalAlignment="Top"
+                    Orientation="Horizontal">
+                    <TextBlock FontSize="16" Text="Мощность, дБм: " />
+                    <TextBlock
+                        Margin="1"
+                        FontSize="16"
+                        Text="{CompiledBinding PowerDbmStr}" />
+                </StackPanel>
+                <StackPanel
+                    Grid.Row="2"
+                    Margin="2"
+                    VerticalAlignment="Top"
+                    Orientation="Horizontal">
+                    <TextBlock FontSize="16" Text="Напряжение, мкВ: " />
+                    <TextBlock
+                        Margin="1"
+                        FontSize="16"
+                        Text="{CompiledBinding PowerDbmStr}" />
+                </StackPanel>
 
                 <!--<TextBlock Text="Tx Antenna Counter:" />
                 <TextBlock Margin="1" Text="{CompiledBinding TxAntennaCounterStr}" />-->
@@ -305,68 +335,157 @@
             </StackPanel>
 
             <!--  Нижний ряд - Приемная антенна  -->
-            <StackPanel Grid.Row="5" VerticalAlignment="Center">
-                <TextBlock
-                    Margin="0,0,0,5"
-                    FontWeight="Bold"
-                    Text="Приемная антенна" />
-                <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
-                    <TextBlock
-                        Margin="0,0,5,0"
-                        VerticalAlignment="Center"
-                        Text="Угол:" />
-                    <NumericUpDown
-                        Width="125"
-                        FormatString="0.0"
-                        Increment="1"
-                        KeyDown="NumericUpDown_KeyDown"
-                        Maximum="359"
-                        Minimum="0"
-                        Watermark="0-359"
-                        Value="{CompiledBinding ReceiverMoveAngle,
-                                                Mode=TwoWay}" />
-                </StackPanel>
-                <TextBlock
-                    FontSize="12"
-                    Foreground="Red"
-                    Text="{CompiledBinding ReceiverMoveAngleError}" />
-                <Button
-                    Width="100"
-                    Margin="0,0,0,10"
-                    HorizontalAlignment="Left"
-                    Command="{CompiledBinding MoveReceiverToAngleCommand}"
-                    Content="Переместить в"
-                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
+            <ScottPlot:AvaPlot
+                x:Name="AvaPlotRx"
+                Grid.Row="3"
+                MinHeight="150"
+                Margin="10"
+                VerticalAlignment="Stretch"
+				HorizontalAlignment="Stretch"/>
+            <TextBlock
+                Grid.Row="3"
+                Margin="1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                FontSize="24"
+                Text="{CompiledBinding ReceiverAngleDegStr}" />
+            <TextBlock
+                Grid.Row="3"
+                Margin="2"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                FontSize="12"
+                Foreground="Red"
+                Text="{CompiledBinding RxAntennaCounterErrorStr}" />
+            <TextBlock
+                Grid.Row="3"
+                Margin="0,5,0,10"
+                HorizontalAlignment="Center"
+                FontSize="16"
+                Text="Приемная антенна" />
 
+            <StackPanel
+                Grid.Row="4"
+                Margin="10"
+                VerticalAlignment="Top"
+				HorizontalAlignment="Center">
                 <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
                     <TextBlock
-                        Margin="0,0,5,0"
+                        Margin="10,0,0,0"
                         VerticalAlignment="Center"
                         Text="Угол:" />
+
+                    <TextBlock
+                        Margin="5,0,0,0"
+                        VerticalAlignment="Bottom"
+                        FontSize="12"
+                        Foreground="Red"
+                        Text="{CompiledBinding ReceiverAngleError}" />
+
+                </StackPanel>
+
+                <StackPanel Margin="0,0,0,5" Orientation="Horizontal" HorizontalAlignment="Center">
+
                     <NumericUpDown
                         Width="125"
+                        Margin="5,0,5,0"
+                        VerticalAlignment="Center"
                         FormatString="0.0"
                         Increment="1"
                         KeyDown="NumericUpDown_KeyDown"
                         Maximum="359"
                         Minimum="0"
                         Watermark="0-359"
-                        Value="{CompiledBinding ReceiverSetAngle,
+                        Value="{CompiledBinding ReceiverAngle,
                                                 Mode=TwoWay,
-                                                FallbackValue=0}" />
+                                                UpdateSourceTrigger=PropertyChanged}" />
+                    <Button
+                        Margin="2"
+                        HorizontalAlignment="Left"
+                        Command="{CompiledBinding MoveReceiverToAngleCommand}"
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                        ToolTip.Tip="Переместить">
+                        <PathIcon Data="{StaticResource arrow_right_regular}" />
+                    </Button>
+                    <Button
+                        Margin="2"
+                        HorizontalAlignment="Left"
+                        Command="{CompiledBinding SetReceiverAngleCommand}"
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                        ToolTip.Tip="Задать угол (без перемещения)">
+                        <PathIcon Data="{StaticResource arrow_download_regular}" />
+                    </Button>
                 </StackPanel>
-                <TextBlock
-                    FontSize="12"
-                    Foreground="Red"
-                    Text="{CompiledBinding ReceiverSetAngleError}" />
-                <Button
-                    Width="100"
-                    HorizontalAlignment="Left"
-                    Command="{CompiledBinding SetReceiverAngleCommand}"
-                    Content="Задать"
-                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
-            </StackPanel>
+                <StackPanel
+                    Margin="2,0,0,5"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal">
+                    <Button
+                        Margin="2"
+                        HorizontalAlignment="Left"
+                        Command="{CompiledBinding MoveRxAntennaToRelativeAngleCommand}"
+                        CommandParameter="{CompiledBinding MoveMinus1}"
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                        ToolTip.Tip="Переместить на -1°">
+                        <Svg Path="{CompiledBinding ChevronsLeftIconPath}" />
+                    </Button>
+                    <Button
+                        Margin="1"
+                        HorizontalAlignment="Left"
+                        Command="{CompiledBinding MoveRxAntennaToRelativeAngleCommand}"
+                        CommandParameter="{CompiledBinding MoveMinus01}"
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                        ToolTip.Tip="Переместить на -0.1°">
+                        <Svg Path="{CompiledBinding ChevronLeftIconPath}" />
 
+                    </Button>
+                    <Button
+                        Margin="1"
+                        HorizontalAlignment="Left"
+                        Command="{CompiledBinding MoveRxAntennaToRelativeAngleCommand}"
+                        CommandParameter="{CompiledBinding MovePlus01}"
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                        ToolTip.Tip="Переместить на +0.1°">
+                        <Svg Path="{CompiledBinding ChevronRightIconPath}" />
+                    </Button>
+                    <Button
+                        Margin="1"
+                        HorizontalAlignment="Left"
+                        Command="{CompiledBinding MoveRxAntennaToRelativeAngleCommand}"
+                        CommandParameter="{CompiledBinding MovePlus1}"
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                        ToolTip.Tip="Переместить на +1°">
+                        <Svg Path="{CompiledBinding ChevronsRightIconPath}" />
+                    </Button>
+                    <Button
+                        Margin="1"
+                        HorizontalAlignment="Left"
+                        Command="{CompiledBinding StopAntennaCommand}"
+                        CommandParameter="R"
+                        Content="Стоп"
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}">
+                        <Button.Styles>
+                            <Style>
+                                <Style.Resources>
+                                    <SolidColorBrush x:Key="ThemeBorderMidBrush">Red</SolidColorBrush>
+                                    <SolidColorBrush x:Key="ThemeControlHighBrush">DarkRed</SolidColorBrush>
+                                    <SolidColorBrush x:Key="ButtonBorderBrush">Red</SolidColorBrush>
+                                    <SolidColorBrush x:Key="ButtonBackground">OrangeRed</SolidColorBrush>
+                                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver">Red</SolidColorBrush>
+                                    <SolidColorBrush x:Key="ButtonBackgroundPressed">OrangeRed</SolidColorBrush>
+                                </Style.Resources>
+                            </Style>
+                        </Button.Styles>
+                        <!--<PathIcon Data="{StaticResource stop_regular}" />-->
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+			<TextBlock
+            Grid.Row="5"
+            Margin="5"
+            VerticalAlignment="Bottom"
+            FontSize="14"
+            Text="{CompiledBinding ConnectionStatus}" />
         </Grid>
 
         <Grid

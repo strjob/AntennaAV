@@ -37,12 +37,12 @@ namespace AntennaAV
                 // Имитация прогресса (можно заменить на реальные этапы)
                 Task.Run(async () =>
                 {
-                    await Task.Delay(1000);
+                    await Task.Delay(50);
 
                 Dispatcher.UIThread.Post(()  =>
                     {
-                        //IComPortService comPortService = new TestComPortService();
-                        IComPortService comPortService = new ComPortManager();
+                        IComPortService comPortService = new TestComPortService();
+                        //IComPortService comPortService = new ComPortManager();
                         var mainViewModel = new MainWindowViewModel(comPortService);
                         var mainWindow = new MainWindow
                         {

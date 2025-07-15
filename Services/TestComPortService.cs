@@ -1,3 +1,4 @@
+using AntennaAV.Helpers;
 using AntennaAV.Models;
 using System;
 using System.Collections.Concurrent;
@@ -94,7 +95,7 @@ public class TestComPortService : IComPortService, IDisposable
             var data = new AntennaData
             {
                 ReceiverAngleDeg = angle,
-                TransmitterAngleDeg = angle,
+                TransmitterAngleDeg = AngleUtils.NormalizeAngle(angle * 2),
                 ReceiverAngleDeg10 = angle10,
                 TransmitterAngleDeg10 = angle10,
                 PowerDbm = powerDbm,

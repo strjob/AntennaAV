@@ -8,6 +8,9 @@
         SystemDecorations="None"
         Title="Загрузка...">
     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
-		<ProgressBar VerticalAlignment="Center" IsIndeterminate="True" />    </StackPanel>
+		<TextBlock Text="Загрузка..." HorizontalAlignment="Center" FontSize="24" />
+
+		<ProgressBar VerticalAlignment="Center" IsIndeterminate="True" />
+</StackPanel>
 </Window>
 

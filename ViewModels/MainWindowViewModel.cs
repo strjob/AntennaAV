@@ -45,7 +45,7 @@ namespace AntennaAV.ViewModels
         // 2. ObservableProperty
         [ObservableProperty] private string connectionStatus = "⏳ Не подключено";
         [ObservableProperty] private double receiverAngleDeg;
-        [ObservableProperty] private string receiverAngleDegStr = "-.-°";
+        [ObservableProperty] private string receiverAngleDegStr = "--";
         [ObservableProperty] private double transmitterAngleDeg;
         [ObservableProperty] private string transmitterAngleDegStr = "--";
         [ObservableProperty] private string powerDbmStr = string.Empty;
@@ -60,13 +60,14 @@ namespace AntennaAV.ViewModels
         [ObservableProperty] private bool showSector = true;
         [ObservableProperty] private bool isPowerNormSelected = true;
         [ObservableProperty] private bool isRealtimeMode = true;
-        [ObservableProperty] private string transmitterMoveAngle = "0";
-        [ObservableProperty] private string? transmitterMoveAngleError;
-        [ObservableProperty] private string receiverMoveAngle = "0";
-        [ObservableProperty] private string receiverMoveAngleError = "";
+        [ObservableProperty] private string transmitterAngle = "0";
+        [ObservableProperty] private string? transmitterAngleError;
+        [ObservableProperty] private string receiverAngle = "0";
+        [ObservableProperty] private string receiverAngleError = "";
         [ObservableProperty] private string receiverSetAngle = "0";
         [ObservableProperty] private string receiverSetAngleError = "";
         [ObservableProperty] private string txAntennaCounterErrorStr = "";
+        [ObservableProperty] private string rxAntennaCounterErrorStr = "";
         [ObservableProperty] private bool isDarkTheme;
         [ObservableProperty] private string lastEvent = "";
         [ObservableProperty] private string dataFlowStatus = "🔴 Нет данных";
@@ -89,7 +90,11 @@ namespace AntennaAV.ViewModels
         public string ChevronLeftIconPath => IsDarkTheme ? "/Assets/chevron-left-dark.svg" : "/Assets/chevron-left-light.svg";
         public string ChevronsRightIconPath => IsDarkTheme ? "/Assets/chevrons-right-dark.svg" : "/Assets/chevrons-right-light.svg";
         public string ChevronsLeftIconPath => IsDarkTheme ? "/Assets/chevrons-left-dark.svg" : "/Assets/chevrons-left-light.svg";
-        public double MoveTxPlus10 => 10;
+        public double MovePlus1 => 1;
+        public double MoveMinus1 => 1;
+        public double MovePlus01 => 1;
+        public double MoveMinus01 => 1;
+
 
         // 4. События
         public event Action<double, double>? OnBuildRadar;
@@ -167,12 +172,15 @@ namespace AntennaAV.ViewModels
                 LastEvent = $"Ошибка импорта: {ex.Message}";
             }
         }
-        [RelayCommand] public void MoveTransmitterToAngle() => SetAntennaAngle(TransmitterMoveAngle, "T", "G");
-        [RelayCommand] public void SetTransmitterAngle() => SetAntennaAngle(TransmitterMoveAngle, "T", "S");
-        [RelayCommand] public void MoveReceiverToAngle() => SetAntennaAngle(ReceiverMoveAngle, "R", "G");
-        [RelayCommand] public void SetReceiverAngle() => SetAntennaAngle(ReceiverSetAngle, "R", "S");
+        [RelayCommand] public void MoveTransmitterToAngle() => SetAntennaAngle(TransmitterAngle, "T", "G");
+        [RelayCommand] public void SetTransmitterAngle() => SetAntennaAngle(TransmitterAngle, "T", "S");
+        [RelayCommand] public void MoveReceiverToAngle() => SetAntennaAngle(ReceiverAngle, "R", "G");
+        [RelayCommand] public void SetReceiverAngle() => SetAntennaAngle(ReceiverAngle, "R", "S");
+
+        [RelayCommand] public void StopAntenna(string antenna) => _comPortService.StopAntenna(antenna);
 
         [RelayCommand] public void MoveTxAntennaToRelativeAngle(double angle) => _comPortService.SetAntennaAngle(AngleUtils.NormalizeAngle(angle + TransmitterAngleDeg), "T", "G");
+        [RelayCommand] public void MoveRxAntennaToRelativeAngle(double angle) => _comPortService.SetAntennaAngle(AngleUtils.NormalizeAngle(angle + TransmitterAngleDeg), "R", "G");
 
         [RelayCommand]
         public async Task StartDiagramAcquisition()
@@ -182,11 +190,12 @@ namespace AntennaAV.ViewModels
                 // Вычисляем from и to из размера и центра сектора
                 var (from, to) = AngleUtils.CalculateSectorRange(size, center);
 
-                if (AngleUtils.AngleDiff(from, to) < 0.1)
-                {
-                    from = ReceiverAngleDeg;
-                    to = from;
-                }
+
+                //if (AngleUtils.AngleDiff(from, to) < 0.1)
+                //{
+                //    from = ReceiverAngleDeg;
+                //    to = from;
+                //}
 
                 _acquisitionCts = new CancellationTokenSource();
                 try
@@ -421,6 +430,7 @@ namespace AntennaAV.ViewModels
         {
             bool dataReceived = ProcessComPortData();
             TxAntennaCounterErrorStr = CheckAntennaCounter(TxAntennaCounter);
+            RxAntennaCounterErrorStr = CheckAntennaCounter(RxAntennaCounter);
             UpdateDataFlowStatus(dataReceived);
             HandleReconnection();
             CheckForPlotRedraw();
@@ -694,19 +704,15 @@ namespace AntennaAV.ViewModels
         {
             ShowSectorChanged?.Invoke(value);
         }
-        partial void OnTransmitterMoveAngleChanged(string value)
+        partial void OnTransmitterAngleChanged(string value)
         {
-            TransmitterMoveAngleError = AngleUtils.ValidateAngle(value, out _);
+            TransmitterAngleError = AngleUtils.ValidateAngle(value, out _);
         }
 
-        partial void OnReceiverSetAngleChanged(string value)
-        {
-            ReceiverSetAngleError = AngleUtils.ValidateAngle(value, out _);
-        }
 
-        partial void OnReceiverMoveAngleChanged(string value)
+        partial void OnReceiverAngleChanged(string value)
         {
-            ReceiverMoveAngleError = AngleUtils.ValidateAngle(value, out _);
+            ReceiverAngleError = AngleUtils.ValidateAngle(value, out _);
         }
         partial void OnIsDarkThemeChanged(bool value)
         {
@@ -767,10 +773,7 @@ namespace AntennaAV.ViewModels
             _uiTimer.Tick += (_, _) => OnUiTimerTick();
             _uiTimer.Start();
 
-            OnTransmitterAngleSelected += angle =>
-            {
-                _comPortService.SetAntennaAngle(angle, "T", "G");
-            };
+            OnTransmitterAngleSelected += angle => _comPortService.SetAntennaAngle(angle, "T", "G");
         }
     }
 }
