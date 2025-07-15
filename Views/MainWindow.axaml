@@ -453,8 +453,7 @@
                                 IsVisible="{CompiledBinding IsEditingHeader}"
                                 KeyDown="HeaderEdit_KeyDown"
                                 LostFocus="HeaderEdit_LostFocus"
-                                Text="{CompiledBinding Header,
-                                                       Mode=TwoWay}" />
+                                Text="{CompiledBinding Header, Mode=TwoWay}" />
                             <TextBlock
                                 MinWidth="100"
                                 DoubleTapped="Header_DoubleTapped"
