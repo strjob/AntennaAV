@@ -832,8 +832,7 @@
                         Text="Настройки" />
                     <CheckBox Margin="10" Content="Включить опцию 1" />
                     <CheckBox Margin="10" Content="Показывать легенду" IsChecked="{CompiledBinding ShowLegend, Mode=TwoWay}" />
-                    <TextBox Margin="10" Watermark="Введите значение" />
-                    <ComboBox Margin="0,0,0,8">
+					<CheckBox Margin="10" Content="Показывать маркеры" IsChecked="{CompiledBinding ShowMarkers, Mode=TwoWay}" />                    <ComboBox Margin="0,0,0,8">
                         <ComboBoxItem Content="Вариант 1" />
                         <ComboBoxItem Content="Вариант 2" />
                         <ComboBoxItem Content="Вариант 3" />

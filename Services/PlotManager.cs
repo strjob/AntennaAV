@@ -67,7 +67,8 @@ namespace AntennaAV.Services
             bool isDark,
             double? min = null,
             double? max = null,
-            string? label = null)
+            string? label = null,
+            bool showMarkers = false)
         {
             System.Diagnostics.Debug.WriteLine($"DrawPolarPlot: label={label}, angles={angles?.Length}, values={values?.Length}");
             if (_polarAxisMain == null || plot == null)
@@ -152,7 +153,7 @@ namespace AntennaAV.Services
                     if (seg.Count > 1)
                     {
                         var scatter = plot.Plot.Add.Scatter(seg, color: color);
-                        scatter.MarkerSize = 0;
+                        scatter.MarkerSize = showMarkers ? 5 : 0; // <--- вот здесь!
                         scatter.LineWidth = 2;
                         if (first && !string.IsNullOrEmpty(label))
                         {
@@ -833,7 +834,7 @@ namespace AntennaAV.Services
                     _angleArrow.ArrowWidth = Constants.ArrowWidth;
                     _angleArrow.ArrowheadWidth = Constants.ArrowheadWidth;
                     _angleArrow.ArrowFillColor = ScottPlot.Color.FromHex("#0073cf");
-                }
+                    plot.Plot.MoveToFront(_angleArrow);                }
                 else
                 {
                     _angleArrow.Base = new ScottPlot.Coordinates(0, 0);

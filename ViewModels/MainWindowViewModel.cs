@@ -72,6 +72,7 @@ namespace AntennaAV.ViewModels
         [ObservableProperty] private string lastEvent = "";
         [ObservableProperty] private string dataFlowStatus = "🔴 Нет данных";
         [ObservableProperty] private bool showLegend = true;
+        [ObservableProperty] private bool showMarkers = false; 
 
         // 3. Публичные свойства
         public TabManager TabManager { get; } = new TabManager();
@@ -191,13 +192,6 @@ namespace AntennaAV.ViewModels
                 // Вычисляем from и to из размера и центра сектора
                 var (from, to) = AngleUtils.CalculateSectorRange(size, center);
 
-
-                //if (AngleUtils.AngleDiff(from, to) < 0.1)
-                //{
-                //    from = ReceiverAngleDeg;
-                //    to = from;
-                //}
-
                 _acquisitionCts = new CancellationTokenSource();
                 try
                 {
@@ -226,7 +220,7 @@ namespace AntennaAV.ViewModels
             _acquisitionCts = null;
             _isDiagramDataCollecting = false;
             _collector.FinalizeData();
-            UpdatePlotWithNormalizedData();
+            //UpdatePlotWithNormalizedData();
             _comPortService.StopAntenna("R");
         }
 

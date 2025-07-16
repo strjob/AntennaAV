@@ -7,6 +7,7 @@ using Avalonia.Interactivity;
 using Avalonia.Rendering;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using HarfBuzzSharp;
 using System;
 using System.Linq;
 
@@ -77,8 +78,8 @@ namespace AntennaAV.Views
         }
         private void DrawCurrentTabPlot(MainWindowViewModel vm)
         {
-            if (vm.SelectedTab == null || vm.SelectedTab.Plot == null)
-                return;
+            if (vm.SelectedTab == null || vm.SelectedTab.Plot == null || vm.SelectedTab.Plot.Angles == null || vm.SelectedTab.Plot.Angles.Length == 0)
+                    return;
             Dispatcher.UIThread.Post(() =>
             {
                 var values = vm.IsPowerNormSelected ? vm.SelectedTab.Plot.PowerNormValues.ToArray() : vm.SelectedTab.Plot.VoltageNormValues.ToArray();
@@ -437,7 +438,7 @@ namespace AntennaAV.Views
             };
             vm.RequestPlotRedraw += () =>
             {
-                DrawCurrentTabPlot(vm);
+                 DrawCurrentTabPlot(vm);
             };
             vm.RequestClearCurrentPlot += () =>
             {
