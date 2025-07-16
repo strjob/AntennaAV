@@ -71,6 +71,7 @@ namespace AntennaAV.ViewModels
         [ObservableProperty] private bool isDarkTheme;
         [ObservableProperty] private string lastEvent = "";
         [ObservableProperty] private string dataFlowStatus = "🔴 Нет данных";
+        [ObservableProperty] private bool showLegend = true;
 
         // 3. Публичные свойства
         public TabManager TabManager { get; } = new TabManager();

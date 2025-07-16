@@ -1,3 +1,4 @@
+using AntennaAV.ViewModels;
 using AntennaAV.Views;
 using Avalonia.Threading;
 using ScottPlot;
@@ -21,6 +22,10 @@ namespace AntennaAV.Services
         private AvaPlot? _avaPlotRx;
         private double? _lastMin = null;
         private double? _lastMax = null;
+        private double? _globalMin = null;
+        private double? _globalMax = null;
+        private TabViewModel? _minSourceTab = null;
+        private TabViewModel? _maxSourceTab = null;
         private bool _avaPlotMainNeedsRefresh = false;
         private bool _avaPlotTxNeedsRefresh = false;
         private bool _avaPlotRxNeedsRefresh = false;
@@ -42,6 +47,12 @@ namespace AntennaAV.Services
         private double? _pendingSectorEnd = null;
         private bool? _pendingSectorVisible = null;
         private bool _sectorUpdatePending = false;
+        private bool _showLegend = true;
+        private bool _lastLegendState = true;
+        public void SetShowLegend(bool value)
+        {
+            _showLegend = value;
+        }
 
         /// <summary>
         /// Общий метод для построения и отрисовки полярного графика
@@ -55,8 +66,10 @@ namespace AntennaAV.Services
             bool isLogScale,
             bool isDark,
             double? min = null,
-            double? max = null)
+            double? max = null,
+            string? label = null)
         {
+            System.Diagnostics.Debug.WriteLine($"DrawPolarPlot: label={label}, angles={angles?.Length}, values={values?.Length}");
             if (_polarAxisMain == null || plot == null)
                 return;
             if (angles == null || values == null || angles.Length == 0 || values.Length == 0 || angles.Length != values.Length)
@@ -64,7 +77,6 @@ namespace AntennaAV.Services
                 System.Diagnostics.Debug.WriteLine($"[DrawPolarPlot] Нет данных для построения: angles={angles?.Length ?? -1}, values={values?.Length ?? -1}");
                 return;
             }
-            
             lock (_plotMainLock)
             {
                 double actualMin = min ?? values.Min();
@@ -84,7 +96,7 @@ namespace AntennaAV.Services
 
                 List<List<ScottPlot.Coordinates>> segments = new();
 
-                // Если все значения одинаковые и углов больше одной — строим линию по всем точкам (замкнутый круг)
+                // Если все значения одинаковые и углов больше одного, строим линию по всем точкам
                 if (allRadiiEqual && angles.Length > 1)
                 {
                     List<ScottPlot.Coordinates> circle = new();
@@ -134,6 +146,7 @@ namespace AntennaAV.Services
 
                 // Рисуем каждый сегмент отдельно
                 var color = ScottPlot.Color.FromHex(colorHex);
+                bool first = true;
                 foreach (var seg in segments)
                 {
                     if (seg.Count > 1)
@@ -141,6 +154,11 @@ namespace AntennaAV.Services
                         var scatter = plot.Plot.Add.Scatter(seg, color: color);
                         scatter.MarkerSize = 0;
                         scatter.LineWidth = 2;
+                        if (first && !string.IsNullOrEmpty(label))
+                        {
+                            scatter.LegendText = label;
+                            first = false;
+                        }
                         dataScatters.Add(scatter);
                     }
                 }
@@ -148,8 +166,143 @@ namespace AntennaAV.Services
             }
         }
 
+        public void UpdateGlobalMinMaxOnActiveChange(
+            TabViewModel activeTab,
+            IEnumerable<TabViewModel> allTabs,
+            bool isLogScale)
+        {
+            var values = isLogScale ? activeTab.Plot.PowerNormValues : activeTab.Plot.VoltageNormValues;
+            bool activeIsEmpty = (values == null || values.Length == 0);
+
+            bool needFullRecalc = activeIsEmpty;
+
+            if (!activeIsEmpty && values != null)
+            {
+                double localMin = values.Min();
+                double localMax = values.Max();
+
+                // Проверяем, был ли глобальный min в этой вкладке и исчез ли он
+                if (_minSourceTab == activeTab && (_globalMin == null || !values.Contains(_globalMin.Value)))
+                    needFullRecalc = true;
+
+                // Проверяем, был ли глобальный max в этой вкладке и исчез ли он
+                if (_maxSourceTab == activeTab && (_globalMax == null || !values.Contains(_globalMax.Value)))
+                    needFullRecalc = true;
+            }
+
+            if (needFullRecalc)
+            {
+                // Пересчитываем по всем вкладкам, игнорируя пустые!
+                double? min = null, max = null;
+                TabViewModel? minTab = null, maxTab = null;
+                foreach (var tab in allTabs)
+                {
+                    if (tab.Plot != null && tab.Plot.IsVisible)
+                    {
+                        var vals = isLogScale ? tab.Plot.PowerNormValues : tab.Plot.VoltageNormValues;
+                        if (vals == null || vals.Length == 0) continue;
+                        double tmin = vals.Min();
+                        double tmax = vals.Max();
+                        if (!min.HasValue || tmin < min.Value)
+                        {
+                            min = tmin;
+                            minTab = tab;
+                        }
+                        if (!max.HasValue || tmax > max.Value)
+                        {
+                            max = tmax;
+                            maxTab = tab;
+                        }
+                    }
+                }
+                _globalMin = min;
+                _globalMax = max;
+                _minSourceTab = minTab;
+                _maxSourceTab = maxTab;
+            }
+            else
+            {
+                // Просто обновляем глобальные значения, если нужно
+                double localMin = values.Min();
+                double localMax = values.Max();
+                if (_globalMin == null || localMin < _globalMin)
+                {
+                    _globalMin = localMin;
+                    _minSourceTab = activeTab;
+                }
+                if (_globalMax == null || localMax > _globalMax)
+                {
+                    _globalMax = localMax;
+                    _maxSourceTab = activeTab;
+                }
+            }
+        }
+
+        //public void DrawAllVisiblePlots(
+        //    AntennaAV.ViewModels.MainWindowViewModel vm,
+        //    AvaPlot? plot,
+        //    bool isLogScale,
+        //    bool isDark)
+        //{
+        //    if (_polarAxisMain == null || plot == null)
+        //        return;
+        //    lock (_plotMainLock)
+        //    {
+        //        try
+        //        {
+        //            // Очистить старые графики
+        //            foreach (var tab in vm.Tabs)
+        //            {
+        //                foreach (var scatter in tab.DataScatters)
+        //                    plot.Plot.Remove(scatter);
+        //                tab.DataScatters.Clear();
+        //            }
+
+        //            double? globalMin = null, globalMax = null;
+        //            // Сначала ищем общий min/max по всем видимым графикам
+        //            foreach (var tab in vm.Tabs)
+        //            {
+        //                if (tab.Plot != null && tab.Plot.IsVisible)
+        //                {
+        //                    double[] values = isLogScale ? tab.Plot.PowerNormValues : tab.Plot.VoltageNormValues;
+        //                    if (values == null || values.Length <= 1)
+        //                        continue;
+        //                    double min = values.Min();
+        //                    double max = values.Max();
+        //                    globalMin = globalMin.HasValue ? Math.Min(globalMin.Value, min) : min;
+        //                    globalMax = globalMax.HasValue ? Math.Max(globalMax.Value, max) : max;
+        //                }
+        //            }
+        //            // Если нет данных — не обновлять круги и не строить графики
+        //            if (!globalMin.HasValue || !globalMax.HasValue || globalMax.Value <= globalMin.Value)
+        //            {
+        //                return;
+        //            }
+        //            // Сначала обновить круги полярной оси
+        //            if (_avaPlotMain != null)
+        //                Plots.AutoUpdatePolarAxisCircles(_avaPlotMain, _polarAxisMain, isLogScale, globalMin.Value, globalMax.Value, isDark);
+        //            // Теперь строим все графики с общей нормализацией
+        //            foreach (var tab in vm.Tabs)
+        //            {
+        //                if (tab.Plot != null && tab.Plot.IsVisible)
+        //                {
+        //                    double[] angles = tab.Plot.Angles;
+        //                    double[] values = isLogScale ? tab.Plot.PowerNormValues : tab.Plot.VoltageNormValues;
+        //                    // Передаём label
+        //                    DrawPolarPlot(angles, values, plot, tab.DataScatters, tab.Plot.ColorHex, isLogScale, isDark, globalMin, globalMax, tab.Header);
+        //                }
+        //            }
+        //            _avaPlotMainNeedsRefresh = true;
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            System.Diagnostics.Debug.WriteLine($"[DrawAllVisiblePlots] Exception: {ex}");
+        //        }
+        //    }
+        //}
+
         public void DrawAllVisiblePlots(
-            AntennaAV.ViewModels.MainWindowViewModel vm,
+            MainWindowViewModel vm,
             AvaPlot? plot,
             bool isLogScale,
             bool isDark)
@@ -160,6 +313,10 @@ namespace AntennaAV.Services
             {
                 try
                 {
+                    // Обновляем глобальные min/max по активной вкладке
+                    if (vm.SelectedTab != null)
+                        UpdateGlobalMinMaxOnActiveChange(vm.SelectedTab, vm.Tabs, isLogScale);
+
                     // Очистить старые графики
                     foreach (var tab in vm.Tabs)
                     {
@@ -168,37 +325,27 @@ namespace AntennaAV.Services
                         tab.DataScatters.Clear();
                     }
 
-                    double? globalMin = null, globalMax = null;
-                    // Сначала ищем общий min/max по всем видимым графикам
-                    foreach (var tab in vm.Tabs)
-                    {
-                        if (tab.Plot != null && tab.Plot.IsVisible)
-                        {
-                            double[] values = isLogScale ? tab.Plot.PowerNormValues : tab.Plot.VoltageNormValues;
-                            if (values == null || values.Length <= 1)
-                                continue;
-                            double min = values.Min();
-                            double max = values.Max();
-                            globalMin = globalMin.HasValue ? Math.Min(globalMin.Value, min) : min;
-                            globalMax = globalMax.HasValue ? Math.Max(globalMax.Value, max) : max;
-                        }
-                    }
-                    // Если нет данных — не обновлять круги и не строить графики
+                    // Используем только кэшированные значения!
+                    double? globalMin = _globalMin;
+                    double? globalMax = _globalMax;
                     if (!globalMin.HasValue || !globalMax.HasValue || globalMax.Value <= globalMin.Value)
-                    {
                         return;
-                    }
-                    // Сначала обновить круги полярной оси
+
+                    // Обновить круги полярной оси
                     if (_avaPlotMain != null)
                         Plots.AutoUpdatePolarAxisCircles(_avaPlotMain, _polarAxisMain, isLogScale, globalMin.Value, globalMax.Value, isDark);
-                    // Теперь строим все графики с общей нормализацией
+
+                    // Строим все графики с общей нормализацией
                     foreach (var tab in vm.Tabs)
                     {
                         if (tab.Plot != null && tab.Plot.IsVisible)
                         {
                             double[] angles = tab.Plot.Angles;
                             double[] values = isLogScale ? tab.Plot.PowerNormValues : tab.Plot.VoltageNormValues;
-                            DrawPolarPlot(angles, values, plot, tab.DataScatters, tab.Plot.ColorHex, isLogScale, isDark, globalMin, globalMax);
+                            System.Diagnostics.Debug.WriteLine($"Вкладка: {tab.Header}, angles: {angles.Length}, values: {values.Length}");
+                            if (angles.Length == 0 || values.Length == 0)
+                                continue; // Не строим пустые графики!
+                            DrawPolarPlot(angles, values, plot, tab.DataScatters, tab.Plot.ColorHex, isLogScale, isDark, globalMin, globalMax, tab.Header);
                         }
                     }
                     _avaPlotMainNeedsRefresh = true;
@@ -576,19 +723,24 @@ namespace AntennaAV.Services
             {
                 if (_sectorUpdatePending && _pendingSectorStart.HasValue && _pendingSectorEnd.HasValue && _pendingSectorVisible.HasValue)
                 {
-                        
                     InternalUpdateSectorPolygon(_avaPlotMain, _pendingSectorStart.Value, _pendingSectorEnd.Value, _pendingSectorVisible.Value);
                     _sectorUpdatePending = false;
                 }
                 if (_avaPlotMainNeedsRefresh && _avaPlotMain != null)
                 {
                     lock (_plotMainLock)
-                    { 
+                    {
                         _avaPlotMain.Refresh();
                         _avaPlotMainNeedsRefresh = false;
                     }
                 }
-
+                // Проверяем изменение showLegend
+                if (_avaPlotMain != null && _showLegend != _lastLegendState)
+                {
+                    _avaPlotMain.Plot.Legend.IsVisible = _showLegend;
+                    _avaPlotMain.Refresh();
+                    _lastLegendState = _showLegend;
+                }
                 if (_avaPlotTxNeedsRefresh && _avaPlotTx != null)
                 {
                     lock (_plotTxLock)
@@ -717,6 +869,21 @@ namespace AntennaAV.Services
             lock (_plotTxLock)
             {
                 return _hoverMarkerTx?.IsVisible ?? false;
+            }
+        }
+
+        public void SetLegendVisibility(bool isVisible)
+        {
+            lock (_plotMainLock)
+            {
+                if (_avaPlotMain != null)
+                {
+                    if(isVisible)
+                        _avaPlotMain.Plot.ShowLegend(Alignment.LowerRight);
+                    else
+                        _avaPlotMain.Plot.HideLegend();
+                        _avaPlotMainNeedsRefresh = true;
+                }
             }
         }
     }

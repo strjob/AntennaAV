@@ -69,18 +69,19 @@ namespace AntennaAV.Views
                     
                 }
             };
-
             Application.Current!.ActualThemeVariantChanged += OnThemeChanged;
-
         }
-
+        private void OnSettingsClick(object sender, RoutedEventArgs e)
+        {
+            SettingsOverlay.IsVisible = !SettingsOverlay.IsVisible;
+        }
         private void DrawCurrentTabPlot(MainWindowViewModel vm)
         {
             if (vm.SelectedTab == null || vm.SelectedTab.Plot == null)
                 return;
             Dispatcher.UIThread.Post(() =>
             {
-                var values = vm.IsPowerNormSelected ? vm.SelectedTab.Plot.PowerNormValues : vm.SelectedTab.Plot.VoltageNormValues;
+                var values = vm.IsPowerNormSelected ? vm.SelectedTab.Plot.PowerNormValues.ToArray() : vm.SelectedTab.Plot.VoltageNormValues.ToArray();
                 if (AvaPlotMain != null)
                 {
                     _plotManager.DrawPolarPlot(
@@ -90,7 +91,10 @@ namespace AntennaAV.Views
                         vm.SelectedTab.DataScatters,
                         vm.SelectedTab.Plot.ColorHex,
                         vm.IsPowerNormSelected,
-                        isDark
+                        isDark,
+                        null,
+                        null,
+                        vm.SelectedTab.Header // label для легенды
                     );
                 }
             });
@@ -302,8 +306,8 @@ namespace AntennaAV.Views
                         if (vm.SelectedTab != null && vm.SelectedTab.Plot != null)
                         {
                             double[] angles = vm.SelectedTab.Plot.Angles.ToArray();
-                            double[] values = (vm.IsPowerNormSelected ? vm.SelectedTab.Plot.PowerNormValues : vm.SelectedTab.Plot.VoltageNormValues).ToArray();
-                            _plotManager.DrawPolarPlot(angles, values, AvaPlotMain, vm.SelectedTab.DataScatters, vm.SelectedTab.Plot.ColorHex, vm.IsPowerNormSelected, isDark);
+                            double[] values = (vm.IsPowerNormSelected ? vm.SelectedTab.Plot.PowerNormValues.ToArray() : vm.SelectedTab.Plot.VoltageNormValues).ToArray();
+                            _plotManager.DrawPolarPlot(angles, values, AvaPlotMain, vm.SelectedTab.DataScatters, vm.SelectedTab.Plot.ColorHex, vm.IsPowerNormSelected, isDark, null, null, vm.SelectedTab.Header);
                         }
                     }
                 });
@@ -326,7 +330,7 @@ namespace AntennaAV.Views
                     if (vm.SelectedTab != null && AvaPlotMain != null)
                     {
                         var plot = AvaPlotMain!;
-                        _plotManager.DrawPolarPlot(angles, values, plot, vm.SelectedTab.DataScatters, vm.SelectedTab.Plot.ColorHex, vm.IsPowerNormSelected, isDark);
+                        _plotManager.DrawPolarPlot(angles, values, plot, vm.SelectedTab.DataScatters, vm.SelectedTab.Plot.ColorHex, vm.IsPowerNormSelected, isDark, null, null, vm.SelectedTab.Header);
                     }
                 });
             };
@@ -440,6 +444,19 @@ namespace AntennaAV.Views
                 ClearCurrentTabPlot(vm);
             };
             // Можно добавить другие подписки, если появятся
+
+            // Легенда
+            _plotManager.SetLegendVisibility(vm.ShowLegend);
+            vm.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(vm.ShowLegend))
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        _plotManager.SetShowLegend(vm.ShowLegend);
+                    });
+                }
+            };
         }
 
         private void ClearCurrentTabPlot(MainWindowViewModel vm)
