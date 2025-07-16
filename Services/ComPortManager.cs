@@ -234,7 +234,7 @@ namespace AntennaAV.Services
             if (direction != "+" && direction != "-" && direction != "S" && direction != "G")
                 throw new ArgumentOutOfRangeException(nameof(direction), "Неверное направление");
 
-            int value = (int)Math.Round(angle * 10);
+            int value = (int)Math.Floor(angle * 10);
             return WriteCommand($"{antenna}={direction}{value}", "ANT");
         }
 
@@ -300,7 +300,7 @@ namespace AntennaAV.Services
                     }
                     else
                     {
-                        Thread.Sleep(5);
+                        Thread.Sleep(10);
                     }
                 }
                 catch (Exception ex)

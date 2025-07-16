@@ -85,7 +85,7 @@ namespace AntennaAV.Views
                 var values = vm.IsPowerNormSelected ? vm.SelectedTab.Plot.PowerNormValues.ToArray() : vm.SelectedTab.Plot.VoltageNormValues.ToArray();
                 if (AvaPlotMain != null)
                 {
-                    _plotManager.DrawPolarPlot(
+                    _plotManager.DrawPolarPlot(vm.Tabs,
                         vm.SelectedTab.Plot.Angles.ToArray(),
                         values.ToArray(),
                         AvaPlotMain,
@@ -93,19 +93,9 @@ namespace AntennaAV.Views
                         vm.SelectedTab.Plot.ColorHex,
                         vm.IsPowerNormSelected,
                         isDark,
-                        null,
-                        null,
                         vm.SelectedTab.Header // label для легенды
                     );
                 }
-            });
-        }
-
-        private void DrawReceiverAngleArrow(double angleDeg)
-        {
-            Dispatcher.UIThread.Post(() =>
-            {
-                _plotManager.CreateOrUpdateAngleArrow(AvaPlotMain, angleDeg, true);
             });
         }
 
@@ -271,7 +261,7 @@ namespace AntennaAV.Views
                     if (AvaPlotMain != null)
                     {
                         _plotManager.DrawAllVisiblePlots(
-                            vm,
+                            vm.Tabs,
                             AvaPlotMain,
                             vm.IsPowerNormSelected,
                             isDark
@@ -308,7 +298,7 @@ namespace AntennaAV.Views
                         {
                             double[] angles = vm.SelectedTab.Plot.Angles.ToArray();
                             double[] values = (vm.IsPowerNormSelected ? vm.SelectedTab.Plot.PowerNormValues.ToArray() : vm.SelectedTab.Plot.VoltageNormValues).ToArray();
-                            _plotManager.DrawPolarPlot(angles, values, AvaPlotMain, vm.SelectedTab.DataScatters, vm.SelectedTab.Plot.ColorHex, vm.IsPowerNormSelected, isDark, null, null, vm.SelectedTab.Header);
+                            _plotManager.DrawPolarPlot(vm.Tabs, angles, values, AvaPlotMain, vm.SelectedTab.DataScatters, vm.SelectedTab.Plot.ColorHex, vm.IsPowerNormSelected, isDark, vm.SelectedTab.Header);
                         }
                     }
                 });
@@ -322,6 +312,25 @@ namespace AntennaAV.Views
                     await vm.ExportSelectedTabAsync(this);
         }
 
+        private async void SavePngButton_Click(object? sender, RoutedEventArgs e)
+        {
+            // Сохраняем график в PNG через PlotManager
+            var window = this;
+            var file = await window.StorageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
+            {
+                Title = "Сохранить график как PNG",
+                SuggestedFileName = "plot.png",
+                FileTypeChoices = new System.Collections.Generic.List<Avalonia.Platform.Storage.FilePickerFileType>
+                {
+                    new("PNG файл") { Patterns = new[] { "*.png" } }
+                },
+                DefaultExtension = "png"
+            });
+            if (file is null)
+                return; // пользователь отменил
+            await _plotManager.SaveMainPlotToPngAsync(file.Path.LocalPath, isDark);
+        }
+
         private void SubscribeToViewModelEvents(MainWindowViewModel vm)
         {
             vm.OnBuildRadarPlot += (angles, values) =>
@@ -330,143 +339,116 @@ namespace AntennaAV.Views
                 {
                     if (vm.SelectedTab != null && AvaPlotMain != null)
                     {
-                        var plot = AvaPlotMain!;
-                        _plotManager.DrawPolarPlot(angles, values, plot, vm.SelectedTab.DataScatters, vm.SelectedTab.Plot.ColorHex, vm.IsPowerNormSelected, isDark, null, null, vm.SelectedTab.Header);
-                    }
-                });
-            };
-
-            vm.PropertyChanged += (s, e) =>
-            {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    if (e.PropertyName == nameof(vm.ReceiverAngleDeg))
-                    {
-                        DrawReceiverAngleArrow(vm.ReceiverAngleDeg);
-                    }
-                    else if (e.PropertyName == nameof(vm.DataFlowStatus))
-                    {
-                        if (vm.DataFlowStatus.Contains("Данные идут"))
-                        {
-                            _plotManager.DrawTransmitterAnglePoint(AvaPlotTx, vm.TransmitterAngleDeg);
-                            _plotManager.DrawReceiverAnglePoint(AvaPlotRx, vm.ReceiverAngleDeg);
-                            DrawReceiverAngleArrow(vm.ReceiverAngleDeg);
-                        }
-                    }
-                    else if (e.PropertyName == nameof(vm.IsPowerNormSelected))
-                    {
-                        bool hasData = vm.Tabs.Any(tab => tab.Plot != null && tab.Plot.Angles.Length > 0);
-                        if (AvaPlotMain != null)
-                        {
-                            if (hasData)
-                            {
-                                _plotManager.DrawAllVisiblePlots(
-                                    vm,
-                                    AvaPlotMain,
-                                    vm.IsPowerNormSelected,
-                                    isDark
-                                );
-                            }
-                            else
-                            {
-                                if (vm.IsPowerNormSelected)
-                                {
-                                    if (AvaPlotMain != null)
-                                        _plotManager.UpdatePolarAxisCircles(AvaPlotMain, true, -50, 0, isDark);
-                                }
-                                else
-                                {
-                                    if (AvaPlotMain != null)
-                                        _plotManager.UpdatePolarAxisCircles(AvaPlotMain, false, 0, 1, isDark);
-                                }
-                            }
-                        }
-                    }
-                    else if (e.PropertyName == nameof(vm.TransmitterAngleDeg))
-                    {
-                        _plotManager.DrawTransmitterAnglePoint(AvaPlotTx, vm.TransmitterAngleDeg);
-                        _plotManager.DrawReceiverAnglePoint(AvaPlotRx, vm.ReceiverAngleDeg);
-
+                        _plotManager.DrawPolarPlot(vm.Tabs, angles, values, AvaPlotMain, vm.SelectedTab.DataScatters, vm.SelectedTab.Plot.ColorHex, vm.IsPowerNormSelected, isDark, vm.SelectedTab.Header);
                     }
                 });
             };
 
             vm.OnBuildRadar += (from, to) =>
             {
+                Dispatcher.UIThread.Post(() => _plotManager.CreateOrUpdateSectorPolygon(AvaPlotMain, to, from, vm?.ShowSector ?? true));
+            };
+
+
+            vm.DataFlowStatusChanged += status =>
+            {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    if (AvaPlotMain != null)
+                    if (status.Contains("Данные идут"))
                     {
-                        _plotManager.CreateOrUpdateSectorPolygon(AvaPlotMain, to, from, vm?.ShowSector ?? true);
-                        _plotManager.MoveAngleArrowToFront(AvaPlotMain);
+                        _plotManager.DrawTransmitterAnglePoint(AvaPlotTx, vm.TransmitterAngleDeg);
+                        _plotManager.DrawReceiverAnglePoint(AvaPlotRx, vm.ReceiverAngleDeg);
+                        _plotManager.CreateOrUpdateAngleArrow(AvaPlotMain, vm.ReceiverAngleDeg);
                     }
                 });
             };
-
-            vm.ShowAntennaChanged += (show) =>
+            vm.IsPowerNormSelectedChanged += isPowerNorm =>
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    _plotManager.SetAngleArrowVisibility(show);
-                });
-            };
-
-            vm.ShowSectorChanged += (show) =>
-            {
-
-                Dispatcher.UIThread.Post(() =>
-                {
-                    _plotManager.SetSectorVisibility(show);
-                });
-
-            };
-
-            vm.Tabs.CollectionChanged += (s2, e2) =>
-            {
-                Dispatcher.UIThread.Post(() =>
-                {
+                    bool hasData = vm.Tabs.Any(tab => tab.Plot != null && tab.Plot.Angles.Length > 0);
                     if (AvaPlotMain != null)
                     {
-                        _plotManager.DrawAllVisiblePlots(
-                            vm,
-                            AvaPlotMain,
-                            vm.IsPowerNormSelected,
-                            isDark
-                        );
+                        if (hasData)
+                        {
+                            _plotManager.DrawAllVisiblePlots(
+                                vm.Tabs,
+                                AvaPlotMain,
+                                vm.IsPowerNormSelected,
+                                isDark
+                            );
+                        }
+                        else
+                        {
+                            if (vm.IsPowerNormSelected)
+                                _plotManager.UpdatePolarAxisCircles(AvaPlotMain, true, -50, 0, isDark);
+                            else
+                                _plotManager.UpdatePolarAxisCircles(AvaPlotMain, false, 0, 1, isDark);
+                        }
                     }
                 });
             };
+            vm.TransmitterAngleDegChanged += angle =>
+            {
+                Dispatcher.UIThread.Post(() => _plotManager.DrawTransmitterAnglePoint(AvaPlotTx, angle));
+            };
+
+            vm.ShowAntennaChanged += value =>
+            {
+                Dispatcher.UIThread.Post(() => _plotManager.SetAngleArrowVisibility(value));
+            };
+
+            vm.ShowSectorChanged += value =>
+            {
+                Dispatcher.UIThread.Post(() => _plotManager.SetSectorVisibility(value));
+            };
+            vm.ShowLegendChanged += value =>
+            {
+                Dispatcher.UIThread.Post(() => _plotManager.SetLegendVisibility(value));
+            };
+
+            vm.ReceiverAngleDegChanged += angle =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    _plotManager.DrawReceiverAnglePoint(AvaPlotRx, angle);
+                    _plotManager.CreateOrUpdateAngleArrow(AvaPlotMain, angle);
+                });
+            };
+
             vm.RequestPlotRedraw += () =>
             {
-                 DrawCurrentTabPlot(vm);
+                DrawCurrentTabPlot(vm);
             };
+
             vm.RequestClearCurrentPlot += () =>
             {
-                ClearCurrentTabPlot(vm);
-            };
-            // Можно добавить другие подписки, если появятся
-
-            // Легенда
-            _plotManager.SetLegendVisibility(vm.ShowLegend);
-            vm.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(vm.ShowLegend))
+                Dispatcher.UIThread.Post(() =>
                 {
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        _plotManager.SetShowLegend(vm.ShowLegend);
-                    });
-                }
+                    if (AvaPlotMain != null && vm.SelectedTab != null)
+                        _plotManager.ClearCurrentTabPlot(vm.SelectedTab, AvaPlotMain);
+                });
             };
-        }
 
-        private void ClearCurrentTabPlot(MainWindowViewModel vm)
-        {
-            Dispatcher.UIThread.Post(() =>
+            vm.RequestDeleteCurrentPlot += () =>
             {
-                if (AvaPlotMain != null)
-                    _plotManager.ClearCurrentTabPlot(vm, AvaPlotMain);
-            });
+                Dispatcher.UIThread.Post(() =>
+                {
+                    // 1. Очистить график
+                    if (AvaPlotMain != null && vm.SelectedTab != null)
+                    _plotManager.ClearCurrentTabPlot(vm.SelectedTab, AvaPlotMain);
+                    vm.RemoveTabInternal();
+                    _plotManager.DrawAllVisiblePlots(
+                                vm.Tabs,
+                                AvaPlotMain,
+                                vm.IsPowerNormSelected,
+                                isDark
+                            );
+
+                    // 2. Удалить вкладку через ViewModel
+                    //
+                });
+            };
         }
 
     }

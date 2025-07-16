@@ -93,9 +93,9 @@ namespace AntennaAV.ViewModels
         public string ChevronsRightIconPath => IsDarkTheme ? "/Assets/chevrons-right-dark.svg" : "/Assets/chevrons-right-light.svg";
         public string ChevronsLeftIconPath => IsDarkTheme ? "/Assets/chevrons-left-dark.svg" : "/Assets/chevrons-left-light.svg";
         public double MovePlus1 => 1;
-        public double MoveMinus1 => 1;
-        public double MovePlus01 => 1;
-        public double MoveMinus01 => 1;
+        public double MoveMinus1 => -1;
+        public double MovePlus01 => 0.1;
+        public double MoveMinus01 => -0.1;
 
 
         // 4. События
@@ -106,9 +106,14 @@ namespace AntennaAV.ViewModels
         public event Action<bool>? ShowSectorChanged;
         public event Action? RequestPlotRedraw;
         public event Action? RequestClearCurrentPlot;
+        public event Action? RequestDeleteCurrentPlot;
+        public event Action<double>? ReceiverAngleDegChanged;
+        public event Action<string>? DataFlowStatusChanged;
+        public event Action<bool>? IsPowerNormSelectedChanged;
+        public event Action<bool>? ShowLegendChanged;
+        public event Action<double>? TransmitterAngleDegChanged;
 
         // 5. RelayCommand
-        [RelayCommand]
         public void BuildRadar()
         {
             if (double.TryParse(SectorSize, out var size) && double.TryParse(SectorCenter, out var center))
@@ -119,7 +124,13 @@ namespace AntennaAV.ViewModels
             }
         }
         [RelayCommand] private void AddTab() => TabManager.AddTab();
-        [RelayCommand(CanExecute = nameof(CanEditOrDelete))] private void RemoveTab() => TabManager.RemoveTab();
+        [RelayCommand(CanExecute = nameof(CanEditOrDelete))]
+        private void RemoveTab()
+        {
+            //TabManager.RemoveTab();
+            RequestDeleteCurrentPlot?.Invoke();
+        }
+
         [RelayCommand]
         public void Set120Degrees()
         {
@@ -178,9 +189,7 @@ namespace AntennaAV.ViewModels
         [RelayCommand] public void SetTransmitterAngle() => SetAntennaAngle(TransmitterAngle, "T", "S");
         [RelayCommand] public void MoveReceiverToAngle() => SetAntennaAngle(ReceiverAngle, "R", "G");
         [RelayCommand] public void SetReceiverAngle() => SetAntennaAngle(ReceiverAngle, "R", "S");
-
         [RelayCommand] public void StopAntenna(string antenna) => _comPortService.StopAntenna(antenna);
-
         [RelayCommand] public void MoveTxAntennaToRelativeAngle(double angle) => _comPortService.SetAntennaAngle(AngleUtils.NormalizeAngle(angle + TransmitterAngleDeg), "T", "G");
         [RelayCommand] public void MoveRxAntennaToRelativeAngle(double angle) => _comPortService.SetAntennaAngle(AngleUtils.NormalizeAngle(angle + TransmitterAngleDeg), "R", "G");
 
@@ -318,6 +327,11 @@ namespace AntennaAV.ViewModels
                 StopTableUpdateTimer();
                 Debug.WriteLine("=== КОНЕЦ СНЯТИЯ ДИАГРАММЫ ===");
             }
+        }
+
+        public void RemoveTabInternal()
+        {
+            TabManager.RemoveTab();
         }
 
         // Вспомогательные методы
@@ -718,6 +732,27 @@ namespace AntennaAV.ViewModels
             OnPropertyChanged(nameof(ChevronsRightIconPath));
             OnPropertyChanged(nameof(ChevronsLeftIconPath));
         }
+        partial void OnReceiverAngleDegChanged(double value)
+        {
+            ReceiverAngleDegChanged?.Invoke(value);
+        }
+        partial void OnDataFlowStatusChanged(string value)
+        {
+            DataFlowStatusChanged?.Invoke(value);
+        }
+        partial void OnIsPowerNormSelectedChanged(bool value)
+        {
+            IsPowerNormSelectedChanged?.Invoke(value);
+        }
+        partial void OnTransmitterAngleDegChanged(double value)
+        {
+            TransmitterAngleDegChanged?.Invoke(value);
+        }
+        partial void OnShowLegendChanged(bool value)
+        {
+            ShowLegendChanged?.Invoke(value);
+        }
+
 
         // 9. Конструктор
         public MainWindowViewModel()

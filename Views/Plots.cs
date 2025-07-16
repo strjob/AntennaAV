@@ -270,7 +270,7 @@ namespace AntennaAV.Views
 
             if (isLogScale)
             {
-                // Логика для логарифмической шкалы (без изменений)
+                // Логика для логарифмической шкалы
                 double relDiff = Math.Abs(maxValue - minValue) / Math.Max(Math.Max(Math.Abs(maxValue), Math.Abs(minValue)), 1);
                 double[] possibleSteps = { 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 30000, 50000, 100000 };
                 double range = maxValue - minValue;

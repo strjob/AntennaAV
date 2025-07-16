@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -9,14 +10,14 @@ namespace AntennaAV.ViewModels
         private const int MaxTabCount = 10;
         private static readonly string[] DefaultColors = new[]
         {
-            "#E60000", // Красный
-            "#00E600", // Зелёный
-            "#0000E6", // Синий
-            "#E69400", // Оранжевый
-            "#800080", // Фиолетовый
-            "#00FFFF", // Голубой
-            "#FFC0CB", // Розовый
-            "#E6E600", // Жёлтый
+            "#CC0000", // Красный
+            "#00CC00", // Зелёный
+            "#0000CC", // Синий
+            "#CC8300", // Оранжевый
+            "#660066", // Фиолетовый
+            "#266489", // Синий
+            "#E7298A", // Розовый
+            "#E6AB02", // Жёлтый
         };
 
         public ObservableCollection<TabViewModel> Tabs { get; } = new();
@@ -61,6 +62,7 @@ namespace AntennaAV.ViewModels
                 Tabs.Remove(SelectedTab);
                 if (idx >= Tabs.Count)
                     SelectedTabIndex = Tabs.Count - 1;
+                SelectTab(SelectedTabIndex);
                 OnPropertyChanged(nameof(SelectedTab));
             }
         }
