@@ -29,6 +29,7 @@ namespace AntennaAV.ViewModels
         private int antennaType;
         private int rxAntennaCounter;
         private int? _firstSystick = null;
+        private DateTime _lastDataReceivedTime = DateTime.MinValue;
         private readonly DispatcherTimer _uiTimer = new();
         private DispatcherTimer? _tableUpdateTimer;
         private AntennaDiagramCollector _collector = new();
@@ -39,7 +40,6 @@ namespace AntennaAV.ViewModels
         private bool _isReconnecting = false;
         private bool _isFinalizingDiagram = false;
         private readonly object _dataLock = new();
-        private IEnumerable<string> _availablePorts = Array.Empty<string>();
         private readonly CsvService _csvService = new CsvService();
 
         // 2. ObservableProperty
@@ -101,6 +101,7 @@ namespace AntennaAV.ViewModels
         // 4. События
         public event Action<double, double>? OnBuildRadar;
         public Action<double>? OnTransmitterAngleSelected;
+        public Action<double>? OnReceiverAngleSelected;
         public event Action<double[], double[]>? OnBuildRadarPlot;
         public event Action<bool>? ShowAntennaChanged;
         public event Action<bool>? ShowSectorChanged;
@@ -191,7 +192,7 @@ namespace AntennaAV.ViewModels
         [RelayCommand] public void SetReceiverAngle() => SetAntennaAngle(ReceiverAngle, "R", "S");
         [RelayCommand] public void StopAntenna(string antenna) => _comPortService.StopAntenna(antenna);
         [RelayCommand] public void MoveTxAntennaToRelativeAngle(double angle) => _comPortService.SetAntennaAngle(AngleUtils.NormalizeAngle(angle + TransmitterAngleDeg), "T", "G");
-        [RelayCommand] public void MoveRxAntennaToRelativeAngle(double angle) => _comPortService.SetAntennaAngle(AngleUtils.NormalizeAngle(angle + TransmitterAngleDeg), "R", "G");
+        [RelayCommand] public void MoveRxAntennaToRelativeAngle(double angle) => _comPortService.SetAntennaAngle(AngleUtils.NormalizeAngle(angle + ReceiverAngleDeg), "R", "G");
 
         [RelayCommand]
         public async Task StartDiagramAcquisition()
@@ -437,10 +438,11 @@ namespace AntennaAV.ViewModels
         }
         private void OnUiTimerTick()
         {
-            bool dataReceived = ProcessComPortData();
+            ProcessComPortData();
             TxAntennaCounterErrorStr = CheckAntennaCounter(TxAntennaCounter);
             RxAntennaCounterErrorStr = CheckAntennaCounter(RxAntennaCounter);
-            UpdateDataFlowStatus(dataReceived);
+            bool isDataFlow = (DateTime.Now - _lastDataReceivedTime) < TimeSpan.FromSeconds(1);
+            UpdateDataFlowStatus(isDataFlow);
             HandleReconnection();
             CheckForPlotRedraw();
         }
@@ -518,7 +520,7 @@ namespace AntennaAV.ViewModels
             }
         }
 
-        private bool ProcessComPortData()
+        private void ProcessComPortData()
         {
             bool dataReceived = false;
             if (_comPortService.IsOpen && !Design.IsDesignMode)
@@ -566,8 +568,11 @@ namespace AntennaAV.ViewModels
                     TxAntennaCounter = lastData.TxAntennaCounter;
                     TxAntennaCounterStr = TxAntennaCounter.ToString();
                 }
+                if (dataReceived)
+                {
+                    _lastDataReceivedTime = DateTime.Now;
+                }
             }
-            return dataReceived;
         }
 
         private string CheckAntennaCounter(int antennaCounter)
@@ -770,7 +775,6 @@ namespace AntennaAV.ViewModels
         public MainWindowViewModel(IComPortService comPortService)
         {
             _comPortService = comPortService;
-            _availablePorts = _comPortService.GetAvailablePortNames();
 
             // Синхронизация состояния переключателя с реальной темой
             var actualTheme = Avalonia.Application.Current?.ActualThemeVariant;
@@ -804,6 +808,7 @@ namespace AntennaAV.ViewModels
             _uiTimer.Start();
 
             OnTransmitterAngleSelected += angle => _comPortService.SetAntennaAngle(angle, "T", "G");
+            OnReceiverAngleSelected += angle => _comPortService.SetAntennaAngle(angle, "R", "G");
         }
     }
 }

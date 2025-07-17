@@ -45,7 +45,6 @@ namespace AntennaAV.Services
         private double? _pendingSectorEnd = null;
         private bool? _pendingSectorVisible = null;
         private bool _sectorUpdatePending = false;
-        private bool _lastLegendState = true;
 
 
         public void DrawPolarPlotFromValues(
@@ -319,7 +318,8 @@ namespace AntennaAV.Services
                 angleDeg,
                 _plotTxLock,
                 ref _transmitterMarker,
-                ref _avaPlotTxNeedsRefresh
+                ref _avaPlotTxNeedsRefresh,
+                270
             );
         }
 
@@ -333,7 +333,8 @@ namespace AntennaAV.Services
                 angleDeg,
                 _plotRxLock,
                 ref _receiverMarker,
-                ref _avaPlotRxNeedsRefresh
+                ref _avaPlotRxNeedsRefresh,
+                90
             );
         }
         public void DrawAnglePoint(
@@ -341,14 +342,15 @@ namespace AntennaAV.Services
             double angleDeg,
             object plotLock,
             ref ScottPlot.Plottables.Marker? marker,
-            ref bool needsRefreshFlag)
+            ref bool needsRefreshFlag,
+            double rotation = 0)
         {
             if (plot == null || plot.Plot == null)
                 return;
             lock (plotLock)
             {
                 double radius = Constants.DefaultPlotRadius;
-                double angleRad = (-angleDeg + 270) * Math.PI / 180.0;
+                double angleRad = (-angleDeg + rotation) * Math.PI / 180.0;
                 double x = radius * Math.Cos(angleRad);
                 double y = radius * Math.Sin(angleRad);
                 if (marker == null)
@@ -368,7 +370,6 @@ namespace AntennaAV.Services
                 needsRefreshFlag = true;
             }
         }
-
         public void CreateOrUpdateSectorPolygon(AvaPlot? plot, double start, double end, bool isVisible)
         {
             if (plot == null)
@@ -401,6 +402,7 @@ namespace AntennaAV.Services
                         _avaPlotMainNeedsRefresh = true;
                         return;
                     }
+                    return;
                 }
                 points.Add(new ScottPlot.Coordinates(0, 0));
                 double step = 1; // 1 градус
@@ -487,7 +489,8 @@ namespace AntennaAV.Services
                 mouseY,
                 plotRadiusPix,
                 threshold,
-                out localSnappedAngle
+                out localSnappedAngle,
+                180
             );
             snappedAngle = localSnappedAngle;
         }
@@ -502,7 +505,8 @@ namespace AntennaAV.Services
             double mouseY,
             double plotRadiusPix,
             double threshold,
-            out double snappedAngle)
+            out double snappedAngle,
+            double rotation = 0)
         {
             snappedAngle = double.NaN;
             if (plot == null || polarAxis == null)
@@ -522,7 +526,7 @@ namespace AntennaAV.Services
                 }
                 double angleRad = Math.Atan2(dx, -dy);
                 double angleDeg = (angleRad * 180.0 / Math.PI + 360) % 360;
-                double mirroredAngle = (360 - angleDeg + 180) % 360;
+                double mirroredAngle = (360 - angleDeg + 180 + rotation) % 360;
                 double snapStep = Constants.PointerSnapStep;
                 snappedAngle = Math.Round(mirroredAngle / snapStep) * snapStep;
                 snappedAngle = snappedAngle % 360;
@@ -540,14 +544,23 @@ namespace AntennaAV.Services
             }
         }
 
-        public void SetTransmitterMarkerVisibility(bool isVisible)
+        public void SetTxHoverMarkerVisibility(bool isVisible)
         {
             lock (_plotTxLock)
             {
-                if (_transmitterMarker != null)
-                    _transmitterMarker.IsVisible = isVisible;
+                if (_hoverMarkerTx != null)
+                    _hoverMarkerTx.IsVisible = isVisible;
             }
             _avaPlotTxNeedsRefresh = true;
+        }
+        public void SetRxHoverMarkerVisibility(bool isVisible)
+        {
+            lock (_plotRxLock)
+            {
+                if (_hoverMarkerRx != null)
+                    _hoverMarkerRx.IsVisible = isVisible;
+            }
+            _avaPlotRxNeedsRefresh = true;
         }
 
         public void UpdatePolarAxisCircles(AvaPlot plot, bool isLog, double min, double max, bool isDark)
@@ -673,7 +686,7 @@ namespace AntennaAV.Services
         public void InitializeRxPlot(AvaPlot plot, bool isDark)
         {
             _avaPlotRx = plot;
-            _polarAxisRx = Plots.InitializeSmall(plot, isDark);
+            _polarAxisRx = Plots.InitializeSmall(plot, isDark, 90);
             ApplyThemeToPlotSmall(
                 isDark,
                 plot,
@@ -759,11 +772,19 @@ namespace AntennaAV.Services
             _avaPlotMainNeedsRefresh = true;
         }
 
-        public bool IsHoverMarkerVisible()
+        public bool IsHoverMarkerTxVisible()
         {
             lock (_plotTxLock)
             {
                 return _hoverMarkerTx?.IsVisible ?? false;
+            }
+        }
+
+        public bool IsHoverMarkerRxVisible()
+        {
+            lock (_plotTxLock)
+            {
+                return _hoverMarkerRx?.IsVisible ?? false;
             }
         }
 

@@ -225,6 +225,7 @@ namespace AntennaAV.Services
 
         public bool SetAntennaAngle(double angle, string antenna, string direction)
         {
+            Debug.WriteLine(angle);
             if (angle < 0.0 || angle > 359.9)
                 throw new ArgumentOutOfRangeException(nameof(angle), "Угол должен быть от 0.0 до 359.9");
 
@@ -234,7 +235,7 @@ namespace AntennaAV.Services
             if (direction != "+" && direction != "-" && direction != "S" && direction != "G")
                 throw new ArgumentOutOfRangeException(nameof(direction), "Неверное направление");
 
-            int value = (int)Math.Floor(angle * 10);
+            int value = (int)Math.Round(angle * 10);
             return WriteCommand($"{antenna}={direction}{value}", "ANT");
         }
 
@@ -257,6 +258,7 @@ namespace AntennaAV.Services
             if (_port != null && _port.IsOpen)
             {
                 string fullCommand = $"#{prefix}/xx/W/{body}$";
+                Debug.WriteLine(fullCommand);
                 _port.Write(fullCommand);
                 return true;
             }

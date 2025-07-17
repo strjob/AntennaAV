@@ -65,10 +65,10 @@ namespace AntennaAV.Views
 
 
 
-        public static ScottPlot.Plottables.PolarAxis InitializeSmall(AvaPlot avaPlot, bool isDark)
+        public static ScottPlot.Plottables.PolarAxis InitializeSmall(AvaPlot avaPlot, bool isDark, double rotation = 270)
         {
             var polarAxis = avaPlot.Plot.Add.PolarAxis(radius: 100);
-            polarAxis.Rotation = Angle.FromDegrees(270);
+            polarAxis.Rotation = Angle.FromDegrees(rotation);
             string[] labels = { "0", "90", "", "270"};
             polarAxis.SetSpokes(labels, 100, true);
 
@@ -86,9 +86,6 @@ namespace AntennaAV.Views
 
             polarAxis.SetCircles(100, 1);
             polarAxis.Circles[0].LineWidth = 0;
-
-
-            // Не создаём круги вручную — они будут обновляться в AutoUpdatePolarAxisCircles
 
             avaPlot.Plot.Add.Palette = isDark
                 ? new ScottPlot.Palettes.Penumbra()
