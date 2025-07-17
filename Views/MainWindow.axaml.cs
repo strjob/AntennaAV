@@ -8,6 +8,7 @@ using Avalonia.Rendering;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using HarfBuzzSharp;
+using ScottPlot.Avalonia;
 using System;
 using System.Linq;
 
@@ -34,10 +35,8 @@ namespace AntennaAV.Views
         {
             InitializeComponent();
             isDark = Application.Current!.ActualThemeVariant == ThemeVariant.Dark;
+            _plotManager.InitializeAllPlots(AvaPlotMain, AvaPlotTx, AvaPlotRx, isDark);
 
-            _plotManager.InitializePlotMain(AvaPlotMain, isDark);
-            _plotManager.InitializeTxPlot(AvaPlotTx, isDark);
-            _plotManager.InitializeRxPlot(AvaPlotRx, isDark);
             this.Closing += MainWindow_Closing;
             this.AddHandler(InputElement.PointerPressedEvent, OnPointerPressed, RoutingStrategies.Tunnel);
            

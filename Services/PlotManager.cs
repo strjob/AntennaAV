@@ -1,16 +1,12 @@
 using AntennaAV.ViewModels;
 using AntennaAV.Views;
 using Avalonia.Threading;
-using HarfBuzzSharp;
 using ScottPlot;
 using ScottPlot.Avalonia;
-using ScottPlot.Colormaps;
 using ScottPlot.Plottables;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Xml.Serialization;
 namespace AntennaAV.Services
 {
     public class PlotManager
@@ -60,7 +56,7 @@ namespace AntennaAV.Services
             double max,
             string? label = null)
         {
-            if (angles == null || values == null || angles.Length == 0 || values.Length == 0 || angles.Length != values.Length || _polarAxisMain == null || plot == null)
+            if (angles == null || values == null || angles.Length == 0 || values.Length == 0 || angles.Length != values.Length || _polarAxisMain == null || plot == null || plot.Plot == null)
             {
                 System.Diagnostics.Debug.WriteLine($"[DrawPolarPlotFromValues] exception");
                 return;
@@ -144,7 +140,7 @@ namespace AntennaAV.Services
                 System.Diagnostics.Debug.WriteLine($"[DrawPolarPlot] angles.Length != values.Length: {angles.Length} != {values.Length}");
                 return;
             }
-            if (_polarAxisMain == null || plot == null)
+            if (_polarAxisMain == null || plot == null || plot.Plot == null)
                 return;
             lock (_plotMainLock)
             {
@@ -213,7 +209,7 @@ namespace AntennaAV.Services
             bool isLogScale,
             bool isDark)
         {
-            if (_polarAxisMain == null || plot == null)
+            if (_polarAxisMain == null || plot == null || plot.Plot == null)
                 return;
             lock (_plotMainLock)
             {
@@ -312,7 +308,7 @@ namespace AntennaAV.Services
         public void DrawTransmitterAnglePoint(AvaPlot? plot, double angleDeg)
         {
             
-            if (plot == null || plot.Plot == null)
+            if (plot == null || plot?.Plot == null)
                 return;
             DrawAnglePoint(
                 plot,
@@ -343,7 +339,7 @@ namespace AntennaAV.Services
             ref ScottPlot.Plottables.Marker? marker,
             ref bool needsRefreshFlag)
         {
-            if (plot == null || plot.Plot == null)
+            if (plot == null || plot?.Plot == null)
                 return;
             lock (plotLock)
             {
@@ -385,7 +381,8 @@ namespace AntennaAV.Services
 
         private void InternalUpdateSectorPolygon(AvaPlot? plot, double start, double end, bool isVisible)
         {
-            lock(_plotMainLock)
+            if (plot?.Plot == null) return;
+            lock (_plotMainLock)
             {
                 // Вычисляем новые точки для сектора
                 var points = new List<ScottPlot.Coordinates>();
@@ -505,7 +502,7 @@ namespace AntennaAV.Services
             out double snappedAngle)
         {
             snappedAngle = double.NaN;
-            if (plot == null || polarAxis == null)
+            if (plot == null || polarAxis == null || plot.Plot == null)
                 return;
             lock (plotLock)
             {
@@ -516,7 +513,7 @@ namespace AntennaAV.Services
                 double rPix = Math.Sqrt(dx * dx + dy * dy);
                 if (Math.Abs(rPix - plotRadiusPix) > threshold)
                 {
-                    if (hoverMarker != null && plot.Plot.GetPlottables().Contains(hoverMarker))
+                    if (hoverMarker != null && plot.Plot != null && plot.Plot.GetPlottables().Contains(hoverMarker))
                         hoverMarker.IsVisible = false;
                     return;
                 }
@@ -552,10 +549,11 @@ namespace AntennaAV.Services
 
         public void UpdatePolarAxisCircles(AvaPlot plot, bool isLog, double min, double max, bool isDark)
         {
+            if (plot == null || plot?.Plot == null || _polarAxisMain == null)
+                return;
             lock (_plotMainLock)
             {
-                if (_avaPlotMain != null && _polarAxisMain != null)
-                    Plots.AutoUpdatePolarAxisCircles(_avaPlotMain, _polarAxisMain, isLog, min, max, isDark);
+                 Plots.AutoUpdatePolarAxisCircles(plot, _polarAxisMain, isLog, min, max, isDark);
             }
             _avaPlotMainNeedsRefresh = true;
         }
@@ -610,10 +608,28 @@ namespace AntennaAV.Services
         public void InitializePlotMain(AvaPlot plot, bool isDark)
         {
             _avaPlotMain = plot;
-            _polarAxisMain = Plots.Initialize(plot, isDark);
+            _polarAxisMain = Plots.Initialize(plot, isDark) ?? throw new InvalidOperationException("Failed to initialize main polar axis");
             ApplyThemeToMainPlot(isDark, plot);
             UpdatePolarAxisCircles(plot, true, -50, 0, isDark);
-            InitializeRefreshTimer();
+        }
+        private bool ArePlotsInitialized()
+        {
+            return _avaPlotMain?.Plot != null && _avaPlotTx?.Plot != null && _avaPlotRx?.Plot != null;
+        }
+
+        public void InitializeAllPlots(AvaPlot mainPlot, AvaPlot txPlot, AvaPlot rxPlot, bool isDark)
+        {
+            InitializePlotMain(mainPlot, isDark);
+            InitializeTxPlot(txPlot, isDark);
+            InitializeRxPlot(rxPlot, isDark);
+            if (ArePlotsInitialized())
+            {
+                InitializeRefreshTimer();
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Failed to initialize all plots; timer not started");
+            }
         }
 
         private void InitializeRefreshTimer()
@@ -628,7 +644,7 @@ namespace AntennaAV.Services
                     _sectorUpdatePending = false;
                 }
 
-                if (_avaPlotMainNeedsRefresh && _avaPlotMain != null)
+                if (_avaPlotMainNeedsRefresh && _avaPlotMain != null && _avaPlotMain?.Plot != null)
                 {
                     lock (_plotMainLock)
                     {
@@ -637,7 +653,7 @@ namespace AntennaAV.Services
                     }
                 }
 
-                if (_avaPlotTxNeedsRefresh && _avaPlotTx != null)
+                if (_avaPlotTxNeedsRefresh && _avaPlotTx != null && _avaPlotTx?.Plot != null)
                 {
                     lock (_plotTxLock)
                     {
@@ -645,7 +661,7 @@ namespace AntennaAV.Services
                         _avaPlotTxNeedsRefresh = false;
                     }
                 }
-                if (_avaPlotRxNeedsRefresh && _avaPlotRx != null)
+                if (_avaPlotRxNeedsRefresh && _avaPlotRx != null && _avaPlotRx?.Plot != null)
                 {
                     lock (_plotRxLock)
                     {
@@ -660,7 +676,7 @@ namespace AntennaAV.Services
         public void InitializeTxPlot(AvaPlot plot, bool isDark)
         {
             _avaPlotTx = plot;
-            _polarAxisTx = Plots.InitializeSmall(plot, isDark);
+            _polarAxisTx = Plots.InitializeSmall(plot, isDark) ?? throw new InvalidOperationException("Failed to initialize Tx polar axis");
             ApplyThemeToPlotSmall(
                 isDark,
                 plot,
@@ -673,7 +689,7 @@ namespace AntennaAV.Services
         public void InitializeRxPlot(AvaPlot plot, bool isDark)
         {
             _avaPlotRx = plot;
-            _polarAxisRx = Plots.InitializeSmall(plot, isDark);
+            _polarAxisRx = Plots.InitializeSmall(plot, isDark) ?? throw new InvalidOperationException("Failed to initialize Rx polar axis");
             ApplyThemeToPlotSmall(
                 isDark,
                 plot,

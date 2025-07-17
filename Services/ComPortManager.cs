@@ -265,9 +265,91 @@ namespace AntennaAV.Services
         }
 
 
+        //private void ReadLoop()
+        //{
+        //    var buffer = new StringBuilder();
+        //    while (_reading && _port != null && _port.IsOpen)
+        //    {
+        //        try
+        //        {
+        //            if (_port.BytesToRead > 0)
+        //            {
+        //                string data = _port.ReadExisting();
+        //                buffer.Append(data);
+
+        //                // Разбираем все сообщения из буфера
+        //                while (true)
+        //                {
+        //                    int start = buffer.ToString().IndexOf('#');
+        //                    int end = buffer.ToString().IndexOf('$', start + 1);
+        //                    if (start >= 0 && end > start)
+        //                    {
+        //                        string message = buffer.ToString().Substring(start, end - start + 1);
+        //                        buffer.Remove(0, end + 1);
+
+        //                        var parsed = ParseDataString(message);
+        //                        if (parsed != null)
+        //                            DataQueue.Enqueue(parsed);
+        //                    }
+        //                    else
+        //                    {
+        //                        // Нет полного сообщения
+        //                        break;
+        //                    }
+        //                }
+        //            }
+        //            else
+        //            {
+        //                Thread.Sleep(10);
+        //            }
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            Debug.WriteLine($"ReadLoop error: {ex}");
+        //        }
+        //    }
+        //}
+
+        //private AntennaData? ParseDataString(string input)
+        //{
+        //    if (!input.StartsWith("#xx/ANT") || !input.EndsWith("$"))
+        //        return null;
+
+        //    var trimmed = input.Trim('#', '$');
+        //    var parts = trimmed.Split('/');
+
+        //    if (parts.Length < 11) return null;
+
+        //    try
+        //    {
+        //        return new AntennaData
+        //        {
+        //            Systick = int.Parse(parts[3]),
+        //            ReceiverAngleDeg10 = int.Parse(parts[4]),
+        //            TransmitterAngleDeg10 = int.Parse(parts[5]),
+        //            ReceiverAngleDeg = int.Parse(parts[4]) / 10.0,
+        //            TransmitterAngleDeg = int.Parse(parts[5]) / 10.0,
+        //            RxAntennaCounter = int.Parse(parts[6]),
+        //            TxAntennaCounter = int.Parse(parts[7]),
+        //            PowerDbm = double.Parse(parts[8], CultureInfo.InvariantCulture),
+        //            AntennaType = int.Parse(parts[9]),
+        //            ModeAutoHand = int.Parse(parts[10]),
+        //        };
+        //    }
+        //    catch
+        //    {
+        //        return null;
+        //    }
+        //}
+
         private void ReadLoop()
         {
-            var buffer = new StringBuilder();
+            var buffer = new StringBuilder(1024);
+            const int maxBufferSize = 10000;
+            int errorCount = 0;
+            const int maxErrors = 100;
+            const int delayMs = 20;
+
             while (_reading && _port != null && _port.IsOpen)
             {
                 try
@@ -276,43 +358,95 @@ namespace AntennaAV.Services
                     {
                         string data = _port.ReadExisting();
                         buffer.Append(data);
+                        Debug.WriteLine($"Read {data.Length} chars, BytesToRead={_port.BytesToRead}, BufferLength={buffer.Length}");
 
-                        // Разбираем все сообщения из буфера
-                        while (true)
+                        if (buffer.Length > maxBufferSize)
                         {
-                            int start = buffer.ToString().IndexOf('#');
-                            int end = buffer.ToString().IndexOf('$', start + 1);
-                            if (start >= 0 && end > start)
-                            {
-                                string message = buffer.ToString().Substring(start, end - start + 1);
-                                buffer.Remove(0, end + 1);
+                            Debug.WriteLine($"Buffer overflow (length={buffer.Length}), trimming to last #");
+                            int lastHash = buffer.ToString().LastIndexOf('#');
+                            if (lastHash >= 0)
+                                buffer.Remove(0, lastHash);
+                            else
+                                buffer.Clear();
+                            errorCount++;
+                        }
 
+                        string currentBuffer = buffer.ToString();
+                        int index = 0;
+
+                        while (index < currentBuffer.Length)
+                        {
+                            int start = currentBuffer.IndexOf('#', index);
+                            if (start == -1) break;
+                            int end = currentBuffer.IndexOf('$', start + 1);
+                            if (end == -1) break;
+
+                            string message = currentBuffer.Substring(start, end - start + 1);
+                            try
+                            {
                                 var parsed = ParseDataString(message);
                                 if (parsed != null)
+                                {
                                     DataQueue.Enqueue(parsed);
+                                    errorCount = 0;
+                                }
+                                else
+                                {
+                                    Debug.WriteLine($"Invalid message format: {message}");
+                                    errorCount++;
+                                }
                             }
-                            else
+                            catch (Exception ex)
                             {
-                                // Нет полного сообщения
-                                break;
+                                Debug.WriteLine($"Error parsing message '{message}': {ex.Message} (Type: {ex.GetType().Name})");
+                                errorCount++;
                             }
+
+                            index = end + 1;
+
+                            if (errorCount >= maxErrors)
+                            {
+                                Debug.WriteLine($"Too many errors, clearing buffer and discarding OS buffer (BytesToRead={_port.BytesToRead})");
+                                buffer.Clear();
+                                _port.DiscardInBuffer();
+                                Thread.Sleep(1000);
+                                errorCount = 0;
+                            }
+                        }
+
+                        if (index > 0)
+                        {
+                            buffer.Remove(0, index);
                         }
                     }
                     else
                     {
-                        Thread.Sleep(10);
+                        Thread.Sleep(delayMs);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"ReadLoop error: {ex}");
+                    Debug.WriteLine($"ReadLoop error: {ex.Message} (Type: {ex.GetType().Name}, BytesToRead={_port.BytesToRead})");
+                    errorCount++;
+                    if (errorCount >= maxErrors)
+                    {
+                        Debug.WriteLine($"Too many read errors, pausing (BytesToRead={_port.BytesToRead})");
+                        Thread.Sleep(1000);
+                        errorCount = 0;
+                    }
+                    else
+                    {
+                        Thread.Sleep(100);
+                    }
                 }
             }
         }
 
+        private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
+
         private AntennaData? ParseDataString(string input)
         {
-            if (!input.StartsWith("#xx/ANT") || !input.EndsWith("$"))
+            if (!input.StartsWith("#xx/ANT", StringComparison.Ordinal) || !input.EndsWith("$"))
                 return null;
 
             var trimmed = input.Trim('#', '$');
@@ -320,26 +454,28 @@ namespace AntennaAV.Services
 
             if (parts.Length < 11) return null;
 
-            try
+            if (!int.TryParse(parts[3], out int systick)) return null;
+            if (!int.TryParse(parts[4], out int receiverAngleDeg10)) return null;
+            if (!int.TryParse(parts[5], out int transmitterAngleDeg10)) return null;
+            if (!int.TryParse(parts[6], out int rxAntennaCounter)) return null;
+            if (!int.TryParse(parts[7], out int txAntennaCounter)) return null;
+            if (!double.TryParse(parts[8], NumberStyles.Float, Invariant, out double powerDbm)) return null;
+            if (!int.TryParse(parts[9], out int antennaType)) return null;
+            if (!int.TryParse(parts[10], out int modeAutoHand)) return null;
+
+            return new AntennaData
             {
-                return new AntennaData
-                {
-                    Systick = int.Parse(parts[3]),
-                    ReceiverAngleDeg10 = int.Parse(parts[4]),
-                    TransmitterAngleDeg10 = int.Parse(parts[5]),
-                    ReceiverAngleDeg = int.Parse(parts[4]) / 10.0,
-                    TransmitterAngleDeg = int.Parse(parts[5]) / 10.0,
-                    RxAntennaCounter = int.Parse(parts[6]),
-                    TxAntennaCounter = int.Parse(parts[7]),
-                    PowerDbm = double.Parse(parts[8], CultureInfo.InvariantCulture),
-                    AntennaType = int.Parse(parts[9]),
-                    ModeAutoHand = int.Parse(parts[10]),
-                };
-            }
-            catch
-            {
-                return null;
-            }
+                Systick = systick,
+                ReceiverAngleDeg10 = receiverAngleDeg10,
+                TransmitterAngleDeg10 = transmitterAngleDeg10,
+                ReceiverAngleDeg = receiverAngleDeg10 / 10.0,
+                TransmitterAngleDeg = transmitterAngleDeg10 / 10.0,
+                RxAntennaCounter = rxAntennaCounter,
+                TxAntennaCounter = txAntennaCounter,
+                PowerDbm = powerDbm,
+                AntennaType = antennaType,
+                ModeAutoHand = modeAutoHand,
+            };
         }
 
         private bool TryOpenPortWithTimeout(SerialPortStream port, int timeoutMs)
