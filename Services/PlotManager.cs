@@ -389,7 +389,7 @@ namespace AntennaAV.Services
             {
                 // Вычисляем новые точки для сектора
                 var points = new List<ScottPlot.Coordinates>();
-                double radius = 100;
+                double radius = Constants.DefaultPlotRadius;
                 // Проверка на полный круг (размер 0 или 360)
                 double sectorSize = (end - start + 360) % 360;
                 if (sectorSize == 0)
@@ -618,7 +618,7 @@ namespace AntennaAV.Services
 
         private void InitializeRefreshTimer()
         {
-            _avaPlotRefreshTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+            _avaPlotRefreshTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(Constants.PlotTimerUpdateIntervalMs) };
             _avaPlotRefreshTimer.Tick += (s, e) =>
             {
                 if (_sectorUpdatePending && _pendingSectorStart.HasValue && _pendingSectorEnd.HasValue && _pendingSectorVisible.HasValue)

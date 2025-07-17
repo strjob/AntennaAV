@@ -450,7 +450,7 @@ namespace AntennaAV.ViewModels
             if (_tableUpdateTimer == null)
             {
                 _tableUpdateTimer = new DispatcherTimer();
-                _tableUpdateTimer.Interval = TimeSpan.FromMilliseconds(500);
+                _tableUpdateTimer.Interval = TimeSpan.FromMilliseconds(Constants.TableTimerUpdateIntervalMs);
                 _tableUpdateTimer.Tick += (s, e) => UpdateTable();
             }
             _tableUpdateTimer.Start();
@@ -799,7 +799,7 @@ namespace AntennaAV.ViewModels
 
             _ = ConnectToPortAsync();
 
-            _uiTimer.Interval = TimeSpan.FromMilliseconds(100);
+            _uiTimer.Interval = TimeSpan.FromMilliseconds(Constants.UiTimerUpdateIntervalMs);
             _uiTimer.Tick += (_, _) => OnUiTimerTick();
             _uiTimer.Start();
 

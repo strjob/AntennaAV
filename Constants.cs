@@ -26,6 +26,10 @@ namespace AntennaAV
         public const int ArrowWidth = 4;
         public const int ArrowheadWidth = 10;
 
+        public const int UiTimerUpdateIntervalMs = 100;
+        public const int TableTimerUpdateIntervalMs = 500;
+        public const int PlotTimerUpdateIntervalMs = 100;
+
     }
 }
 
