@@ -24,9 +24,9 @@ namespace AntennaAV.ViewModels
 
         public PlotData Plot { get; set; } = new PlotData();
 
-        public List<ScottPlot.Plottables.Scatter> DataScatters { get; } = new();
+        //public List<ScottPlot.Plottables.Scatter> DataScatters { get; } = new();
 
-        public bool IsPlotColorDirty { get; set; }
+        public bool IsPlotColorChanged { get; set; }
 
         public TabViewModel()
         {
@@ -67,7 +67,7 @@ namespace AntennaAV.ViewModels
 
             Plot.ColorChanged += () =>
             {
-                IsPlotColorDirty = true;
+                IsPlotColorChanged = true;
             };
         }
 

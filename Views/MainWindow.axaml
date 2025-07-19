@@ -170,7 +170,7 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 FontSize="24"
-                Text="{CompiledBinding TransmitterAngleDegStr}" />
+                Text="{CompiledBinding TransmitterAngleDeg, StringFormat={}{0:0.0}}}" />
             <TextBlock
                 Grid.Row="0"
                 Margin="2"
@@ -311,11 +311,6 @@
                 Grid.Row="2"
                 Margin="5"
                 VerticalAlignment="Top">
-                <!--<TextBlock Text="Receiver Angle:" />
-                <TextBlock Margin="1" Text="{CompiledBinding ReceiverAngleDegStr}" />
-
-                <TextBlock Text="Transmitter Angle:" />
-                <TextBlock Margin="1" Text="{CompiledBinding TransmitterAngleDegStr}" />-->
                 <StackPanel
                     Grid.Row="2"
                     Margin="2"
@@ -327,7 +322,7 @@
                     <TextBlock
                         Margin="1"
                         FontSize="16"
-                        Text="{CompiledBinding AntennaTypeStr}" />
+                        Text="{CompiledBinding DeviceModeStr}" />
                 </StackPanel>
                 <StackPanel
                     Grid.Row="2"
@@ -338,7 +333,7 @@
                     <TextBlock
                         Margin="1"
                         FontSize="16"
-                        Text="{CompiledBinding PowerDbmStr}" />
+                        Text="{CompiledBinding PowerDbm, StringFormat={}{0:0.0}}}" />
                 </StackPanel>
                 <StackPanel
                     Grid.Row="2"
@@ -349,7 +344,7 @@
                     <TextBlock
                         Margin="1"
                         FontSize="16"
-                        Text="{CompiledBinding PowerDbmStr}" />
+                        Text="dfd" />
                 </StackPanel>
 
                 <!--<TextBlock Text="Tx Antenna Counter:" />
@@ -372,7 +367,7 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 FontSize="24"
-                Text="{CompiledBinding ReceiverAngleDegStr}" />
+                Text="{CompiledBinding ReceiverAngleDeg, StringFormat={}{0:0.0}}}" />
             <TextBlock
                 Grid.Row="3"
                 Margin="2"

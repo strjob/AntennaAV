@@ -17,13 +17,11 @@
 		<PublishAot>true</PublishAot>
         <SelfContained>true</SelfContained>
      <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-		--><!-- Recommended Avalonia trimming settings for Native AOT --><!--
 		<BuiltInComInteropSupport>false</BuiltInComInteropSupport>
 		<TrimMode>link</TrimMode>
 	</PropertyGroup>
 
 	<ItemGroup>
-		--><!-- Preserve Avalonia types for reflection --><!--
 		<TrimmerRootAssembly Include="Avalonia.Themes.Fluent" />
 	</ItemGroup>
 	<ItemGroup>

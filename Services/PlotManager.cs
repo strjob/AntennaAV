@@ -7,7 +7,9 @@ using ScottPlot.Avalonia;
 using ScottPlot.Plottables;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Windows.Markup;
 namespace AntennaAV.Services
 {
 
@@ -64,306 +66,10 @@ namespace AntennaAV.Services
         private bool _sectorUpdatePending = false;
 
 
-        public void DrawPolarPlotFromValues(
-            PlotData plotData,
-            AvaPlot? plot,
-            bool isLogScale,
-            bool isDark,
-            double min,
-            double max,
-            string? label = null)
-        {
-            if (plotData?.Angles == null || plotData.Angles.Length == 0 ||
-                _polarAxisMain == null || plot == null || plot.Plot == null)
-            {
-                System.Diagnostics.Debug.WriteLine($"[DrawPolarPlotFromValues] invalid parameters");
-                return;
-            }
-
-            // Get the appropriate values based on scale type
-            double[] values = isLogScale ? plotData.PowerNormValues : plotData.VoltageNormValues;
-            double[] angles = plotData.Angles;
-
-            if (values.Length == 0 || angles.Length != values.Length)
-            {
-                System.Diagnostics.Debug.WriteLine($"[DrawPolarPlotFromValues] arrays length mismatch");
-                return;
-            }
-
-            lock (_plotMainLock)
-            {
-                // Initialize segments if not exists
-                if (plotData.PlotSegments == null)
-                    plotData.PlotSegments = new List<PlotSegmentData>();
-
-                // Create segments based on angle gaps
-                List<(List<double> segAngles, List<double> segValues)> segments = CreateSegments(angles, values);
-
-                var color = ScottPlot.Color.FromHex(plotData.ColorHex);
-                bool first = true;
-
-                // Create or update segments
-                for (int segIndex = 0; segIndex < segments.Count; segIndex++)
-                {
-                    var (segAngles, segValues) = segments[segIndex];
-                    if (segAngles.Count <= 1) continue;
-
-                    PlotSegmentData segmentData = GetOrCreateSegmentData(plotData, segIndex);
-
-                    // Update segment data
-                    segmentData.SegmentAngles = segAngles.ToArray();
-                    segmentData.SegmentValues = segValues.ToArray();
-
-                    // Calculate coordinates and update the fixed array
-                    UpdateSegmentCoordinates(segmentData, isLogScale, min, max);
-
-                    // Create or update scatter plot
-                    UpdateScatterPlot(segmentData, plot, color, ref first, label);
-                }
-
-                // Remove excess segments if array got smaller
-                RemoveExcessSegments(plotData, segments.Count, plot);
-
-                _avaPlotMainNeedsRefresh = true;
-            }
-        }
-
-
-        //public void DrawPolarPlotFromValues(
-        //    double[] angles,
-        //    double[] values,
-        //    AvaPlot? plot,
-        //    List<Scatter> dataScatters,
-        //    string colorHex,
-        //    bool isLogScale,
-        //    bool isDark,
-        //    double min,
-        //    double max,
-        //    string? label = null)
-        //{
-        //    if (angles == null || values == null || angles.Length == 0 || values.Length == 0 || angles.Length != values.Length || _polarAxisMain == null || plot == null || plot.Plot == null)
-        //    {
-        //        System.Diagnostics.Debug.WriteLine($"[DrawPolarPlotFromValues] exception");
-        //        return;
-        //    }
-
-        //    lock (_plotMainLock)
-        //    {
-        //        List<List<ScottPlot.Coordinates>> segments = new();
-        //        List<ScottPlot.Coordinates> current = new();
-        //        double r_max = Constants.DefaultPlotRadius;
-        //        for (int i = 0; i < angles.Length; i++)
-        //        {
-        //            double mirroredAngle = (360 - angles[i]) % 360;
-        //            double r;
-        //            if (isLogScale)
-        //            {
-        //                r = (max - min) > 0 ? r_max * (values[i] - min) / (max - min) : r_max;
-
-        //            }
-        //            else
-        //            {
-        //                r = max > 0 ? Constants.DefaultPlotRadius * (values[i] / max) : 0;
-        //            }
-        //            var pt = _polarAxisMain.GetCoordinates(r, mirroredAngle);
-        //            if (i > 0 && Math.Abs(angles[i] - angles[i - 1]) > 10)
-        //            {
-        //                if (current.Count > 0)
-        //                    segments.Add(current);
-        //                current = new List<ScottPlot.Coordinates>();
-        //            }
-        //            current.Add(pt);
-        //        }
-        //        if (current.Count > 0)
-        //            segments.Add(current);
-
-        //        // Рисуем каждый сегмент отдельно
-        //        var color = ScottPlot.Color.FromHex(colorHex);
-        //        bool first = true;
-        //        foreach (var seg in segments)
-        //        {
-        //            if (seg.Count > 1)
-        //            {
-        //                var scatter = plot.Plot.Add.Scatter(seg, color: color);
-        //                scatter.LineWidth = 2;
-        //                scatter.MarkerSize = 0;
-        //                if (first && !string.IsNullOrEmpty(label))
-        //                {
-        //                    scatter.LegendText = label;
-        //                    first = false;
-        //                }
-        //                dataScatters.Add(scatter);
-        //            }
-        //        }
-        //        _avaPlotMainNeedsRefresh = true;
-        //    }
-        //}
-
-
-        //public void DrawPolarPlot(IEnumerable<TabViewModel> tabs,
-        //    double[] angles,
-        //    double[] values,
-        //    AvaPlot? plot,
-        //    List<Scatter> dataScatters,
-        //    string colorHex,
-        //    bool isLogScale,
-        //    bool isDark,
-        //    string? label = null)
-        //{
-        //    if (angles == null || values == null)
-        //    {
-        //        System.Diagnostics.Debug.WriteLine($"[DrawPolarPlot] angles или values == null");
-        //        return;
-        //    }
-        //    if (angles.Length == 0 || values.Length == 0)
-        //    {
-        //        System.Diagnostics.Debug.WriteLine($"[DrawPolarPlot] angles или values пусты");
-        //        return;
-        //    }
-        //    if (angles.Length != values.Length)
-        //    {
-        //        System.Diagnostics.Debug.WriteLine($"[DrawPolarPlot] angles.Length != values.Length: {angles.Length} != {values.Length}");
-        //        return;
-        //    }
-        //    if (_polarAxisMain == null || plot == null || plot.Plot == null)
-        //        return;
-        //    lock (_plotMainLock)
-        //    {
-        //        bool isUpdated = UpdateGlobalMinMax(values);
-        //        double actualMin = _globalMin ?? values.Min();
-        //        double actualMax = _globalMax ?? values.Max();
-
-
-        //        if (isUpdated)
-        //        {
-        //            Plots.AutoUpdatePolarAxisCircles(plot, _polarAxisMain, isLogScale, actualMin, actualMax, isDark);
-        //            DrawAllVisiblePlots(tabs, plot, isLogScale, isDark);
-        //        }
-        //        else 
-        //        {
-        //            // Удаляем все старые графики
-        //            foreach (var scatter in dataScatters)
-        //                plot.Plot.Remove(scatter);
-        //            dataScatters.Clear();
-        //            DrawPolarPlotFromValues(angles, values, plot, dataScatters, colorHex, isLogScale, isDark, actualMin, actualMax, label);
-        //        }
-
-        //            _avaPlotMainNeedsRefresh = true;
-        //    }
-        //}
-
-        private List<(List<double> segAngles, List<double> segValues)> CreateSegments(double[] angles, double[] values)
-        {
-            List<(List<double> segAngles, List<double> segValues)> segments = new();
-            List<double> currentAngles = new();
-            List<double> currentValues = new();
-
-            for (int i = 0; i < angles.Length; i++)
-            {
-                if (i > 0 && Math.Abs(angles[i] - angles[i - 1]) > 10)
-                {
-                    if (currentAngles.Count > 0)
-                    {
-                        segments.Add((currentAngles, currentValues));
-                        currentAngles = new List<double>();
-                        currentValues = new List<double>();
-                    }
-                }
-                currentAngles.Add(angles[i]);
-                currentValues.Add(values[i]);
-            }
-
-            if (currentAngles.Count > 0)
-                segments.Add((currentAngles, currentValues));
-
-            return segments;
-        }
-
-        private PlotSegmentData GetOrCreateSegmentData(PlotData plotData, int segIndex)
-        {
-            // Reuse existing segment data if available
-            if (segIndex < plotData.PlotSegments!.Count)
-            {
-                return plotData.PlotSegments[segIndex];
-            }
-            else
-            {
-                // Create new segment data
-                var segmentData = new PlotSegmentData();
-                plotData.PlotSegments.Add(segmentData);
-                return segmentData;
-            }
-        }
-
-        private void UpdateScatterPlot(PlotSegmentData segmentData, AvaPlot plot, ScottPlot.Color color, ref bool first, string? label)
-        {
-            if (segmentData.ScatterPlot == null)
-            {
-                // Create new scatter plot with the fixed-length coordinate array
-                segmentData.ScatterPlot = plot.Plot.Add.Scatter(segmentData.CoordinatesArray, color: color);
-                segmentData.ScatterPlot.LineWidth = 2;
-                segmentData.ScatterPlot.MarkerSize = 0;
-
-                if (first && !string.IsNullOrEmpty(label))
-                {
-                    segmentData.ScatterPlot.LegendText = label;
-                    first = false;
-                }
-            }
-            else
-            {
-                // Update color if changed
-                segmentData.ScatterPlot.Color = color;
-            }
-        }
-
-        private void RemoveExcessSegments(PlotData plotData, int segmentCount, AvaPlot plot)
-        {
-            while (plotData.PlotSegments!.Count > segmentCount)
-            {
-                var lastSegment = plotData.PlotSegments[plotData.PlotSegments.Count - 1];
-                if (lastSegment.ScatterPlot != null)
-                    plot.Plot.Remove(lastSegment.ScatterPlot);
-                plotData.PlotSegments.RemoveAt(plotData.PlotSegments.Count - 1);
-            }
-        }
-
-        private void UpdateSegmentCoordinates(PlotSegmentData segmentData, bool isLogScale, double min, double max)
-        {
-            double r_max = Constants.DefaultPlotRadius;
-            int pointCount = Math.Min(segmentData.SegmentAngles.Length, segmentData.CoordinatesArray.Length);
-
-            for (int i = 0; i < pointCount; i++)
-            {
-                double mirroredAngle = (360 - segmentData.SegmentAngles[i]) % 360;
-                double r;
-
-                if (isLogScale)
-                {
-                    r = (max - min) > 0 ? r_max * (segmentData.SegmentValues[i] - min) / (max - min) : r_max;
-                }
-                else
-                {
-                    r = max > 0 ? Constants.DefaultPlotRadius * (segmentData.SegmentValues[i] / max) : 0;
-                }
-
-                // Update the coordinate in the fixed array - ScottPlot maintains reference to this array
-                segmentData.CoordinatesArray[i] = _polarAxisMain!.GetCoordinates(r, mirroredAngle);
-            }
-
-            // Fill remaining array elements with the last valid coordinate to avoid rendering artifacts
-            var lastCoord = pointCount > 0 ? segmentData.CoordinatesArray[pointCount - 1] : new ScottPlot.Coordinates(0, 0);
-            for (int i = pointCount; i < segmentData.CoordinatesArray.Length; i++)
-            {
-                segmentData.CoordinatesArray[i] = lastCoord;
-            }
-
-            segmentData.ValidPointCount = pointCount;
-        }
-
+        private readonly List<TabViewModel> _activePlotTabs = new();
 
         public void DrawPolarPlot(IEnumerable<TabViewModel> tabs,
-            TabViewModel currentTab, // Current tab with PlotData
+            TabViewModel currentTab,
             bool isLogScale,
             bool isDark,
             string? label = null)
@@ -389,150 +95,354 @@ namespace AntennaAV.Services
 
             lock (_plotMainLock)
             {
-                bool isUpdated = UpdateGlobalMinMax(values);
-                double actualMin = _globalMin ?? values.Min();
-                double actualMax = _globalMax ?? values.Max();
+                // Check if global min/max changed - this is the expensive operation
+                bool globalRangeChanged = UpdateGlobalMinMax(values);
+                double actualMin = _globalMin!.Value;
+                double actualMax = _globalMax!.Value;
 
-                if (isUpdated)
+                if (globalRangeChanged)
                 {
-                    // Update axis circles
+                    // Update axis circles only when range changes
                     Plots.AutoUpdatePolarAxisCircles(_avaPlotMain, _polarAxisMain, isLogScale, actualMin, actualMax, isDark);
 
-                    // Update coordinates for all existing plots instead of redrawing
+                    // Update coordinates for all existing plots - this is the most expensive part
                     UpdateAllPlotCoordinates(tabs, isLogScale, actualMin, actualMax);
                 }
 
-                // Draw/update current tab's plot
-                DrawPolarPlotFromValues(plotData, _avaPlotMain, isLogScale, isDark, actualMin, actualMax, label);
+                // Always update current tab's plot (fast operation - just coordinate updates)
+                UpdateCurrentTabPlot(plotData, isLogScale, actualMin, actualMax, label);
 
                 _avaPlotMainNeedsRefresh = true;
             }
         }
 
+        private void UpdateCurrentTabPlot(PlotData plotData, bool isLogScale, double min, double max, string? label)
+        {
+            // Initialize segments if not exists
+            plotData.PlotSegments ??= new List<PlotSegmentData>();
+
+            // Get values and create segments - optimized for frequent updates
+            double[] values = isLogScale ? plotData.PowerNormValues : plotData.VoltageNormValues;
+            var segments = CreateSegmentsOptimized(plotData.Angles, values);
+
+            var color = ScottPlot.Color.FromHex(plotData.ColorHex);
+            bool first = true;
+
+            // Update existing segments or create new ones
+            for (int segIndex = 0; segIndex < segments.Count; segIndex++)
+            {
+                var (segAngles, segValues) = segments[segIndex];
+                if (segAngles.Count <= 1) continue;
+
+                PlotSegmentData segmentData = GetOrCreateSegmentData(plotData, segIndex);
+
+                // Only update arrays if they're different (avoid unnecessary allocations)
+                if (!ArraysEqual(segmentData.SegmentAngles, segAngles) ||
+                    !ArraysEqual(segmentData.SegmentValues, segValues))
+                {
+                    segmentData.SegmentAngles = segAngles.ToArray();
+                    segmentData.SegmentValues = segValues.ToArray();
+                }
+
+                // Update coordinates in the fixed array
+                UpdateSegmentCoordinates(segmentData, isLogScale, min, max);
+
+                // Create or update scatter plot
+                CreateOrUpdateScatterPlot(segmentData, color, first, segIndex == 0 ? label : null);
+                first = false; 
+            }
+
+            // Remove excess segments
+            RemoveExcessSegments(plotData, segments.Count);
+        }
+
+        private List<(List<double> segAngles, List<double> segValues)> CreateSegmentsOptimized(double[] angles, double[] values)
+        {
+            var segments = new List<(List<double>, List<double>)>();
+            var currentAngles = new List<double>();
+            var currentValues = new List<double>();
+
+            for (int i = 0; i < angles.Length; i++)
+            {
+                // Check for angle gap (segment break)
+                if (i > 0 && Math.Abs(angles[i] - angles[i - 1]) > 10)
+                {
+                    if (currentAngles.Count > 0)
+                    {
+                        segments.Add((currentAngles, currentValues));
+                        currentAngles = new List<double>();
+                        currentValues = new List<double>();
+                    }
+                }
+                currentAngles.Add(angles[i]);
+                currentValues.Add(values[i]);
+            }
+
+            if (currentAngles.Count > 0)
+                segments.Add((currentAngles, currentValues));
+
+            return segments;
+        }
+
+        private bool ArraysEqual(double[] arr1, List<double> arr2)
+        {
+            if (arr1.Length != arr2.Count) return false;
+            for (int i = 0; i < arr1.Length; i++)
+            {
+                if (Math.Abs(arr1[i] - arr2[i]) > 1e-10) return false;
+            }
+            return true;
+        }
+
+        private PlotSegmentData GetOrCreateSegmentData(PlotData plotData, int segIndex)
+        {
+            if (segIndex < plotData.PlotSegments!.Count)
+            {
+                return plotData.PlotSegments[segIndex];
+            }
+            else
+            {
+                var segmentData = new PlotSegmentData();
+                plotData.PlotSegments.Add(segmentData);
+                return segmentData;
+            }
+        }
+
+        private void CreateOrUpdateScatterPlot(PlotSegmentData segmentData, ScottPlot.Color color, bool isFirst, string? label)
+        {
+            if (segmentData.ScatterPlot == null)
+            {
+                segmentData.ScatterPlot = _avaPlotMain!.Plot.Add.Scatter(segmentData.CoordinatesArray, color: color);
+                segmentData.ScatterPlot.LineWidth = 2;
+                segmentData.ScatterPlot.MarkerSize = 0;
+            }
+            else
+            {
+                if (segmentData.ScatterPlot.Color.ToHex() != color.ToHex())
+                {
+                    segmentData.ScatterPlot.Color = color;
+                }
+            }
+
+            // Set legend only for the first segment
+            segmentData.ScatterPlot.LegendText = isFirst && !string.IsNullOrEmpty(label) ? label : "";
+        }
+
+        private void RemoveExcessSegments(PlotData plotData, int segmentCount)
+        {
+            while (plotData.PlotSegments!.Count > segmentCount)
+            {
+                var lastSegment = plotData.PlotSegments[plotData.PlotSegments.Count - 1];
+                if (lastSegment.ScatterPlot != null)
+                {
+                    _avaPlotMain!.Plot.Remove(lastSegment.ScatterPlot);
+                    lastSegment.ScatterPlot = null; // Обнуление ссылки
+                }    
+                    
+                plotData.PlotSegments.RemoveAt(plotData.PlotSegments.Count - 1);
+            }
+        }
+
+        private void UpdateSegmentCoordinates(PlotSegmentData segmentData, bool isLogScale, double min, double max)
+        {
+            double r_max = Constants.DefaultPlotRadius;
+            int pointCount = Math.Min(segmentData.SegmentAngles.Length, segmentData.CoordinatesArray.Length);
+
+            for (int i = 0; i < pointCount; i++)
+            {
+                // Fix angle orientation - ensure consistent coordinate system
+                double mirroredAngle = (360 - segmentData.SegmentAngles[i]) % 360;
+                double r;
+
+                if (isLogScale)
+                {
+                    // For log scale, ensure we have a valid range
+                    if (max > min && min > 0)
+                    {
+                        // Log scale calculation
+                        double logMin = Math.Log10(min);
+                        double logMax = Math.Log10(max);
+                        double logValue = Math.Log10(Math.Max(segmentData.SegmentValues[i], min)); // Prevent log(0)
+                        r = r_max * (logValue - logMin) / (logMax - logMin);
+                    }
+                    else
+                    {
+                        // Fallback for invalid log range
+                        r = (max - min) > 0 ? r_max * (segmentData.SegmentValues[i] - min) / (max - min) : 0;
+                    }
+                }
+                else
+                {
+                    // Linear scale calculation
+                    if (max > 0)
+                    {
+                        r = r_max * (segmentData.SegmentValues[i] / max);
+                    }
+                    else
+                    {
+                        r = 0;
+                    }
+                }
+
+                // Ensure r is within valid bounds
+                r = Math.Max(0, Math.Min(r, r_max));
+
+                segmentData.CoordinatesArray[i] = _polarAxisMain!.GetCoordinates(r, mirroredAngle);
+            }
+
+            // Fill remaining array elements with the last valid coordinate
+            var lastCoord = pointCount > 0 ? segmentData.CoordinatesArray[pointCount - 1] : new ScottPlot.Coordinates(0, 0);
+            for (int i = pointCount; i < segmentData.CoordinatesArray.Length; i++)
+            {
+                segmentData.CoordinatesArray[i] = lastCoord;
+            }
+
+            segmentData.ValidPointCount = pointCount;
+        }
+
+        // This is the expensive operation - only called when global min/max changes
         private void UpdateAllPlotCoordinates(IEnumerable<TabViewModel> tabs, bool isLogScale, double min, double max)
         {
+            // Update active tabs cache to avoid repeated enumeration
+            _activePlotTabs.Clear();
             foreach (var tab in tabs)
             {
                 if (tab.Plot?.IsVisible == true && tab.Plot.PlotSegments != null)
                 {
-                    foreach (var segmentData in tab.Plot.PlotSegments)
+                    _activePlotTabs.Add(tab);
+                }
+            }
+
+            // Update coordinates for all active plots
+            foreach (var tab in _activePlotTabs)
+            {
+                foreach (var segmentData in tab.Plot!.PlotSegments!)
+                {
+                    if (segmentData.SegmentAngles?.Length > 0 && segmentData.SegmentValues?.Length > 0)
                     {
-                        if (segmentData.SegmentAngles != null && segmentData.SegmentValues != null)
-                        {
-                            // Update coordinates in the fixed array - ScottPlot will automatically use new values
-                            UpdateSegmentCoordinates(segmentData, isLogScale, min, max);
-                        }
+                        UpdateSegmentCoordinates(segmentData, isLogScale, min, max);
                     }
                 }
             }
         }
 
-        private bool UpdateGlobalMinMax(double[]? values)
+        private bool UpdateGlobalMinMax(double[] values)
         {
-            if (values == null || values.Length == 0)
-            {
-                return false;
-            }
             double localMin = values.Min();
             double localMax = values.Max();
-            bool isUpdated = false;
+            bool changed = false;
 
-            if (_globalMax == null || _globalMax < localMax)
-            {
-                _globalMax = localMax;
-                isUpdated = true;
-
-            }
-            if (_globalMin == null || _globalMin > localMin)
-            {
-                _globalMin = localMin;
-                isUpdated = true;
-            }
-            return isUpdated;
-        }
-
-        public bool UpdateGlobalMinMaxForAllTabs(IEnumerable<TabViewModel> tabs, bool isLogScale)
-        {
-            bool isUpdated = false;
-            foreach (var tab in tabs)
-            {
-                if (tab == null)
-                    continue;
-                var values = isLogScale ? tab.Plot?.PowerNormValues : tab.Plot?.VoltageNormValues;
-                isUpdated = UpdateGlobalMinMax(values);
-            }
-            return isUpdated;
-        }
-
-        public void DrawAllVisiblePlots(IEnumerable<TabViewModel> tabs,
-            AvaPlot? plot,
-            bool isLogScale,
-            bool isDark)
-        {
-            if (_polarAxisMain == null || plot == null || plot.Plot == null)
-                return;
             lock (_plotMainLock)
             {
-                try
+                if (_globalMax == null || _globalMax < localMax)
                 {
-                    bool isUpdated = false;
-                    _globalMax = null;
-                    _globalMin = null;
-                    isUpdated = UpdateGlobalMinMaxForAllTabs(tabs, isLogScale);
-                    // Очистить старые графики
-                    foreach (var tab in tabs)
+                    _globalMax = localMax;
+                    changed = true;
+                }
+                if (_globalMin == null || _globalMin > localMin)
+                {
+                    _globalMin = localMin;
+                    changed = true;
+                }
+                return changed;
+            }
+        }
+
+
+        // Replacement for DrawAllVisiblePlots - use for scale changes, theme changes, etc.
+        public void RefreshAllVisiblePlots(IEnumerable<TabViewModel> tabs, bool isLogScale, bool isDark)
+        {
+            if (_avaPlotMain == null || _polarAxisMain == null)
+                return;
+
+            lock (_plotMainLock)
+            {
+                // Clear all existing plots first to avoid coordinate conflicts
+                foreach (var tab in tabs)
+                {
+                    if (tab.Plot?.PlotSegments != null)
                     {
-                        foreach (var scatter in tab.DataScatters)
-                            plot.Plot.Remove(scatter);
-                        tab.DataScatters.Clear();
-                    }
-
-                    // Используем только кэшированные значения!
-
-                    double globalMin = _globalMin ?? 0;
-                    double globalMax = _globalMax ?? -1;
-                    if (globalMax <= globalMin)
-                        return;
-
-                    // Обновить круги полярной оси
-                    if (_avaPlotMain != null)
-                        Plots.AutoUpdatePolarAxisCircles(_avaPlotMain, _polarAxisMain, isLogScale, globalMin, globalMax, isDark);
-
-                    // Строим все графики с общей нормализацией
-                    foreach (var tab in tabs)
-                    {
-                        if (tab.Plot != null && tab.Plot.IsVisible)
+                        foreach (var segmentData in tab.Plot.PlotSegments)
                         {
-                            if (tab.Plot.Angles == null)
-                                continue; // Не строим пустые графики!
-                            double[] angles = tab.Plot.Angles.ToArray();
-                            double[] values = isLogScale ? tab.Plot.PowerNormValues.ToArray() : tab.Plot.VoltageNormValues.ToArray();
-                            //System.Diagnostics.Debug.WriteLine($"Вкладка: {tab.Header}, angles: {angles.Length}, values: {values.Length}");
-                            //DrawPolarPlotFromValues(angles, values, plot, tab.DataScatters, tab.Plot.ColorHex, isLogScale, isDark, globalMin, globalMax, tab.Header);
+                            if (segmentData.ScatterPlot != null)
+                                _avaPlotMain.Plot.Remove(segmentData.ScatterPlot);
+                        }
+                        tab.Plot.PlotSegments.Clear();
+                    }
+                }
+
+                // Reset global range completely
+                _globalMin = null;
+                _globalMax = null;
+
+                // Recalculate global min/max with correct scale
+                RecalculateGlobalRange(tabs, isLogScale);
+
+                double actualMin = _globalMin ?? 0;
+                double actualMax = _globalMax ?? 0;
+
+                // Update axis circles with current range
+                Plots.AutoUpdatePolarAxisCircles(_avaPlotMain, _polarAxisMain, isLogScale, actualMin, actualMax, isDark);
+
+                // Recreate all plots with correct coordinates
+                foreach (var tab in tabs)
+                {
+                    if (tab.Plot?.IsVisible == true && tab.Plot.Angles?.Length > 0)
+                    {
+                        UpdateCurrentTabPlot(tab.Plot, isLogScale, actualMin, actualMax, tab.Header);
+                    }
+                }
+                _avaPlotMainNeedsRefresh = true;
+            }
+        }
+
+
+        // Helper method to recalculate global range from all visible plots
+        public void RecalculateGlobalRange(IEnumerable<TabViewModel> tabs, bool isLogScale)
+        {
+            lock (_plotMainLock)
+            {
+                _globalMin = null;
+                _globalMax = null;
+
+                foreach (var tab in tabs)
+                {
+                    if (tab.Plot?.IsVisible == true && tab.Plot.Angles?.Length > 0)
+                    {
+                        // Use the correct value array based on scale type
+                        double[] values = isLogScale ? tab.Plot.PowerNormValues : tab.Plot.VoltageNormValues;
+                        if (values.Length > 0)
+                        {
+                            UpdateGlobalMinMax(values);
                         }
                     }
-                    _avaPlotMainNeedsRefresh = true;
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[DrawAllVisiblePlots] Exception: {ex}");
                 }
             }
+            _avaPlotMainNeedsRefresh = true;
         }
 
-        public void ClearCurrentTabPlot(TabViewModel tab, AvaPlot? plot)
+
+        public void ClearCurrentTabPlot(TabViewModel tab, AvaPlot? plot = null)
         {
-            if (plot == null)
+            plot ??= _avaPlotMain;
+            if (plot == null || tab?.Plot == null)
                 return;
-            if (tab == null || tab.Plot == null)
-                return;
+
             lock (_plotMainLock)
             {
                 try
                 {
-                    foreach (var scatter in tab.DataScatters)
-                        plot.Plot.Remove(scatter);
-                    tab.DataScatters.Clear();
+                    if (tab.Plot.PlotSegments != null)
+                    {
+                        foreach (var segmentData in tab.Plot.PlotSegments)
+                        {
+                            if (segmentData.ScatterPlot != null)
+                                plot.Plot.Remove(segmentData.ScatterPlot);
+                        }
+                        tab.Plot.PlotSegments.Clear();
+                    }
+
+                    //tab.DataScatters?.Clear();
                     _avaPlotMainNeedsRefresh = true;
                 }
                 catch (Exception ex)
@@ -541,7 +451,52 @@ namespace AntennaAV.Services
                 }
             }
         }
-        
+        public void ClearAllPlots(IEnumerable<TabViewModel> tabs, AvaPlot? plot = null)
+        {
+            plot ??= _avaPlotMain;
+            if (plot == null)
+                return;
+
+            lock (_plotMainLock)
+            {
+                try
+                {
+                    foreach (var tab in tabs)
+                    {
+                        if (tab.Plot?.PlotSegments != null)
+                        {
+                            foreach (var segmentData in tab.Plot.PlotSegments)
+                            {
+                                if (segmentData.ScatterPlot != null)
+                                    plot.Plot.Remove(segmentData.ScatterPlot);
+                            }
+                            tab.Plot.PlotSegments.Clear();
+                        }
+                        //tab.DataScatters?.Clear();
+                    }
+
+                    // Reset global min/max for next acquisition
+                    _globalMin = null;
+                    _globalMax = null;
+                    _activePlotTabs.Clear();
+                    _avaPlotMainNeedsRefresh = true;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ClearAllPlots] Exception: {ex}");
+                }
+            }
+        }
+        // Method to reset global range when starting new acquisition series
+        public void ResetGlobalRange()
+        {
+            lock (_plotMainLock)
+            {
+                _globalMin = null;
+                _globalMax = null;
+            }
+        }
+
 
         public void ResetPlotAxes()
         {
