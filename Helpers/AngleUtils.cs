@@ -77,7 +77,7 @@ namespace AntennaAV.Helpers
 
         public static double NormalizeAngle(double angle)
         {
-            return (angle + 360) % 360;
+            return Math.Round((angle + 360) % 360, 1);
         }
 
         public static (double from, double to) CalculateSectorRange(double size, double center)
