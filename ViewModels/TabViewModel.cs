@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls;
+﻿using AntennaAV.Services;
+using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
@@ -107,6 +108,25 @@ namespace AntennaAV.ViewModels
         }
     }
 
+    //public partial class PlotData : ObservableObject
+    //{
+    //    public double[] Angles { get; set; } = Array.Empty<double>();
+    //    public double[] PowerNormValues { get; set; } = Array.Empty<double>();
+    //    public double[] VoltageNormValues { get; set; } = Array.Empty<double>();
+
+    //    [ObservableProperty]
+    //    private string colorHex = "#0000FF";
+
+    //    [ObservableProperty]
+    //    private bool isVisible = true;
+
+    //    // Добавляем событие
+    //    public event Action? ColorChanged;
+    //    partial void OnColorHexChanged(string value)
+    //    {
+    //        ColorChanged?.Invoke();
+    //    }
+    //}
     public partial class PlotData : ObservableObject
     {
         public double[] Angles { get; set; } = Array.Empty<double>();
@@ -119,8 +139,12 @@ namespace AntennaAV.ViewModels
         [ObservableProperty]
         private bool isVisible = true;
 
-        // Добавляем событие
+        // Move segments into PlotData
+        public List<PlotSegmentData>? PlotSegments { get; set; }
+
+        // Event for color changes
         public event Action? ColorChanged;
+
         partial void OnColorHexChanged(string value)
         {
             ColorChanged?.Invoke();

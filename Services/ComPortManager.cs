@@ -225,6 +225,7 @@ namespace AntennaAV.Services
 
         public bool SetAntennaAngle(double angle, string antenna, string direction)
         {
+            Debug.WriteLine(angle);
             if (angle < 0.0 || angle > 359.9)
                 throw new ArgumentOutOfRangeException(nameof(angle), "Угол должен быть от 0.0 до 359.9");
 
@@ -234,7 +235,7 @@ namespace AntennaAV.Services
             if (direction != "+" && direction != "-" && direction != "S" && direction != "G")
                 throw new ArgumentOutOfRangeException(nameof(direction), "Неверное направление");
 
-            int value = (int)Math.Floor(angle * 10);
+            int value = (int)Math.Round(angle * 10);
             return WriteCommand($"{antenna}={direction}{value}", "ANT");
         }
 
@@ -257,6 +258,7 @@ namespace AntennaAV.Services
             if (_port != null && _port.IsOpen)
             {
                 string fullCommand = $"#{prefix}/xx/W/{body}$";
+                Debug.WriteLine(fullCommand);
                 _port.Write(fullCommand);
                 return true;
             }
@@ -348,7 +350,7 @@ namespace AntennaAV.Services
             const int maxBufferSize = 10000;
             int errorCount = 0;
             const int maxErrors = 100;
-            const int delayMs = 20;
+            const int delayMs = 15;
 
             while (_reading && _port != null && _port.IsOpen)
             {
@@ -358,7 +360,7 @@ namespace AntennaAV.Services
                     {
                         string data = _port.ReadExisting();
                         buffer.Append(data);
-                        Debug.WriteLine($"Read {data.Length} chars, BytesToRead={_port.BytesToRead}, BufferLength={buffer.Length}");
+                        //Debug.WriteLine($"Read {data.Length} chars, BytesToRead={_port.BytesToRead}, BufferLength={buffer.Length}");
 
                         if (buffer.Length > maxBufferSize)
                         {
@@ -382,41 +384,33 @@ namespace AntennaAV.Services
                             if (end == -1) break;
 
                             string message = currentBuffer.Substring(start, end - start + 1);
-                            try
+                            var parsed = ParseDataString(message);
+                            if (parsed != null)
                             {
-                                var parsed = ParseDataString(message);
-                                if (parsed != null)
-                                {
-                                    DataQueue.Enqueue(parsed);
-                                    errorCount = 0;
-                                }
-                                else
-                                {
-                                    Debug.WriteLine($"Invalid message format: {message}");
-                                    errorCount++;
-                                }
+                                DataQueue.Enqueue(parsed);
+                                errorCount = 0;
                             }
-                            catch (Exception ex)
+                            else
                             {
-                                Debug.WriteLine($"Error parsing message '{message}': {ex.Message} (Type: {ex.GetType().Name})");
+                                Debug.WriteLine($"Invalid message format: {message}");
                                 errorCount++;
                             }
 
                             index = end + 1;
-
-                            if (errorCount >= maxErrors)
-                            {
-                                Debug.WriteLine($"Too many errors, clearing buffer and discarding OS buffer (BytesToRead={_port.BytesToRead})");
-                                buffer.Clear();
-                                _port.DiscardInBuffer();
-                                Thread.Sleep(1000);
-                                errorCount = 0;
-                            }
                         }
 
                         if (index > 0)
                         {
                             buffer.Remove(0, index);
+                        }
+
+                        if (errorCount >= maxErrors)
+                        {
+                            Debug.WriteLine($"Too many errors, clearing buffer and discarding OS buffer (BytesToRead={_port.BytesToRead})");
+                            buffer.Clear();
+                            Thread.Sleep(1000);
+                            _port.DiscardInBuffer();
+                            errorCount = 0;
                         }
                     }
                     else
@@ -430,13 +424,11 @@ namespace AntennaAV.Services
                     errorCount++;
                     if (errorCount >= maxErrors)
                     {
-                        Debug.WriteLine($"Too many read errors, pausing (BytesToRead={_port.BytesToRead})");
+                        Debug.WriteLine($"Too many read errors, clearing buffer and discarding OS buffer (BytesToRead={_port.BytesToRead})");
+                        buffer.Clear();
+                        _port.DiscardInBuffer();
                         Thread.Sleep(1000);
                         errorCount = 0;
-                    }
-                    else
-                    {
-                        Thread.Sleep(100);
                     }
                 }
             }

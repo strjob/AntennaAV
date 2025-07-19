@@ -8,8 +8,10 @@ using Avalonia.Rendering;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using HarfBuzzSharp;
+using ScottPlot;
 using ScottPlot.Avalonia;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace AntennaAV.Views
@@ -46,11 +48,14 @@ namespace AntennaAV.Views
             {
                 AvaPlotTx.PointerMoved += AvaPlotTx_PointerMoved;
                 AvaPlotTx.PointerPressed += AvaPlotTx_PointerPressed;
+                AvaPlotTx.PointerExited += (sender, e) => _plotManager.SetTxHoverMarkerVisibility(false);
             }
             if (AvaPlotRx != null)
             {
                 AvaPlotRx.PointerMoved += AvaPlotRx_PointerMoved;
                 AvaPlotRx.PointerPressed += AvaPlotRx_PointerPressed;
+                AvaPlotRx.PointerExited += (sender, e) => _plotManager.SetRxHoverMarkerVisibility(false);
+
             }
 
             //OnThemeChanged(this, EventArgs.Empty);
@@ -84,12 +89,19 @@ namespace AntennaAV.Views
                 var values = vm.IsPowerNormSelected ? vm.SelectedTab.Plot.PowerNormValues.ToArray() : vm.SelectedTab.Plot.VoltageNormValues.ToArray();
                 if (AvaPlotMain != null)
                 {
-                    _plotManager.DrawPolarPlot(vm.Tabs,
-                        vm.SelectedTab.Plot.Angles.ToArray(),
-                        values.ToArray(),
-                        AvaPlotMain,
-                        vm.SelectedTab.DataScatters,
-                        vm.SelectedTab.Plot.ColorHex,
+                    //_plotManager.DrawPolarPlot(vm.Tabs,
+                    //    vm.SelectedTab.Plot.Angles.ToArray(),
+                    //    values.ToArray(),
+                    //    AvaPlotMain,
+                    //    vm.SelectedTab.DataScatters,
+                    //    vm.SelectedTab.Plot.ColorHex,
+                    //    vm.IsPowerNormSelected,
+                    //    isDark,
+                    //    vm.SelectedTab.Header // label для легенды
+                    //);
+                    _plotManager.DrawPolarPlot(
+                        vm.Tabs,
+                        vm.SelectedTab,
                         vm.IsPowerNormSelected,
                         isDark,
                         vm.SelectedTab.Header // label для легенды
@@ -119,7 +131,7 @@ namespace AntennaAV.Views
 
         private void AvaPlotTx_PointerPressed(object? sender, PointerPressedEventArgs e)
         {
-            if (_plotManager.IsHoverMarkerVisible())
+            if (_plotManager.IsHoverMarkerTxVisible())
             {
                 if (DataContext is MainWindowViewModel vm)
                 {
@@ -148,14 +160,15 @@ namespace AntennaAV.Views
 
         private void AvaPlotRx_PointerPressed(object? sender, PointerPressedEventArgs e)
         {
-            if (_plotManager.IsHoverMarkerVisible())
+            if (_plotManager.IsHoverMarkerRxVisible())
             {
                 if (DataContext is MainWindowViewModel vm)
                 {
-                    vm.OnTransmitterAngleSelected?.Invoke((360 - _lastSnappedAngleRx) % 360);
+                    vm.OnReceiverAngleSelected?.Invoke((360 - _lastSnappedAngleRx) % 360);
                 }
             }
         }
+
 
         private void Header_DoubleTapped(object sender, RoutedEventArgs e)
         {
@@ -297,7 +310,14 @@ namespace AntennaAV.Views
                         {
                             double[] angles = vm.SelectedTab.Plot.Angles.ToArray();
                             double[] values = (vm.IsPowerNormSelected ? vm.SelectedTab.Plot.PowerNormValues.ToArray() : vm.SelectedTab.Plot.VoltageNormValues).ToArray();
-                            _plotManager.DrawPolarPlot(vm.Tabs, angles, values, AvaPlotMain, vm.SelectedTab.DataScatters, vm.SelectedTab.Plot.ColorHex, vm.IsPowerNormSelected, isDark, vm.SelectedTab.Header);
+                            //_plotManager.DrawPolarPlot(vm.Tabs, angles, values, AvaPlotMain, vm.SelectedTab.DataScatters, vm.SelectedTab.Plot.ColorHex, vm.IsPowerNormSelected, isDark, vm.SelectedTab.Header);
+                            _plotManager.DrawPolarPlot(
+                                vm.Tabs,
+                                vm.SelectedTab,
+                                vm.IsPowerNormSelected,
+                                isDark,
+                                vm.SelectedTab.Header // label для легенды
+                            );
                         }
                     }
                 });
@@ -338,7 +358,14 @@ namespace AntennaAV.Views
                 {
                     if (vm.SelectedTab != null && AvaPlotMain != null)
                     {
-                        _plotManager.DrawPolarPlot(vm.Tabs, angles, values, AvaPlotMain, vm.SelectedTab.DataScatters, vm.SelectedTab.Plot.ColorHex, vm.IsPowerNormSelected, isDark, vm.SelectedTab.Header);
+                        //_plotManager.DrawPolarPlot(vm.Tabs, angles, values, AvaPlotMain, vm.SelectedTab.DataScatters, vm.SelectedTab.Plot.ColorHex, vm.IsPowerNormSelected, isDark, vm.SelectedTab.Header);
+                        _plotManager.DrawPolarPlot(
+                            vm.Tabs,
+                            vm.SelectedTab,
+                            vm.IsPowerNormSelected,
+                            isDark,
+                            vm.SelectedTab.Header // label для легенды
+                        );
                     }
                 });
             };
@@ -443,9 +470,6 @@ namespace AntennaAV.Views
                                 vm.IsPowerNormSelected,
                                 isDark
                             );
-
-                    // 2. Удалить вкладку через ViewModel
-                    //
                 });
             };
         }
