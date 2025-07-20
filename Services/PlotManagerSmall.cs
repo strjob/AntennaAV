@@ -1,4 +1,4 @@
-using AntennaAV.Views;
+using AntennaAV.Helpers;
 using Avalonia.Threading;
 using ScottPlot.Avalonia;
 using System;

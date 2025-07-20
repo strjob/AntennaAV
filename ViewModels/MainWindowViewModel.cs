@@ -99,6 +99,7 @@ namespace AntennaAV.ViewModels
         public event Action? RequestPlotRedraw;
         public event Action? RequestClearCurrentPlot;
         public event Action? RequestDeleteCurrentPlot;
+        public event Action? RequestMinMaxReset;
         public event Action<double>? ReceiverAngleDegChanged;
         public event Action<string>? DataFlowStatusChanged;
         public event Action<bool>? IsPowerNormSelectedChanged;
@@ -120,6 +121,13 @@ namespace AntennaAV.ViewModels
         private void RemoveTab()
         {
             //TabManager.RemoveTab();
+            if(SelectedTab != null)
+            {
+                SelectedTab.Plot.Angles = Array.Empty<double>();
+                SelectedTab.Plot.PowerNormValues = Array.Empty<double>();
+                SelectedTab.Plot.VoltageNormValues = Array.Empty<double>();
+            }
+
             RequestDeleteCurrentPlot?.Invoke();
         }
 
@@ -348,6 +356,7 @@ namespace AntennaAV.ViewModels
         private void StartDataCollection()
         {
             _isDiagramDataCollecting = true;
+            RequestMinMaxReset?.Invoke();
             Debug.WriteLine("🔄 Начинаем сбор данных");
             _collector.Reset();
             StartTableUpdateTimer();

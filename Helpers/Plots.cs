@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
 
-namespace AntennaAV.Views
+namespace AntennaAV.Helpers
 {
     public static class Plots
     {
@@ -27,7 +27,7 @@ namespace AntennaAV.Views
             return ret;
         }
 
-        public static ScottPlot.Plottables.PolarAxis Initialize(AvaPlot avaPlot, bool isDark)
+        public static PolarAxis Initialize(AvaPlot avaPlot, bool isDark)
         {
             var polarAxis = avaPlot.Plot.Add.PolarAxis(radius: 100);
             polarAxis.Rotation = Angle.FromDegrees(90);
@@ -53,19 +53,19 @@ namespace AntennaAV.Views
 
         public static class ThemeColors
         {
-            public static ScottPlot.Color GetLineColor(bool isDark) =>
-                isDark ? ScottPlot.Color.FromHex("#777777") : ScottPlot.Color.FromHex("#BBBBBB");
+            public static Color GetLineColor(bool isDark) =>
+                isDark ? Color.FromHex("#777777") : Color.FromHex("#BBBBBB");
 
-            public static ScottPlot.Color GetCircleColor(bool isDark) =>
-                isDark ? ScottPlot.Color.FromHex("#bbbbbb") : ScottPlot.Color.FromHex("#666666");
+            public static Color GetCircleColor(bool isDark) =>
+                isDark ? Color.FromHex("#bbbbbb") : Color.FromHex("#666666");
 
-            public static ScottPlot.Color GetLabelColor(bool isDark) =>
-                isDark ? ScottPlot.Color.FromHex("#eeeeee") : ScottPlot.Color.FromHex("#111111");
+            public static Color GetLabelColor(bool isDark) =>
+                isDark ? Color.FromHex("#eeeeee") : Color.FromHex("#111111");
         }
 
 
 
-        public static ScottPlot.Plottables.PolarAxis InitializeSmall(AvaPlot avaPlot, bool isDark, double rotation = 270)
+        public static PolarAxis InitializeSmall(AvaPlot avaPlot, bool isDark, double rotation = 270)
         {
             var polarAxis = avaPlot.Plot.Add.PolarAxis(radius: 100);
             polarAxis.Rotation = Angle.FromDegrees(rotation);
@@ -124,7 +124,7 @@ namespace AntennaAV.Views
             return result.ToArray();
         }
 
-        public static void AddCustomSpokeLinesSmall(AvaPlot avaPlot, ScottPlot.Plottables.PolarAxis polarAxis, bool isDark)
+        public static void AddCustomSpokeLinesSmall(AvaPlot avaPlot, PolarAxis polarAxis, bool isDark)
         {
 
             double rStart = 97;
@@ -155,12 +155,12 @@ namespace AntennaAV.Views
                 var line = avaPlot.Plot.Add.Line(x1, y1, x2, y2);
                 line.Color = lineColor;
                 line.LineWidth = 1;
-                line.LinePattern = ScottPlot.LinePattern.Solid;
+                line.LinePattern = LinePattern.Solid;
                 _customSpokeLinesSmall.Add(line);
             }
         }
 
-        public static void AddCustomSpokeLines(AvaPlot avaPlot, ScottPlot.Plottables.PolarAxis polarAxis, bool isDark)
+        public static void AddCustomSpokeLines(AvaPlot avaPlot, PolarAxis polarAxis, bool isDark)
         {
             // Защита от недостаточного количества кругов
             if (polarAxis.Circles.Count < 2)
@@ -190,12 +190,12 @@ namespace AntennaAV.Views
                 var line = avaPlot.Plot.Add.Line(x1, y1, x2, y2);
                 line.Color = lineColor;
                 line.LineWidth = 1;
-                line.LinePattern = ScottPlot.LinePattern.Dotted;
+                line.LinePattern = LinePattern.Dotted;
                 _customSpokeLines.Add(line);
             }  
         }
 
-        public static void UpdatePolarAxisTheme(ScottPlot.Plottables.PolarAxis polarAxis, bool isDark)
+        public static void UpdatePolarAxisTheme(PolarAxis polarAxis, bool isDark)
         {
             if (polarAxis == null) return;
 
@@ -220,7 +220,7 @@ namespace AntennaAV.Views
 
         }
 
-        public static void UpdatePolarAxisThemeSmall(ScottPlot.Plottables.PolarAxis axis, AvaPlot avaPlot, bool isDark)
+        public static void UpdatePolarAxisThemeSmall(PolarAxis axis, AvaPlot avaPlot, bool isDark)
         {
             var lineColor = ThemeColors.GetLineColor(isDark);
             var circleColor = ThemeColors.GetCircleColor(isDark);
@@ -250,7 +250,7 @@ namespace AntennaAV.Views
 
         public static void AutoUpdatePolarAxisCircles(
             AvaPlot avaPlot,
-            ScottPlot.Plottables.PolarAxis polarAxis,
+            PolarAxis polarAxis,
             bool isLogScale,
             double minValue,
             double maxValue,
@@ -303,13 +303,13 @@ namespace AntennaAV.Views
                     circleValues.Add(Math.Round(v, 6));
                 circleValues = circleValues.OrderBy(v => v).ToList();
                 circleValues = circleValues
-                    .Where(v => v == niceMax || ((niceMax - niceMin) > 0 ? 100 * (v - niceMin) / (niceMax - niceMin) : 100) >= 10)
+                    .Where(v => v == niceMax || (niceMax - niceMin > 0 ? 100 * (v - niceMin) / (niceMax - niceMin) : 100) >= 10)
                     .ToList();
 
                 if (circleValues.Count > 2)
                 {
                     int n = circleValues.Count;
-                    double r0 = ((niceMax - niceMin) > 0) ? 100 * (circleValues[0] - niceMin) / (niceMax - niceMin) : 100;
+                    double r0 = niceMax - niceMin > 0 ? 100 * (circleValues[0] - niceMin) / (niceMax - niceMin) : 100;
                     double rN = 100;
                     positions = new double[n];
                     labels = new string[n];
@@ -324,7 +324,7 @@ namespace AntennaAV.Views
                         else
                             r = r0 + (rN - r0) * i / (n - 1);
                         positions[i] = r;
-                        labels[i] = (i == n - 1) ? "" : (isLogScale ? $"{Math.Round(value, 1)} дБ" : $"{Math.Round(value, 1)}");
+                        labels[i] = i == n - 1 ? "" : isLogScale ? $"{Math.Round(value, 1)} дБ" : $"{Math.Round(value, 1)}";
                     }
                 }
                 else
@@ -409,13 +409,13 @@ namespace AntennaAV.Views
                 {
                     polarAxis.Circles[i].Radius = 100;
                     polarAxis.Circles[i].LineWidth = 2;
-                    polarAxis.Circles[i].LinePattern = ScottPlot.LinePattern.Solid;
+                    polarAxis.Circles[i].LinePattern = LinePattern.Solid;
                     polarAxis.Circles[i].LineColor = circleColor;
                 }
                 else
                 {
                     polarAxis.Circles[i].LineWidth = 1;
-                    polarAxis.Circles[i].LinePattern = ScottPlot.LinePattern.Dotted;
+                    polarAxis.Circles[i].LinePattern = LinePattern.Dotted;
                     polarAxis.Circles[i].LineColor = lineColor;
                 }
             }
@@ -434,25 +434,25 @@ namespace AntennaAV.Views
                     {
                         if(main)
                         {
-                            avaPlot.Plot.FigureBackground.Color = ScottPlot.Color.FromHex("#181818");
-                            avaPlot.Plot.DataBackground.Color = ScottPlot.Color.FromHex("#1f1f1f");
-                            avaPlot.Plot.Axes.Color(ScottPlot.Color.FromHex("#d7d7d7"));
-                            avaPlot.Plot.Grid.MajorLineColor = ScottPlot.Color.FromHex("#404040");
-                            avaPlot.Plot.Legend.BackgroundColor = ScottPlot.Color.FromHex("#404040");
-                            avaPlot.Plot.Legend.FontColor = ScottPlot.Color.FromHex("#d7d7d7");
-                            avaPlot.Plot.Legend.OutlineColor = ScottPlot.Color.FromHex("#d7d7d7");
+                            avaPlot.Plot.FigureBackground.Color = Color.FromHex("#181818");
+                            avaPlot.Plot.DataBackground.Color = Color.FromHex("#1f1f1f");
+                            avaPlot.Plot.Axes.Color(Color.FromHex("#d7d7d7"));
+                            avaPlot.Plot.Grid.MajorLineColor = Color.FromHex("#404040");
+                            avaPlot.Plot.Legend.BackgroundColor = Color.FromHex("#404040");
+                            avaPlot.Plot.Legend.FontColor = Color.FromHex("#d7d7d7");
+                            avaPlot.Plot.Legend.OutlineColor = Color.FromHex("#d7d7d7");
                             avaPlot.Plot.Add.Palette = new ScottPlot.Palettes.Penumbra();
                         }
                         else
                         {
 
-                            avaPlot.Plot.FigureBackground.Color = ScottPlot.Color.FromHex("#000000");
-                            avaPlot.Plot.DataBackground.Color = ScottPlot.Color.FromHex("#000000");
-                            avaPlot.Plot.Axes.Color(ScottPlot.Color.FromHex("#d7d7d7"));
-                            avaPlot.Plot.Grid.MajorLineColor = ScottPlot.Color.FromHex("#404040");
-                            avaPlot.Plot.Legend.BackgroundColor = ScottPlot.Color.FromHex("#404040");
-                            avaPlot.Plot.Legend.FontColor = ScottPlot.Color.FromHex("#d7d7d7");
-                            avaPlot.Plot.Legend.OutlineColor = ScottPlot.Color.FromHex("#d7d7d7");
+                            avaPlot.Plot.FigureBackground.Color = Color.FromHex("#000000");
+                            avaPlot.Plot.DataBackground.Color = Color.FromHex("#000000");
+                            avaPlot.Plot.Axes.Color(Color.FromHex("#d7d7d7"));
+                            avaPlot.Plot.Grid.MajorLineColor = Color.FromHex("#404040");
+                            avaPlot.Plot.Legend.BackgroundColor = Color.FromHex("#404040");
+                            avaPlot.Plot.Legend.FontColor = Color.FromHex("#d7d7d7");
+                            avaPlot.Plot.Legend.OutlineColor = Color.FromHex("#d7d7d7");
                             avaPlot.Plot.Add.Palette = new ScottPlot.Palettes.Penumbra();
                         }
                     }
@@ -461,24 +461,24 @@ namespace AntennaAV.Views
                         if (main)
                         {
 
-                            avaPlot.Plot.FigureBackground.Color = ScottPlot.Color.FromHex("#ffffff");
-                            avaPlot.Plot.DataBackground.Color = ScottPlot.Color.FromHex("#ffffff");
-                            avaPlot.Plot.Axes.Color(ScottPlot.Color.FromHex("#222222"));
-                            avaPlot.Plot.Grid.MajorLineColor = ScottPlot.Color.FromHex("#e5e5e5");
-                            avaPlot.Plot.Legend.BackgroundColor = ScottPlot.Color.FromHex("#f0f0f0");
-                            avaPlot.Plot.Legend.FontColor = ScottPlot.Color.FromHex("#222222");
-                            avaPlot.Plot.Legend.OutlineColor = ScottPlot.Color.FromHex("#222222");
+                            avaPlot.Plot.FigureBackground.Color = Color.FromHex("#ffffff");
+                            avaPlot.Plot.DataBackground.Color = Color.FromHex("#ffffff");
+                            avaPlot.Plot.Axes.Color(Color.FromHex("#222222"));
+                            avaPlot.Plot.Grid.MajorLineColor = Color.FromHex("#e5e5e5");
+                            avaPlot.Plot.Legend.BackgroundColor = Color.FromHex("#f0f0f0");
+                            avaPlot.Plot.Legend.FontColor = Color.FromHex("#222222");
+                            avaPlot.Plot.Legend.OutlineColor = Color.FromHex("#222222");
                             avaPlot.Plot.Add.Palette = new ScottPlot.Palettes.Category10();
                         }
                         else
                         {
-                            avaPlot.Plot.FigureBackground.Color = ScottPlot.Color.FromHex("#ffffff");
-                            avaPlot.Plot.DataBackground.Color = ScottPlot.Color.FromHex("#ffffff");
-                            avaPlot.Plot.Axes.Color(ScottPlot.Color.FromHex("#222222"));
-                            avaPlot.Plot.Grid.MajorLineColor = ScottPlot.Color.FromHex("#e5e5e5");
-                            avaPlot.Plot.Legend.BackgroundColor = ScottPlot.Color.FromHex("#f0f0f0");
-                            avaPlot.Plot.Legend.FontColor = ScottPlot.Color.FromHex("#222222");
-                            avaPlot.Plot.Legend.OutlineColor = ScottPlot.Color.FromHex("#222222");
+                            avaPlot.Plot.FigureBackground.Color = Color.FromHex("#ffffff");
+                            avaPlot.Plot.DataBackground.Color = Color.FromHex("#ffffff");
+                            avaPlot.Plot.Axes.Color(Color.FromHex("#222222"));
+                            avaPlot.Plot.Grid.MajorLineColor = Color.FromHex("#e5e5e5");
+                            avaPlot.Plot.Legend.BackgroundColor = Color.FromHex("#f0f0f0");
+                            avaPlot.Plot.Legend.FontColor = Color.FromHex("#222222");
+                            avaPlot.Plot.Legend.OutlineColor = Color.FromHex("#222222");
                             avaPlot.Plot.Add.Palette = new ScottPlot.Palettes.Category10();
                         }
                     }

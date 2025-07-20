@@ -1,5 +1,5 @@
-﻿using AntennaAV.ViewModels;
-using AntennaAV.Views;
+﻿using AntennaAV.Helpers;
+using AntennaAV.ViewModels;
 using Avalonia.Threading;
 using ScottPlot;
 using ScottPlot.Avalonia;
@@ -371,8 +371,7 @@ namespace AntennaAV.Services
                 }
 
                 // Reset global range completely
-                _globalMin = null;
-                _globalMax = null;
+                ResetGlobalRange();
 
                 // Recalculate global min/max with correct scale
                 RecalculateGlobalRange(tabs, isLogScale);
@@ -401,8 +400,7 @@ namespace AntennaAV.Services
         {
             lock (_plotMainLock)
             {
-                _globalMin = null;
-                _globalMax = null;
+                ResetGlobalRange();
 
                 foreach (var tab in tabs)
                 {
@@ -460,6 +458,7 @@ namespace AntennaAV.Services
                 _globalMax = null;
             }
         }
+
 
         public void ResetPlotAxes()
         {

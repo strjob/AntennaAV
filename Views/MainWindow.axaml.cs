@@ -248,18 +248,7 @@ namespace AntennaAV.Views
                 Dispatcher.UIThread.Post(() =>
                 {
                     vm.SelectedTab.Plot.IsVisible = !vm.SelectedTab.Plot.IsVisible;
-                    bool hasData = vm.Tabs.Any(tab => tab.Plot != null && tab.Plot.Angles.Length > 0 && tab.Plot.IsVisible);
-                    if (AvaPlotMain != null)
-                    {
-                        _plotManagerMain.RefreshAllVisiblePlots(vm.Tabs, vm.IsPowerNormSelected, isDark);
-                        if (!hasData)
-                        {
-                            if (vm.IsPowerNormSelected)
-                                _plotManagerMain.UpdatePolarAxisCircles(AvaPlotMain, true, -50, 0, isDark);
-                            else
-                                _plotManagerMain.UpdatePolarAxisCircles(AvaPlotMain, false, 0, 1, isDark);
-                        }
-                    }
+                    RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark);
                 });
 
             }
@@ -289,9 +278,6 @@ namespace AntennaAV.Views
                     {
                         if (vm.SelectedTab != null && vm.SelectedTab.Plot != null)
                         {
-                            //double[] angles = vm.SelectedTab.Plot.Angles.ToArray();
-                            //double[] values = (vm.IsPowerNormSelected ? vm.SelectedTab.Plot.PowerNormValues.ToArray() : vm.SelectedTab.Plot.VoltageNormValues).ToArray();
-                            //_plotManager.DrawPolarPlot(vm.Tabs, angles, values, AvaPlotMain, vm.SelectedTab.DataScatters, vm.SelectedTab.Plot.ColorHex, vm.IsPowerNormSelected, isDark, vm.SelectedTab.Header);
                             _plotManagerMain.DrawPolarPlot(
                                 vm.Tabs,
                                 vm.SelectedTab,
@@ -331,6 +317,26 @@ namespace AntennaAV.Views
             await _plotManagerMain.SaveMainPlotToPngAsync(file.Path.LocalPath, isDark);
         }
 
+        private void RefreshAllPlots(IEnumerable<TabViewModel> tabs, bool isPowerNormSelected, bool isDark)
+        {
+            
+            bool hasData = tabs.Any(tab => tab.Plot != null && tab.Plot.Angles.Length > 0 && tab.Plot.IsVisible);
+            if (AvaPlotMain != null)
+            {
+                if (hasData)
+                {
+                    _plotManagerMain.RefreshAllVisiblePlots(tabs, isPowerNormSelected, isDark);
+                }
+                else
+                {
+                    if (isPowerNormSelected)
+                        _plotManagerMain.UpdatePolarAxisCircles(AvaPlotMain, true, -50, 0, isDark);
+                    else
+                        _plotManagerMain.UpdatePolarAxisCircles(AvaPlotMain, false, 0, 1, isDark);
+                }
+            }
+        }
+
         private void SubscribeToViewModelEvents(MainWindowViewModel vm)
         {
 
@@ -354,24 +360,7 @@ namespace AntennaAV.Views
             };
             vm.IsPowerNormSelectedChanged += isPowerNorm =>
             {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    bool hasData = vm.Tabs.Any(tab => tab.Plot != null && tab.Plot.Angles.Length > 0 && tab.Plot.IsVisible);
-                    if (AvaPlotMain != null)
-                    {
-                        if (hasData)
-                        {
-                            _plotManagerMain.RefreshAllVisiblePlots(vm.Tabs, vm.IsPowerNormSelected, isDark);
-                        }
-                        else
-                        {
-                            if (vm.IsPowerNormSelected)
-                                _plotManagerMain.UpdatePolarAxisCircles(AvaPlotMain, true, -50, 0, isDark);
-                            else
-                                _plotManagerMain.UpdatePolarAxisCircles(AvaPlotMain, false, 0, 1, isDark);
-                        }
-                    }
-                });
+                Dispatcher.UIThread.Post(() => RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark));
             };
             vm.TransmitterAngleDegChanged += angle =>
             {
@@ -425,7 +414,24 @@ namespace AntennaAV.Views
                 Dispatcher.UIThread.Post(() =>
                 {
                     if (AvaPlotMain != null && vm.SelectedTab != null)
+                    {
                         _plotManagerMain.ClearCurrentTabPlot(vm.SelectedTab, AvaPlotMain);
+                        RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark);
+                    }                     
+                });
+            };
+
+            vm.RequestMinMaxReset += () =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (AvaPlotMain != null && vm.SelectedTab != null)
+                    {
+                        _plotManagerMain.ClearCurrentTabPlot(vm.SelectedTab, AvaPlotMain);
+                        _plotManagerMain.ResetGlobalRange();
+                        _plotManagerMain.RecalculateGlobalRange(vm.Tabs, vm.IsPowerNormSelected);
+                    }
+
                 });
             };
 
@@ -433,10 +439,9 @@ namespace AntennaAV.Views
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    // 1. Очистить график
                     if (AvaPlotMain != null && vm.SelectedTab != null)
-                    _plotManagerMain.ClearCurrentTabPlot(vm.SelectedTab, AvaPlotMain);
-                    _plotManagerMain.RecalculateGlobalRange(vm.Tabs, vm.IsPowerNormSelected);
+                        _plotManagerMain.ClearCurrentTabPlot(vm.SelectedTab, AvaPlotMain);
+                    RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark);
                     vm.RemoveTabInternal();
                 });
             };
