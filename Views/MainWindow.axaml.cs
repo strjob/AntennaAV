@@ -362,6 +362,10 @@ namespace AntennaAV.Views
             {
                 Dispatcher.UIThread.Post(() => RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark));
             };
+            vm.IsAutoscaleChanged += isAutoscale =>
+            {
+                Dispatcher.UIThread.Post(() => _plotManagerMain.UpdateScaleMode(isAutoscale));
+            };
             vm.TransmitterAngleDegChanged += angle =>
             {
                 Dispatcher.UIThread.Post(() => _plotManagerSmall.DrawTransmitterAnglePoint(AvaPlotTx, angle));
