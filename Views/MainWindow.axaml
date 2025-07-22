@@ -825,7 +825,8 @@
                     Margin="10"
                     HorizontalAlignment="Right"
                     Click="OnSettingsClick"
-                    Content="Настройки">
+                    Content="Настройки"
+                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}">
                     <PathIcon Data="{StaticResource settings_regular}" />
                 </Button>
 
@@ -845,7 +846,8 @@
                     <StackPanel>
                         <TextBlock
                             Margin="10"
-                            FontWeight="Bold"
+                            HorizontalAlignment="Center"
+                            FontSize="16"
                             Text="Настройки" />
                         <ToggleSwitch
                             Grid.Row="2"
@@ -861,17 +863,74 @@
                             Content="Показывать легенду"
                             IsChecked="{CompiledBinding ShowLegend,
                                                         Mode=TwoWay}" />
-                        <CheckBox
-                            Margin="10"
-                            Content="Показывать маркеры"
-                            IsChecked="{CompiledBinding ShowMarkers,
-                                                        Mode=TwoWay}" />
-                        <ComboBox Margin="0,0,0,8">
-                            <ComboBoxItem Content="Вариант 1" />
-                            <ComboBoxItem Content="Вариант 2" />
-                            <ComboBoxItem Content="Вариант 3" />
-                        </ComboBox>
+                        <StackPanel
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            Margin="10,10,0,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Orientation="Vertical"
+                            ZIndex="2">
+                            <TextBlock
+                                Margin="0,0,10,0"
+                                VerticalAlignment="Center"
+                                Text="Масштаб:"
+                                ToolTip.Tip="Для логарифмической шкалы" />
+
+                            <StackPanel Orientation="Vertical">
+                                <RadioButton
+                                    Margin="0,0,10,0"
+                                    Content="Авто"
+                                    GroupName="Scale"
+                                    IsChecked="{CompiledBinding IsAutoscale,
+                                                                Mode=TwoWay}"
+                                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
+                                <TextBlock />
+                                <TextBlock
+                                    Margin="5,0,0,2"
+                                    HorizontalAlignment="Left"
+                                    IsVisible="{CompiledBinding IsAutoscale}"
+                                    Text="Ограничение минимума, дб:" />
+                                <NumericUpDown
+                                    Width="125"
+                                    Margin="10,0,5,0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    FormatString="0.0"
+                                    Increment="5"
+                                    IsVisible="{CompiledBinding IsAutoscale}"
+                                    KeyDown="NumericUpDown_KeyDown"
+                                    Maximum="80"
+                                    Minimum="10"
+                                    Value="{CompiledBinding AutolscaleLimitValue,
+                                                            Mode=TwoWay,
+                                                            UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Vertical">
+                                <RadioButton
+                                    Content="Ручной"
+                                    GroupName="Scale"
+                                    IsChecked="{x:Null}"
+                                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
+                                <NumericUpDown
+                                    Width="125"
+                                    Margin="5,0,5,0"
+                                    VerticalAlignment="Center"
+                                    FormatString="0.0"
+                                    Increment="5"
+                                    IsVisible="{CompiledBinding !IsAutoscale}"
+                                    KeyDown="NumericUpDown_KeyDown"
+                                    Maximum="80"
+                                    Minimum="10"
+                                    Value="{CompiledBinding ManualScaleValue,
+                                                            Mode=TwoWay,
+                                                            UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                        </StackPanel>
+
                         <Button
+                            Margin="5"
                             HorizontalAlignment="Right"
                             Click="OnSettingsClick"
                             Content="Скрыть" />

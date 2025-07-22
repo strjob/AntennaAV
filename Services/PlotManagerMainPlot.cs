@@ -24,6 +24,31 @@ namespace AntennaAV.Services
             CoordinatesArray = new ScottPlot.Coordinates[maxCapacity];
         }
     }
+
+    public enum ScaleMode
+    {
+        Auto,           // Текущее поведение - динамический расчет
+        Manual          // Пользователь задает диапазон
+    }
+
+    public class ScaleSettings
+    {
+        public double ManualMin { get; set; } = -50;
+        public double ManualMax { get; set; } = 0;
+        public double ManualMinLinear { get; set; } = 0;
+        public double ManualMaxLinear { get; set; } = 1;
+        public bool UseAutoMinLimit { get; set; } = false;
+        public double AutoMinLimit { get; set; } = -60; // Для логарифмического
+        public double AutoMinLimitLinear { get; set; } = 0; // Для линейного
+
+        // Минимальный диапазон для случая min=max
+        public double MinRangeLog { get; set; } = 10; // 10 дБ
+        public double MinRangeLinear { get; set; } = 0.1; // 0.1 единицы
+    }
+        
+
+
+
     public class PlotManagerMain
     {
         private readonly object _plotMainLock = new();
@@ -41,17 +66,24 @@ namespace AntennaAV.Services
         private bool? _pendingSectorVisible = null;
         private bool _sectorUpdatePending = false;
 
+        private ScaleMode _currentScaleMode = ScaleMode.Auto;
+        private ScaleSettings _scaleSettings = new();
+
 
         private readonly List<TabViewModel> _activePlotTabs = new();
 
 
 
+        /// <summary>
+        /// МОДИФИЦИРОВАННЫЙ метод DrawPolarPlot
+        /// </summary>
         public void DrawPolarPlot(IEnumerable<TabViewModel> tabs,
             TabViewModel currentTab,
             bool isLogScale,
             bool isDark,
             string? label = null)
         {
+            // Существующие проверки...
             if (currentTab.Plot == null || currentTab.Plot.Angles == null ||
                 currentTab.Plot.Angles.Length == 0)
             {
@@ -73,23 +105,38 @@ namespace AntennaAV.Services
 
             lock (_plotMainLock)
             {
-                // Check if global min/max changed - this is the expensive operation
-                bool globalRangeChanged = UpdateGlobalMinMax(values);
-                double actualMin = _globalMin!.Value;
-                double actualMax = _globalMax!.Value;
+                double actualMin, actualMax;
+                bool globalRangeChanged = false;
+
+                // НОВАЯ ЛОГИКА: разное поведение для разных режимов масштабирования
+                if (_currentScaleMode == ScaleMode.Manual)
+                {
+                    // Используем ручные значения
+                    var (min, max) = GetCurrentRange(isLogScale);
+                    actualMin = min;
+                    actualMax = max;
+                    // В ручном режиме диапазон не меняется, но нужно обновить оси при первом вызове
+                    globalRangeChanged = (_globalMin != actualMin || _globalMax != actualMax);
+                    _globalMin = actualMin;
+                    _globalMax = actualMax;
+                }
+                else
+                {
+                    // Оригинальная логика для Auto режима
+                    globalRangeChanged = UpdateGlobalMinMax(values);
+                    actualMin = _globalMin!.Value;
+                    actualMax = _globalMax!.Value;
+                }
 
                 if (globalRangeChanged)
                 {
-                    // Update axis circles only when range changes
+                    // Обновляем оси и координаты всех существующих графиков
                     Plots.AutoUpdatePolarAxisCircles(_avaPlotMain, _polarAxisMain, isLogScale, actualMin, actualMax, isDark);
-
-                    // Update coordinates for all existing plots - this is the most expensive part
                     UpdateAllPlotCoordinates(tabs, isLogScale, actualMin, actualMax);
                 }
 
-                // Always update current tab's plot (fast operation - just coordinate updates)
+                // Обновляем текущую вкладку
                 UpdateCurrentTabPlot(plotData, isLogScale, actualMin, actualMax, label);
-
                 _avaPlotMainNeedsRefresh = true;
             }
         }
@@ -324,15 +371,214 @@ namespace AntennaAV.Services
                 }
             }
         }
-
-        private bool UpdateGlobalMinMax(double[] values)
+        public ScaleMode CurrentScaleMode
         {
-            double localMin = values.Min();
-            double localMax = values.Max();
-            bool changed = false;
+            get => _currentScaleMode;
+            set
+            {
+                if (_currentScaleMode != value)
+                {
+                    _currentScaleMode = value;
+                    OnScaleModeChanged?.Invoke(value);
+                }
+            }
+        }
+
+        public ScaleSettings ScaleSettings => _scaleSettings;
+
+        // НОВЫЕ СОБЫТИЯ
+        public event Action<ScaleMode>? OnScaleModeChanged;
+        public event Action<double, double>? OnScaleRangeChanged;
+
+        // НОВЫЕ ПУБЛИЧНЫЕ МЕТОДЫ
+
+        /// <summary>
+        /// Устанавливает режим масштабирования
+        /// </summary>
+        private void SetScaleMode(ScaleMode mode)
+        {
+            lock (_plotMainLock)
+            {
+                if (_currentScaleMode == mode) return;
+
+                // При переходе в Manual режим - сохраняем текущий авто-диапазон как начальные значения
+                if (mode == ScaleMode.Manual && _currentScaleMode == ScaleMode.Auto)
+                {
+                    if (_globalMin.HasValue && _globalMax.HasValue)
+                    {
+                        _scaleSettings.ManualMin = _globalMin.Value;
+                        _scaleSettings.ManualMax = _globalMax.Value;
+                    }
+                }
+
+                CurrentScaleMode = mode;
+            }
+        }
+
+        public void UpdateScaleMode(bool isAutoScale)
+        {
+            ScaleMode mode = isAutoScale ? ScaleMode.Auto : ScaleMode.Manual;
+            SetScaleMode(mode);
+        }
+
+        /// <summary>
+        /// Устанавливает ручной диапазон масштабирования
+        /// </summary>
+        public bool SetManualRange(double min, double max, bool isLogScale = true)
+        {
+            // Валидация
+            if (min >= max) return false;
+            if (isLogScale && (min <= 0 || max <= 0)) return false;
 
             lock (_plotMainLock)
             {
+                if (isLogScale)
+                {
+                    _scaleSettings.ManualMin = min;
+                    _scaleSettings.ManualMax = max;
+                }
+                else
+                {
+                    _scaleSettings.ManualMinLinear = min;
+                    _scaleSettings.ManualMaxLinear = max;
+                }
+
+                // Если режим Manual, сразу применяем изменения
+                if (_currentScaleMode == ScaleMode.Manual)
+                {
+                    ApplyManualRange(isLogScale);
+                    OnScaleRangeChanged?.Invoke(min, max);
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Получает текущий эффективный диапазон (авто или ручной)
+        /// </summary>
+        public (double min, double max) GetCurrentRange(bool isLogScale)
+        {
+            lock (_plotMainLock)
+            {
+                if (_currentScaleMode == ScaleMode.Manual)
+                {
+                    return isLogScale
+                        ? (_scaleSettings.ManualMin, _scaleSettings.ManualMax)
+                        : (_scaleSettings.ManualMinLinear, _scaleSettings.ManualMaxLinear);
+                }
+                else
+                {
+                    return (_globalMin ?? 0, _globalMax ?? 0);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Применяет ручной диапазон ко всем графикам
+        /// </summary>
+        public void ApplyManualRange(bool isLogScale)
+        {
+            if (_currentScaleMode != ScaleMode.Manual) return;
+
+            lock (_plotMainLock)
+            {
+                double min, max;
+                if (isLogScale)
+                {
+                    min = _scaleSettings.ManualMin;
+                    max = _scaleSettings.ManualMax;
+                }
+                else
+                {
+                    min = _scaleSettings.ManualMinLinear;
+                    max = _scaleSettings.ManualMaxLinear;
+                }
+
+                // Принудительно устанавливаем глобальный диапазон
+                _globalMin = min;
+                _globalMax = max;
+
+                // Обновляем оси
+                if (_avaPlotMain != null && _polarAxisMain != null)
+                {
+                    Plots.AutoUpdatePolarAxisCircles(_avaPlotMain, _polarAxisMain, isLogScale, min, max, /* isDark */ true);
+                }
+
+                // Обновляем координаты всех существующих графиков
+                UpdateAllExistingPlotCoordinates(isLogScale, min, max);
+
+                _avaPlotMainNeedsRefresh = true;
+            }
+        }
+        /// <summary>
+        /// Обновляет координаты всех существующих графиков (кроме текущего в процессе отрисовки)
+        /// </summary>
+        private void UpdateAllExistingPlotCoordinates(bool isLogScale, double min, double max)
+        {
+            foreach (var tab in _activePlotTabs)
+            {
+                if (tab.Plot?.PlotSegments != null)
+                {
+                    foreach (var segmentData in tab.Plot.PlotSegments)
+                    {
+                        if (segmentData.SegmentAngles?.Length > 0 && segmentData.SegmentValues?.Length > 0)
+                        {
+                            UpdateSegmentCoordinates(segmentData, isLogScale, min, max);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Сброс к заводским настройкам масштаба
+        /// </summary>
+        public void ResetScaleSettings()
+        {
+            lock (_plotMainLock)
+            {
+                _scaleSettings.ManualMin = -50;
+                _scaleSettings.ManualMax = 0;
+                _scaleSettings.ManualMinLinear = 0;
+                _scaleSettings.ManualMaxLinear = 1;
+                CurrentScaleMode = ScaleMode.Auto;
+            }
+        }
+
+
+        private bool UpdateGlobalMinMax(double[] values)
+        {
+            lock (_plotMainLock)
+            {
+                if (_currentScaleMode == ScaleMode.Manual)
+                    return false;
+
+                double localMin = values.Min();
+                double localMax = values.Max();
+                bool changed = false;
+
+                // Применяем ограничение минимума если включено
+                if (_scaleSettings.UseAutoMinLimit)
+                {
+                    // Предполагаем что это для текущего масштаба (нужен параметр isLogScale)
+                    // Или можно хранить последний использованный масштаб
+                    localMin = Math.Max(localMin, _scaleSettings.AutoMinLimit);
+                }
+
+                // Обработка случая min=max
+                if (Math.Abs(localMax - localMin) < 1e-3)
+                {
+                    double halfRange = _scaleSettings.MinRangeLog / 2; // Или MinRangeLinear
+                    localMin -= halfRange;
+                    localMax += halfRange;
+
+                    // Повторно применяем ограничение минимума после расширения
+                    if (_scaleSettings.UseAutoMinLimit)
+                    {
+                        localMin = Math.Max(localMin, _scaleSettings.AutoMinLimit);
+                    }
+                }
+
                 if (_globalMax == null || _globalMax < localMax)
                 {
                     _globalMax = localMax;
@@ -343,6 +589,12 @@ namespace AntennaAV.Services
                     _globalMin = localMin;
                     changed = true;
                 }
+
+                if (changed)
+                {
+                    OnScaleRangeChanged?.Invoke(_globalMin.Value, _globalMax.Value);
+                }
+
                 return changed;
             }
         }
@@ -547,6 +799,10 @@ namespace AntennaAV.Services
                 _avaPlotMainNeedsRefresh = true;
             }
         }
+
+
+
+
 
 
         public void UpdatePolarAxisCircles(AvaPlot plot, bool isLog, double min, double max, bool isDark)
