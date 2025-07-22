@@ -32,7 +32,7 @@ namespace AntennaAV.Helpers
             {
                 startAngleOvershoot = currentAngle;
                 isFullCircle = true;
-                int fullCircleMovement = 3600; // 360° в единицах 0.1°
+                int fullCircleMovement = 360; 
                 if (currentCounter + fullCircleMovement <= Constants.MaxAntennaCounter)
                 {
                     direction = "+";

@@ -360,7 +360,6 @@ namespace AntennaAV.Services
                     {
                         string data = _port.ReadExisting();
                         buffer.Append(data);
-                        //Debug.WriteLine($"Read {data.Length} chars, BytesToRead={_port.BytesToRead}, BufferLength={buffer.Length}");
 
                         if (buffer.Length > maxBufferSize)
                         {

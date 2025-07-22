@@ -350,7 +350,7 @@ namespace AntennaAV.Views
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    if (status.Contains("Данные идут"))
+                    if (status.Contains("Обмен данными"))
                     {
                         _plotManagerSmall.DrawTransmitterAnglePoint(AvaPlotTx, vm.TransmitterAngleDeg);
                         _plotManagerSmall.DrawReceiverAnglePoint(AvaPlotRx, vm.ReceiverAngleDeg);
