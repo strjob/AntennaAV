@@ -36,9 +36,8 @@ namespace AntennaAV.Services
         public double ManualMin { get; set; } = -50;
         public double ManualMax { get; set; } = 0;
 
-        public bool UseAutoMinLimit { get; set; } = false;
+        public bool UseAutoMinLimit { get; set; } = true;
         public double AutoMinLimit { get; set; } = -60; // Для логарифмического
-        public double AutoMinLimitLinear { get; set; } = 0; // Для линейного
 
         // Минимальный диапазон для случая min=max
         public double MinRangeLog { get; set; } = 0.5; 
@@ -527,6 +526,14 @@ namespace AntennaAV.Services
             {
                 _scaleSettings.UseAutoMinLimit = enabled;
                 _scaleSettings.AutoMinLimit = limit;
+            }
+        }
+
+        public void SetAutoscaleMinValue(double limit)
+        {
+            lock (_plotMainLock)
+            {
+                _scaleSettings.MinRangeLog = limit;
             }
         }
 

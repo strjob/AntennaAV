@@ -172,11 +172,11 @@
                 <ScottPlot:AvaPlot
                     x:Name="AvaPlotTx"
                     MinHeight="150"
-                    Margin="10,10,10,10"
+                    Margin="10,10,10,2"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch" />
                 <TextBlock
-                    Margin="1"
+                    Margin="1,8,1,1"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     FontSize="24"
@@ -367,12 +367,12 @@
                     x:Name="AvaPlotRx"
                     Grid.Row="3"
                     MinHeight="150"
-                    Margin="10"
+                    Margin="10,10,10,2"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch" />
                 <TextBlock
                     Grid.Row="3"
-                    Margin="1"
+                    Margin="5,5,5,0"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     FontSize="24"
@@ -511,19 +511,18 @@
                         </Button>
                     </StackPanel>
 
-                    <!--<Button
-                    Width="215"
-                    Margin="5,0,0,0"
+                    <Button
+
+                    Height="28"
+                    Margin="4,0,0,0"
                     HorizontalAlignment="Left"
+                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
+                    Content="{CompiledBinding RxAntennaCounter,
+                                               StringFormat='Счетчик: {0:0.0}° | Сброс'}"
 					Command="{CompiledBinding ResetRxAntennaCounterCommand}">
 
-                    <TextBlock
-                        Margin="0,2,0,0"
-                        HorizontalAlignment="Center"
-                        FontSize="14"
-                        Text="{CompiledBinding RxAntennaCounter,
-                                               StringFormat='Счетчик: {0:0.0}° | Сброс'}" />
-                </Button>-->
+
+                </Button>
 
                 </StackPanel>
 
@@ -672,8 +671,8 @@
                         VerticalAlignment="Center"
                         Increment="5"
                         IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}"
+                        KeyDown="NumericUpDown_KeyDown"
                         LostFocus="NumericUpDown_LostFocus"
-						KeyDown="NumericUpDown_KeyDown"
                         Maximum="360"
                         Minimum="10"
                         Watermark="Размер сектора"
@@ -857,80 +856,96 @@
                             Content="Показывать легенду"
                             IsChecked="{CompiledBinding ShowLegend,
                                                         Mode=TwoWay}" />
-						<Border
-							CornerRadius="5"
-							Background="{DynamicResource SystemChromeColor}"
-							>
-							<StackPanel
-                            Grid.Row="0"
-                            Grid.Column="2"
-                            Margin="10,10,0,0"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            Orientation="Vertical"
-                            ZIndex="2">
-                            <TextBlock
-                                Margin="0,0,10,0"
-                                VerticalAlignment="Center"
-                                Text="Масштаб:"
-                                ToolTip.Tip="Для логарифмической шкалы" />
-
-							<StackPanel Orientation="Vertical">
-                                <RadioButton
-                                    Margin="0,0,10,0"
-                                    Content="Авто"
-                                    GroupName="Scale"
-                                    IsChecked="{CompiledBinding IsAutoscale,
-                                                                Mode=TwoWay}"
-                                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
-                                <TextBlock />
+                        <Border Background="{DynamicResource SystemChromeColor}" CornerRadius="5">
+                            <StackPanel
+                                Grid.Row="0"
+                                Grid.Column="2"
+                                Margin="10,10,0,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                Orientation="Vertical"
+                                ZIndex="2">
                                 <TextBlock
-                                    Margin="5,0,0,2"
-                                    HorizontalAlignment="Left"
-                                    IsVisible="{CompiledBinding IsAutoscale}"
-                                    Text="Ограничение минимума, дб:" />
-                                <NumericUpDown
-                                    Width="125"
-					                Name="NumericUpDownAutoLimit"
-                                    Margin="10,0,5,0"
-                                    HorizontalAlignment="Left"
+                                    Margin="0,0,10,0"
                                     VerticalAlignment="Center"
-                                    FormatString="0.0"
-                                    Increment="5"
-                                    IsVisible="{CompiledBinding IsAutoscale}"
-                                    KeyDown="NumericUpDown_KeyDown"
-                                    Maximum="-10"
-                                    Minimum="-80"
-                                    Value="{CompiledBinding AutoscaleLimitValue,
-                                                            Mode=TwoWay
-                                                            }" />
-                            </StackPanel>
-                            <StackPanel Orientation="Vertical">
-                                <RadioButton
-                                    Content="Ручной"
-                                    GroupName="Scale"
-                                    IsChecked="{x:Null}"
-                                    IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
-                                <NumericUpDown
-									Name="NumericUpDownManualLimit"
-                                    Width="125"
-                                    Margin="5,0,5,0"
-                                    VerticalAlignment="Center"
-                                    FormatString="0.0"
-                                    Increment="5"
-                                    IsVisible="{CompiledBinding !IsAutoscale}"
-                                    KeyDown="NumericUpDown_KeyDown"
-                                    Maximum="-5"
-                                    Minimum="-80"
-                                    ParsingNumberStyle="Integer"
-                                    Value="{CompiledBinding ManualScaleValue,
-                                                            Mode=TwoWay
-                                                            }" />
-                            </StackPanel>
+                                    Text="Масштаб:"
+                                    ToolTip.Tip="Для логарифмической шкалы" />
+
+                                <StackPanel Orientation="Vertical">
+                                    <RadioButton
+                                        Margin="0,0,10,0"
+                                        Content="Авто"
+                                        GroupName="Scale"
+                                        IsChecked="{CompiledBinding IsAutoscale,
+                                                                    Mode=TwoWay}"
+                                        IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
+                                    <TextBlock />
+                                    <TextBlock
+                                        Margin="5,0,0,2"
+                                        HorizontalAlignment="Left"
+                                        IsVisible="{CompiledBinding IsAutoscale}"
+                                        ToolTip.Tip="На графике точки со значениями ниже этого параметра будут отображаться в центре"
+                                        Text="Ограничение минимума, дб:" />
+                                    <NumericUpDown
+                                        Name="NumericUpDownAutoLimit"
+                                        Width="125"
+                                        Margin="10,0,5,0"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        FormatString="0.0"
+                                        Increment="5"
+                                        IsVisible="{CompiledBinding IsAutoscale}"
+                                        KeyDown="NumericUpDown_KeyDown"
+                                        Maximum="-10"
+                                        Minimum="-80"
+                                        Value="{CompiledBinding AutoscaleLimitValue,
+                                                                Mode=TwoWay}" />
+                                    <TextBlock
+                                        Margin="5,5,0,2"
+                                        HorizontalAlignment="Left"
+                                        IsVisible="{CompiledBinding IsAutoscale}"
+                                        ToolTip.Tip="При маломеняющихся данных точка в центре графика будет соответсвовать этому значению со знаком минус"
+                                        Text="Минимальный размах, дб:" />
+                                    <NumericUpDown
+                                        Width="125"
+                                        Margin="10,0,5,0"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        FormatString="0.0"
+                                        Increment="0.5"
+                                        IsVisible="{CompiledBinding IsAutoscale}"
+                                        KeyDown="NumericUpDown_KeyDown"
+                                        Maximum="20"
+                                        Minimum="0.5"
+                                        Value="{CompiledBinding AutoscaleMinValue,
+                                                                Mode=TwoWay,
+                                                                UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Vertical">
+                                    <RadioButton
+                                        Content="Ручной"
+                                        GroupName="Scale"
+                                        IsChecked="{x:Null}"
+                                        IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
+                                    <NumericUpDown
+                                        Name="NumericUpDownManualLimit"
+                                        Width="125"
+                                        Margin="5,0,5,0"
+                                        VerticalAlignment="Center"
+                                        FormatString="0.0"
+                                        Increment="5"
+                                        IsVisible="{CompiledBinding !IsAutoscale}"
+                                        KeyDown="NumericUpDown_KeyDown"
+                                        Maximum="-5"
+                                        Minimum="-80"
+                                        ParsingNumberStyle="Integer"
+                                        Value="{CompiledBinding ManualScaleValue,
+                                                                Mode=TwoWay}" />
+                                </StackPanel>
 
 
-                        </StackPanel>
-					</Border>
+                            </StackPanel>
+                        </Border>
 
                         <Button
                             Margin="5"
@@ -956,26 +971,19 @@
                     <ColumnDefinition Width="0.8*" />
                 </Grid.ColumnDefinitions>
 
-                <TextBlock
-                    Grid.Row="0"
-                    Grid.Column="0"
-                    Margin="10,0,0,0"
-                    HorizontalAlignment="Left"
-                    FontSize="14"
-                    Text="{CompiledBinding RxAntennaCounter,
-                                           StringFormat='Счетчик: {0:0.0}° | Сброс'}" />
+
                 <StackPanel
                     Grid.Row="0"
-                    Grid.Column="1"
+                    Grid.Column="0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
                     Orientation="Horizontal">
                     <TextBlock
-                        Margin="3"
+                        Margin="10,0,0,0"
                         FontSize="14"
                         Text="{CompiledBinding ConnectionStatus}" />
                     <TextBlock
-                        Margin="3"
+                        Margin="10,0,0,0"
                         FontSize="14"
                         Text="{CompiledBinding DataFlowStatus}" />
                 </StackPanel>

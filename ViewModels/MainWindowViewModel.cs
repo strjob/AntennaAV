@@ -63,6 +63,7 @@ namespace AntennaAV.ViewModels
         [ObservableProperty] private string transmitterAngle = "0";
         [ObservableProperty] private int? manualScaleValue = -30;
         [ObservableProperty] private double? autoscaleLimitValue = -50;
+        [ObservableProperty] private double? autoscaleMinValue = 1;
         [ObservableProperty] private string transmitterAngleError = "";
         [ObservableProperty] private string receiverAngle = "0";
         [ObservableProperty] private string receiverAngleError = "";
@@ -110,6 +111,7 @@ namespace AntennaAV.ViewModels
         public event Action<double>? TransmitterAngleDegChanged; 
         public event Action<int?>? ManualScaleValueChanged;
         public event Action<double?>? AutoscaleLimitValueChanged;
+        public event Action<double?>? AutoscaleMinValueChanged;
 
         // 5. RelayCommand
         public void BuildRadar()
@@ -706,6 +708,11 @@ namespace AntennaAV.ViewModels
         {
             if (value != null)
                 AutoscaleLimitValueChanged?.Invoke(value.Value);
+        }
+        partial void OnAutoscaleMinValueChanged(double? value)
+        {
+            if (value != null)
+                AutoscaleMinValueChanged?.Invoke(value.Value);
         }
         partial void OnShowAntennaChanged(bool value)
         {

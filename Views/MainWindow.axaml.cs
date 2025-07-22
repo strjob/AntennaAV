@@ -245,10 +245,11 @@ namespace AntennaAV.Views
         {
             if (this.DataContext is MainWindowViewModel vm && vm.SelectedTab != null && vm.SelectedTab.Plot != null)
             {
+                var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue : vm.ManualScaleValue;
                 Dispatcher.UIThread.Post(() =>
                 {
                     vm.SelectedTab.Plot.IsVisible = !vm.SelectedTab.Plot.IsVisible;
-                    RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark);
+                    RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
                 });
 
             }
@@ -314,10 +315,17 @@ namespace AntennaAV.Views
             await _plotManagerMain.SaveMainPlotToPngAsync(file.Path.LocalPath, isDark);
         }
 
-        private void RefreshAllPlots(IEnumerable<TabViewModel> tabs, bool isPowerNormSelected, bool isDark, double limit = -50)
+        private void RefreshAllPlots(IEnumerable<TabViewModel> tabs, bool isPowerNormSelected, bool isDark, double? limit)
         {
             
             bool hasData = tabs.Any(tab => tab.Plot != null && tab.Plot.Angles.Length > 0 && tab.Plot.IsVisible);
+            double limitValue;
+            if (limit.HasValue)
+                limitValue = limit.Value;
+            else
+                limitValue = -50;
+
+
             if (AvaPlotMain != null)
             {
                 if (hasData)
@@ -327,7 +335,7 @@ namespace AntennaAV.Views
                 else
                 {
                     if (isPowerNormSelected)
-                        _plotManagerMain.UpdatePolarAxisCircles(AvaPlotMain, isPowerNormSelected, limit, 0, isDark);
+                        _plotManagerMain.UpdatePolarAxisCircles(AvaPlotMain, isPowerNormSelected, limitValue, 0, isDark);
                     else
                         _plotManagerMain.UpdatePolarAxisCircles(AvaPlotMain, isPowerNormSelected, 0, 1, isDark);
                 }
@@ -360,8 +368,8 @@ namespace AntennaAV.Views
                 Dispatcher.UIThread.Post(() =>
                 {
                     _plotManagerMain.SetScaleMode(isPowerNorm);
-                    
-                    RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark);
+                    var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue : vm.ManualScaleValue;
+                    RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
                 });
                 
                 
@@ -371,9 +379,11 @@ namespace AntennaAV.Views
             {
                 Dispatcher.UIThread.Post(() =>
                 {
+                     var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue : vm.ManualScaleValue;
                     _plotManagerMain.UpdateScaleMode(isAutoscale);
                     _plotManagerMain.SetAutoMinLimit(true, AutoscaleLimitValue!.Value);
                     _plotManagerMain.SetManualRange(ManualScaleValue!.Value, 0);
+                    RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
                 });
             };
 
@@ -398,8 +408,19 @@ namespace AntennaAV.Views
                 Dispatcher.UIThread.Post(() =>
                 {
                     _plotManagerMain.SetAutoMinLimit(true, value!.Value);
-                    RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark);
+                    var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue : vm.ManualScaleValue;
+                    RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
                 });                
+            };
+
+            vm.AutoscaleMinValueChanged += value =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue : vm.ManualScaleValue;
+                    _plotManagerMain.SetAutoscaleMinValue(value!.Value);
+                    RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
+                });
             };
 
             vm.ShowSectorChanged += value =>
@@ -443,8 +464,9 @@ namespace AntennaAV.Views
                 {
                     if (AvaPlotMain != null && vm.SelectedTab != null)
                     {
+                        var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue : vm.ManualScaleValue;
                         _plotManagerMain.ClearCurrentTabPlot(vm.SelectedTab, AvaPlotMain);
-                        RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark);
+                        RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
                     }                     
                 });
             };
@@ -467,9 +489,10 @@ namespace AntennaAV.Views
             {
                 Dispatcher.UIThread.Post(() =>
                 {
+                    var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue :vm.ManualScaleValue;
                     if (AvaPlotMain != null && vm.SelectedTab != null)
                         _plotManagerMain.ClearCurrentTabPlot(vm.SelectedTab, AvaPlotMain);
-                    RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark);
+                    RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
                     vm.RemoveTabInternal();
                 });
             };
