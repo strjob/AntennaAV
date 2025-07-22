@@ -673,6 +673,7 @@
                         Increment="5"
                         IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}"
                         LostFocus="NumericUpDown_LostFocus"
+						KeyDown="NumericUpDown_KeyDown"
                         Maximum="360"
                         Minimum="10"
                         Watermark="Размер сектора"
@@ -856,7 +857,11 @@
                             Content="Показывать легенду"
                             IsChecked="{CompiledBinding ShowLegend,
                                                         Mode=TwoWay}" />
-                        <StackPanel
+						<Border
+							CornerRadius="5"
+							Background="{DynamicResource SystemChromeColor}"
+							>
+							<StackPanel
                             Grid.Row="0"
                             Grid.Column="2"
                             Margin="10,10,0,0"
@@ -870,7 +875,7 @@
                                 Text="Масштаб:"
                                 ToolTip.Tip="Для логарифмической шкалы" />
 
-                            <StackPanel Orientation="Vertical">
+							<StackPanel Orientation="Vertical">
                                 <RadioButton
                                     Margin="0,0,10,0"
                                     Content="Авто"
@@ -886,6 +891,7 @@
                                     Text="Ограничение минимума, дб:" />
                                 <NumericUpDown
                                     Width="125"
+					                Name="NumericUpDownAutoLimit"
                                     Margin="10,0,5,0"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Center"
@@ -893,11 +899,11 @@
                                     Increment="5"
                                     IsVisible="{CompiledBinding IsAutoscale}"
                                     KeyDown="NumericUpDown_KeyDown"
-                                    Maximum="80"
-                                    Minimum="10"
+                                    Maximum="-10"
+                                    Minimum="-80"
                                     Value="{CompiledBinding AutoscaleLimitValue,
-                                                            Mode=TwoWay,
-                                                            UpdateSourceTrigger=PropertyChanged}" />
+                                                            Mode=TwoWay
+                                                            }" />
                             </StackPanel>
                             <StackPanel Orientation="Vertical">
                                 <RadioButton
@@ -906,6 +912,7 @@
                                     IsChecked="{x:Null}"
                                     IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
                                 <NumericUpDown
+									Name="NumericUpDownManualLimit"
                                     Width="125"
                                     Margin="5,0,5,0"
                                     VerticalAlignment="Center"
@@ -913,15 +920,17 @@
                                     Increment="5"
                                     IsVisible="{CompiledBinding !IsAutoscale}"
                                     KeyDown="NumericUpDown_KeyDown"
-                                    Maximum="80"
-                                    Minimum="10"
+                                    Maximum="-5"
+                                    Minimum="-80"
                                     ParsingNumberStyle="Integer"
                                     Value="{CompiledBinding ManualScaleValue,
-                                                            Mode=TwoWay,
-                                                            UpdateSourceTrigger=PropertyChanged}" />
+                                                            Mode=TwoWay
+                                                            }" />
                             </StackPanel>
 
+
                         </StackPanel>
+					</Border>
 
                         <Button
                             Margin="5"

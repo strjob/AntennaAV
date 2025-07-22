@@ -61,8 +61,8 @@ namespace AntennaAV.ViewModels
         [ObservableProperty] private bool showLegend = true;
         [ObservableProperty] private bool showMarkers = false;
         [ObservableProperty] private string transmitterAngle = "0";
-        [ObservableProperty] private int manualScaleValue = 30;
-        [ObservableProperty] private double autoscaleLimitValue = 50;
+        [ObservableProperty] private int? manualScaleValue = -30;
+        [ObservableProperty] private double? autoscaleLimitValue = -50;
         [ObservableProperty] private string transmitterAngleError = "";
         [ObservableProperty] private string receiverAngle = "0";
         [ObservableProperty] private string receiverAngleError = "";
@@ -105,11 +105,11 @@ namespace AntennaAV.ViewModels
         public event Action<double>? ReceiverAngleDegChanged;
         public event Action<string>? DataFlowStatusChanged;
         public event Action<bool>? IsPowerNormSelectedChanged;
-        public event Action<bool, int, double>? IsAutoscaleChanged;
+        public event Action<bool, int?, double?>? IsAutoscaleChanged;
         public event Action<bool>? ShowLegendChanged;
         public event Action<double>? TransmitterAngleDegChanged; 
-        public event Action<int>? ManualScaleValueChanged;
-        public event Action<double>? AutoscaleLimitValueChanged;
+        public event Action<int?>? ManualScaleValueChanged;
+        public event Action<double?>? AutoscaleLimitValueChanged;
 
         // 5. RelayCommand
         public void BuildRadar()
@@ -696,14 +696,16 @@ namespace AntennaAV.ViewModels
                 _ => "-"
             };
         }
-        partial void OnManualScaleValueChanged(int value)
+        partial void OnManualScaleValueChanged(int? value)
         {
-            ManualScaleValueChanged?.Invoke(value);
+            if(value != null)
+                ManualScaleValueChanged?.Invoke(value.Value);
         }
 
-        partial void OnAutoscaleLimitValueChanged(double value)
+        partial void OnAutoscaleLimitValueChanged(double? value)
         {
-            AutoscaleLimitValueChanged?.Invoke(value);
+            if (value != null)
+                AutoscaleLimitValueChanged?.Invoke(value.Value);
         }
         partial void OnShowAntennaChanged(bool value)
         {
@@ -745,7 +747,8 @@ namespace AntennaAV.ViewModels
         }
         partial void OnIsAutoscaleChanged(bool value)
         {
-            IsAutoscaleChanged?.Invoke(value, ManualScaleValue, AutoscaleLimitValue);
+            if(ManualScaleValue.HasValue && AutoscaleLimitValue.HasValue)
+                IsAutoscaleChanged?.Invoke(value, ManualScaleValue.Value, AutoscaleLimitValue.Value);
         }
         partial void OnTransmitterAngleDegChanged(double value)
         {

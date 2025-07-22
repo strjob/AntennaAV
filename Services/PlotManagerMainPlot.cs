@@ -842,7 +842,7 @@ namespace AntennaAV.Services
             _avaPlotMain = plot;
             _polarAxisMain = Plots.Initialize(plot, isDark) ?? throw new InvalidOperationException("Failed to initialize main polar axis");
             ApplyThemeToMainPlot(isDark, plot);
-            UpdatePolarAxisCircles(plot, true, -50, 0, isDark);
+            UpdatePolarAxisCircles(plot, true, -50.0, 0, isDark);
             InitializeRefreshTimer();
         }
 

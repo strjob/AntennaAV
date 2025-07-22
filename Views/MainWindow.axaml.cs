@@ -69,6 +69,10 @@ namespace AntennaAV.Views
 
             NumericUpDownSectorSize.AddHandler(InputElement.KeyDownEvent, NumericUpDown_KeyDown, RoutingStrategies.Tunnel);
             NumericUpDownSectorCenter.AddHandler(InputElement.KeyDownEvent, NumericUpDown_KeyDown, RoutingStrategies.Tunnel);
+            NumericUpDownManualLimit.AddHandler(InputElement.KeyDownEvent, NumericUpDown_KeyDown, RoutingStrategies.Tunnel);
+            NumericUpDownAutoLimit.AddHandler(InputElement.KeyDownEvent, NumericUpDown_KeyDown, RoutingStrategies.Tunnel);
+
+
 
             this.DataContextChanged += (s, e) =>
             {
@@ -323,9 +327,9 @@ namespace AntennaAV.Views
                 else
                 {
                     if (isPowerNormSelected)
-                        _plotManagerMain.UpdatePolarAxisCircles(AvaPlotMain, true, -limit, 0, isDark);
+                        _plotManagerMain.UpdatePolarAxisCircles(AvaPlotMain, isPowerNormSelected, limit, 0, isDark);
                     else
-                        _plotManagerMain.UpdatePolarAxisCircles(AvaPlotMain, false, 0, 1, isDark);
+                        _plotManagerMain.UpdatePolarAxisCircles(AvaPlotMain, isPowerNormSelected, 0, 1, isDark);
                 }
             }
         }
@@ -356,6 +360,7 @@ namespace AntennaAV.Views
                 Dispatcher.UIThread.Post(() =>
                 {
                     _plotManagerMain.SetScaleMode(isPowerNorm);
+                    
                     RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark);
                 });
                 
@@ -367,8 +372,8 @@ namespace AntennaAV.Views
                 Dispatcher.UIThread.Post(() =>
                 {
                     _plotManagerMain.UpdateScaleMode(isAutoscale);
-                    _plotManagerMain.SetAutoMinLimit(true, -AutoscaleLimitValue);
-                    _plotManagerMain.SetManualRange(-ManualScaleValue, 0);
+                    _plotManagerMain.SetAutoMinLimit(true, AutoscaleLimitValue!.Value);
+                    _plotManagerMain.SetManualRange(ManualScaleValue!.Value, 0);
                 });
             };
 
@@ -385,18 +390,16 @@ namespace AntennaAV.Views
 
             vm.ManualScaleValueChanged += value =>
             {
-                Dispatcher.UIThread.Post(() => _plotManagerMain.SetManualRange(-value, 0));
+                Dispatcher.UIThread.Post(() => _plotManagerMain.SetManualRange(value!.Value, 0));
             };
 
             vm.AutoscaleLimitValueChanged += value =>
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    _plotManagerMain.SetAutoMinLimit(true, -value);
+                    _plotManagerMain.SetAutoMinLimit(true, value!.Value);
                     RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark);
-                });
-                
-                
+                });                
             };
 
             vm.ShowSectorChanged += value =>
