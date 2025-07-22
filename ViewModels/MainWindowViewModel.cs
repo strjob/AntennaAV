@@ -56,10 +56,13 @@ namespace AntennaAV.ViewModels
         [ObservableProperty] private bool showAntenna = true;
         [ObservableProperty] private bool showSector = true;
         [ObservableProperty] private bool isPowerNormSelected = true;
+        [ObservableProperty] private bool isAutoscale = true;
         [ObservableProperty] private bool isRealtimeMode = true;
         [ObservableProperty] private bool showLegend = true;
         [ObservableProperty] private bool showMarkers = false;
         [ObservableProperty] private string transmitterAngle = "0";
+        [ObservableProperty] private int manualScaleValue = 30;
+        [ObservableProperty] private double autoscaleLimitValue = 50;
         [ObservableProperty] private string transmitterAngleError = "";
         [ObservableProperty] private string receiverAngle = "0";
         [ObservableProperty] private string receiverAngleError = "";
@@ -67,7 +70,6 @@ namespace AntennaAV.ViewModels
         [ObservableProperty] private string rxAntennaCounterErrorStr = "";
         [ObservableProperty] private bool isDarkTheme;
         [ObservableProperty] private string lastEvent = "";
-
 
 
         // 3. Публичные свойства
@@ -103,8 +105,11 @@ namespace AntennaAV.ViewModels
         public event Action<double>? ReceiverAngleDegChanged;
         public event Action<string>? DataFlowStatusChanged;
         public event Action<bool>? IsPowerNormSelectedChanged;
+        public event Action<bool, int, double>? IsAutoscaleChanged;
         public event Action<bool>? ShowLegendChanged;
-        public event Action<double>? TransmitterAngleDegChanged;
+        public event Action<double>? TransmitterAngleDegChanged; 
+        public event Action<int>? ManualScaleValueChanged;
+        public event Action<double>? AutoscaleLimitValueChanged;
 
         // 5. RelayCommand
         public void BuildRadar()
@@ -229,8 +234,8 @@ namespace AntennaAV.ViewModels
             _acquisitionCts?.Dispose();
             _acquisitionCts = null;
             _isDiagramDataCollecting = false;
-            lock (_dataLock)
-                _collector.FinalizeData();
+            //lock (_dataLock)
+                //_collector.FinalizeData();
                 //UpdatePlotWithNormalizedData();
             _comPortService.StopAntenna("R");
         }
@@ -254,86 +259,7 @@ namespace AntennaAV.ViewModels
         }
 
         // 6. Публичные методы
-        public async Task StartDiagramAcquisitionAsync(double from, double to, CancellationToken cancellationToken)
-        {
-            try
-            {
-                Debug.WriteLine($"Начинаем сбор диаграммы: размер сектора = {to - from:F1}°, центр = {(from + to) / 2:F1}°");
-
-                if (IsDiagramAcquisitionRunning)
-                {
-                    Debug.WriteLine("❌ Диаграмма уже запущена, выход");
-                    return;
-                }
-
-                IsDiagramAcquisitionRunning = true;
-                _isDiagramDataCollecting = false;
-
-                if (SelectedTab != null && !SelectedTab.Plot.IsVisible)
-                    SelectedTab.Plot.IsVisible = true;
-
-                double currentAngle = ReceiverAngleDeg;
-                double currentCounter = RxAntennaCounter;
-                Debug.WriteLine($"Текущее положение: угол={currentAngle:F1}°, counter={currentCounter}");
-
-                // Определяем углы и параметры
-                //(double startAngle, double endAngle) = DetermineStartAndEndAngles(currentAngle, from, to);
-                (double startAngleOvershoot, double stopAngleOvershoot, string direction, bool isFullCircle) = AngleUtils.DetermineStartEndDir(currentAngle, from, to, currentCounter);
-                _acquisitionFrom = from;
-                _acquisitionTo = to;
-
-                //Если полный круг, то едем сразу к конечной точке, иначе - к стартовой
-                if (isFullCircle)
-                { 
-                    StartDataCollection();
-                    _comPortService.SetAntennaAngle(currentAngle, "R", direction);
-                    await WaitForMovementStartAsync(ReceiverAngleDeg, cancellationToken);
-                    await Task.Delay(2000, cancellationToken);
-                }
-                else
-                {
-                    _comPortService.SetAntennaAngle(startAngleOvershoot, "R", "G");
-                    await WaitStartAngleAsync(startAngleOvershoot, cancellationToken);
-                    StartDataCollection();
-                }
-
-                // Движение к конечной точке
-                _comPortService.SetAntennaAngle(stopAngleOvershoot, "R", direction);
-                Debug.WriteLine($"Направление движения: {direction}");
-
-                await WaitForEndAngleAsync(stopAngleOvershoot, cancellationToken);
-
-                // Завершение
-                Debug.WriteLine($"🔄 Завершение сбора данных");
-                //FinalizeDataCollection();
-                Debug.WriteLine("✅ Диаграмма успешно завершена");
-            }
-            catch (TaskCanceledException)
-            {
-                Debug.WriteLine("❌ Операция была отменена пользователем");
-            }
-            catch (OperationCanceledException)
-            {
-                Debug.WriteLine("❌ Операция была отменена");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"💥 Неожиданная ошибка: {ex.Message}");
-                LastEvent = $"Ошибка сбора диаграммы: {ex.Message}";
-            }
-            finally
-            {
-                _isDiagramDataCollecting = false;
-                IsDiagramAcquisitionRunning = false;
-                _comPortService.StopAntenna("R");
-                _isFinalizingDiagram = true;
-                UpdateTable(); // Обновляем таблицу после сбора данных
-                _isFinalizingDiagram = false;
-                StopTableUpdateTimer();
-                RequestPlotRedraw?.Invoke();
-                Debug.WriteLine("=== КОНЕЦ СНЯТИЯ ДИАГРАММЫ ===");
-            }
-        }
+        
 
         public void RemoveTabInternal()
         {
@@ -401,7 +327,6 @@ namespace AntennaAV.ViewModels
             }
         }
 
-
         public void StopMessaging()
         {
             _comPortService.StopMessaging();
@@ -415,7 +340,6 @@ namespace AntennaAV.ViewModels
         }
 
         // 7. Приватные методы
-
         private bool CanEditOrDelete() => SelectedTab != null;
         private async Task ConnectToPortAsync()
         {
@@ -436,6 +360,88 @@ namespace AntennaAV.ViewModels
             if (result == ConnectResult.Success)
                 _comPortService.StartReading();
         }
+
+        private async Task StartDiagramAcquisitionAsync(double from, double to, CancellationToken cancellationToken)
+        {
+            try
+            {
+                Debug.WriteLine($"Начинаем сбор диаграммы: размер сектора = {to - from:F1}°, центр = {(from + to) / 2:F1}°");
+
+                if (IsDiagramAcquisitionRunning)
+                {
+                    Debug.WriteLine("❌ Диаграмма уже запущена, выход");
+                    return;
+                }
+
+                IsDiagramAcquisitionRunning = true;
+                _isDiagramDataCollecting = false;
+
+                if (SelectedTab != null && !SelectedTab.Plot.IsVisible)
+                    SelectedTab.Plot.IsVisible = true;
+
+                double currentAngle = ReceiverAngleDeg;
+                double currentCounter = RxAntennaCounter;
+                Debug.WriteLine($"Текущее положение: угол={currentAngle:F1}°, counter={currentCounter}");
+
+                // Определяем углы и параметры
+                //(double startAngle, double endAngle) = DetermineStartAndEndAngles(currentAngle, from, to);
+                (double startAngleOvershoot, double stopAngleOvershoot, string direction, bool isFullCircle) = AngleUtils.DetermineStartEndDir(currentAngle, from, to, currentCounter);
+                _acquisitionFrom = from;
+                _acquisitionTo = to;
+
+                //Если полный круг, то едем сразу к конечной точке, иначе - к стартовой
+                if (isFullCircle)
+                {
+                    StartDataCollection();
+                    _comPortService.SetAntennaAngle(currentAngle, "R", direction);
+                    await WaitForMovementStartAsync(ReceiverAngleDeg, cancellationToken);
+                    await Task.Delay(2000, cancellationToken);
+                }
+                else
+                {
+                    _comPortService.SetAntennaAngle(startAngleOvershoot, "R", "G");
+                    await WaitStartAngleAsync(startAngleOvershoot, cancellationToken);
+                    StartDataCollection();
+                }
+
+                // Движение к конечной точке
+                _comPortService.SetAntennaAngle(stopAngleOvershoot, "R", direction);
+                Debug.WriteLine($"Направление движения: {direction}");
+
+                await WaitForEndAngleAsync(stopAngleOvershoot, cancellationToken);
+
+                // Завершение
+                Debug.WriteLine($"🔄 Завершение сбора данных");
+                //FinalizeDataCollection();
+                Debug.WriteLine("✅ Диаграмма успешно завершена");
+            }
+            catch (TaskCanceledException)
+            {
+                Debug.WriteLine("❌ Операция была отменена пользователем");
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine("❌ Операция была отменена");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"💥 Неожиданная ошибка: {ex.Message}");
+                LastEvent = $"Ошибка сбора диаграммы: {ex.Message}";
+            }
+            finally
+            {
+                _isDiagramDataCollecting = false;
+                IsDiagramAcquisitionRunning = false;
+                _comPortService.StopAntenna("R");
+                _isFinalizingDiagram = true;
+                UpdateTable(); // Обновляем таблицу после сбора данных
+                _isFinalizingDiagram = false;
+                StopTableUpdateTimer();
+                RequestPlotRedraw?.Invoke();
+                Debug.WriteLine("=== КОНЕЦ СНЯТИЯ ДИАГРАММЫ ===");
+            }
+        }
+
         private void OnUiTimerTick()
         {
             ProcessComPortData();
@@ -469,7 +475,7 @@ namespace AntennaAV.ViewModels
                 if (_isFinalizingDiagram || !IsRealtimeMode || SelectedTab == null)
                     return;
 
-                _collector.FinalizeData();
+                //_collector.FinalizeData();
 
                 var plotSw = System.Diagnostics.Stopwatch.StartNew();
                 if (RequestPlotRedraw != null)
@@ -554,7 +560,7 @@ namespace AntennaAV.ViewModels
         {
             if (dataReceived)
             {
-                DataFlowStatus = "🟢 Обмен данными";
+                DataFlowStatus = "🟢 Идет обмен данными";
             }
             else
             {
@@ -690,6 +696,15 @@ namespace AntennaAV.ViewModels
                 _ => "-"
             };
         }
+        partial void OnManualScaleValueChanged(int value)
+        {
+            ManualScaleValueChanged?.Invoke(value);
+        }
+
+        partial void OnAutoscaleLimitValueChanged(double value)
+        {
+            AutoscaleLimitValueChanged?.Invoke(value);
+        }
         partial void OnShowAntennaChanged(bool value)
         {
             ShowAntennaChanged?.Invoke(value);
@@ -702,8 +717,7 @@ namespace AntennaAV.ViewModels
         {
             TransmitterAngleError = AngleUtils.ValidateAngle(value, out _);
         }
-
-
+        
         partial void OnReceiverAngleChanged(string value)
         {
             ReceiverAngleError = AngleUtils.ValidateAngle(value, out _);
@@ -728,6 +742,10 @@ namespace AntennaAV.ViewModels
         partial void OnIsPowerNormSelectedChanged(bool value)
         {
             IsPowerNormSelectedChanged?.Invoke(value);
+        }
+        partial void OnIsAutoscaleChanged(bool value)
+        {
+            IsAutoscaleChanged?.Invoke(value, ManualScaleValue, AutoscaleLimitValue);
         }
         partial void OnTransmitterAngleDegChanged(double value)
         {

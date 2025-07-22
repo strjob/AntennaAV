@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AntennaAV.Services
 {
@@ -44,7 +45,7 @@ namespace AntennaAV.Services
             // Пересчёт PowerDbm -> Voltage (uV)
             double powerWatt = Math.Pow(10, (powerDbm - 30) / 10.0);
             double voltageRms = Math.Sqrt(powerWatt * 50);
-            double voltageMicroV = Math.Round(voltageRms * 1_000_000, 1);
+            double voltageMicroV = voltageRms * 1_000_000;
 
             // Проверяем, изменились ли максимумы
             bool powerMaxChangedNow = powerDbm > _maxPowerDbm;
@@ -63,20 +64,13 @@ namespace AntennaAV.Services
 
             var data = new GridAntennaData
             {
-                Angle = Math.Round(receiverAngleDeg10 / 10.0, 1),
+                Angle = receiverAngleDeg10 / 10.0,
                 PowerDbm = powerDbm,
                 Voltage = voltageMicroV,
                 Time = timestamp
             };
 
-            // Если максимумы не изменились, сразу вычисляем нормализованные значения
-            if (!powerMaxChangedNow && !voltageMaxChangedNow && _lastNormalizedMaxPower != double.NegativeInfinity)
-            {
-                data.PowerNorm = data.PowerDbm - _lastNormalizedMaxPower;
-                data.VoltageNorm = _lastNormalizedMaxVoltage > 0 ? Math.Round(data.Voltage / _lastNormalizedMaxVoltage, 3) : 0;
-            }
-
-            // Обновляем индексы
+            // Обновляем индексы СНАЧАЛА
             if (_data.ContainsKey(receiverAngleDeg10))
             {
                 var oldData = _data[receiverAngleDeg10];
@@ -86,22 +80,34 @@ namespace AntennaAV.Services
             _data[receiverAngleDeg10] = data;
             _timeToAngleIndex[timestamp] = receiverAngleDeg10; // SortedList автоматически сортирует!
 
+            // Нормализуем после добавления точки в данные
+            if (powerMaxChangedNow || voltageMaxChangedNow)
+            {
+                FinalizeData();
+            }
+            else if (_lastNormalizedMaxPower != double.NegativeInfinity)
+            {
+                // Нормализуем только текущую точку
+                data.PowerNorm = data.PowerDbm - _lastNormalizedMaxPower;
+                if (_lastNormalizedMaxVoltage > 0)
+                {
+                    data.VoltageNorm = data.Voltage / _lastNormalizedMaxVoltage;
+                }
+                else
+                {
+                    data.VoltageNorm = 0;
+                }
+
+                // Обновляем в словаре
+                _data[receiverAngleDeg10] = data;
+            }
+
             InvalidateCache();
         }
 
-        public NormalizationResult FinalizeData()
+        public void FinalizeData()
         {
-            var result = new NormalizationResult
-            {
-                PowerMaxChanged = _powerMaxChanged,
-                VoltageMaxChanged = _voltageMaxChanged,
-                ItemsProcessed = 0
-            };
 
-            if (!_powerMaxChanged && !_voltageMaxChanged)
-                return result;
-
-            var sw = System.Diagnostics.Stopwatch.StartNew();
 
             if (_powerMaxChanged)
             {
@@ -120,18 +126,19 @@ namespace AntennaAV.Services
                 foreach (var key in _data.Keys)
                 {
                     var d = _data[key];
-                    d.VoltageNorm = _maxVoltage > 0 ? Math.Round(d.Voltage / _maxVoltage, 3) : 0;
+                    if (_maxVoltage > 0)
+                    {
+                        d.VoltageNorm = d.Voltage / _maxVoltage;
+                    }
+                    else
+                    {
+                        d.VoltageNorm = 0;
+                    }
                     _data[key] = d;
                 }
                 _lastNormalizedMaxVoltage = _maxVoltage;
                 _voltageMaxChanged = false;
             }
-
-            result.ItemsProcessed = _data.Count;
-            result.TimeMs = sw.ElapsedMilliseconds;
-            InvalidateCache();
-
-            return result;
         }
 
         public List<GridAntennaData> GetTableData()
@@ -197,4 +204,4 @@ namespace AntennaAV.Services
 
         public bool HasChanges => PowerMaxChanged || VoltageMaxChanged;
     }
-} 
+}

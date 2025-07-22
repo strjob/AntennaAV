@@ -160,6 +160,7 @@ namespace AntennaAV.Helpers
             }
         }
 
+
         public static void AddCustomSpokeLines(AvaPlot avaPlot, PolarAxis polarAxis, bool isDark)
         {
             // Защита от недостаточного количества кругов
@@ -171,28 +172,51 @@ namespace AntennaAV.Helpers
                 avaPlot.Plot.Remove(line);
             _customSpokeLines.Clear();
 
-            double rStart = 10;
             double rEnd = 100;
             var lineColor = ThemeColors.GetLineColor(isDark);
 
-            rStart = polarAxis.Circles[0].Radius;
-            //rEnd = polarAxis.Circles.Last().Radius;
+            // Определяем пороговое значение для радиуса первого круга
+            const double radiusThreshold = 20; // можно настроить по необходимости
+
+            double firstCircleRadius = polarAxis.Circles[0].Radius;
+            double secondCircleRadius = polarAxis.Circles[1].Radius;
 
             for (double angle = 0; angle < 360; angle += 10)
             {
-                if (angle % 30 == 0) rStart = polarAxis.Circles[0].Radius;
-                else rStart = polarAxis.Circles[1].Radius;
+                double rStart;
+
+                if (angle % 30 == 0)
+                {
+                    // Если шаг кратный 30, то всегда рисуем от нулевого круга (первого)
+                    rStart = firstCircleRadius;
+                }
+                else
+                {
+                    // Если шаг не кратный 30, то оцениваем радиус первого круга
+                    if (firstCircleRadius > radiusThreshold)
+                    {
+                        // Если радиус первого круга больше порогового значения, рисуем от первого круга
+                        rStart = firstCircleRadius;
+                    }
+                    else
+                    {
+                        // Иначе рисуем от второго круга
+                        rStart = secondCircleRadius;
+                    }
+                }
+
                 double angleRad = Math.PI * angle / 180.0;
                 double x1 = rStart * Math.Cos(angleRad);
                 double y1 = rStart * Math.Sin(angleRad);
                 double x2 = rEnd * Math.Cos(angleRad);
                 double y2 = rEnd * Math.Sin(angleRad);
+
                 var line = avaPlot.Plot.Add.Line(x1, y1, x2, y2);
                 line.Color = lineColor;
                 line.LineWidth = 1;
                 line.LinePattern = LinePattern.Dotted;
                 _customSpokeLines.Add(line);
-            }  
+            }
         }
 
         public static void UpdatePolarAxisTheme(PolarAxis polarAxis, bool isDark)
@@ -256,7 +280,7 @@ namespace AntennaAV.Helpers
             double maxValue,
             bool isDark,
             int minCircles = 3,
-            int maxCircles = 7)
+            int maxCircles = 8)
         {
             // Оставляем только внешний круг
             while (polarAxis.Circles.Count > 1)
@@ -268,17 +292,20 @@ namespace AntennaAV.Helpers
             var lineColor = ThemeColors.GetLineColor(isDark);
             var labelColor = ThemeColors.GetLabelColor(isDark);
             var circleColor = ThemeColors.GetCircleColor(isDark);
+            const double minRadius = 7;
 
             if (isLogScale)
+
             {
                 // Логика для логарифмической шкалы
-                double relDiff = Math.Abs(maxValue - minValue) / Math.Max(Math.Max(Math.Abs(maxValue), Math.Abs(minValue)), 1);
-                double[] possibleSteps = { 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 30000, 50000, 100000 };
                 double range = maxValue - minValue;
+                double[] possibleSteps = { 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 30000, 50000, 100000 };
+
                 double step = possibleSteps
                     .Select(s => new { s, count = Math.Ceiling(range / s) })
                     .Where(x => x.count >= minCircles && x.count <= maxCircles)
-                    .OrderBy(x => Math.Abs(x.count - (minCircles + maxCircles) / 2))
+                    .OrderBy(x => x.s) // Приоритет меньшим шагам
+                    .ThenBy(x => Math.Abs(x.count - (minCircles + maxCircles) / 2)) // Затем по близости к идеалу
                     .Select(x => x.s)
                     .FirstOrDefault(10);
 
@@ -289,6 +316,7 @@ namespace AntennaAV.Helpers
                     else
                         return -Math.Ceiling(Math.Abs(value) / s) * s;
                 }
+
                 double NiceCeil(double value, double s)
                 {
                     if (value >= 0)
@@ -296,49 +324,66 @@ namespace AntennaAV.Helpers
                     else
                         return -Math.Floor(Math.Abs(value) / s) * s;
                 }
+
                 double niceMin = NiceFloor(minValue, step);
                 double niceMax = NiceCeil(maxValue, step);
+
                 List<double> circleValues = new();
                 for (double v = niceMin; v <= niceMax + step * 0.1; v += step)
                     circleValues.Add(Math.Round(v, 6));
+
                 circleValues = circleValues.OrderBy(v => v).ToList();
+
+                // Фильтруем значения, оставляя только те, что находятся в пределах реальных данных
+                // и обеспечиваем минимальный радиус 10%
                 circleValues = circleValues
-                    .Where(v => v == niceMax || (niceMax - niceMin > 0 ? 100 * (v - niceMin) / (niceMax - niceMin) : 100) >= 10)
+                    .Where(v => v >= minValue - step * 0.1 && v <= maxValue + step * 0.1)
+                    .Where(v => {
+                        double dataRange = maxValue - minValue;
+                        double r = dataRange > 0 ? 100 * (v - minValue) / dataRange : 100;
+                        return v == maxValue || r >= minRadius;
+                    })
                     .ToList();
 
                 if (circleValues.Count > 2)
                 {
                     int n = circleValues.Count;
-                    double r0 = niceMax - niceMin > 0 ? 100 * (circleValues[0] - niceMin) / (niceMax - niceMin) : 100;
-                    double rN = 100;
                     positions = new double[n];
                     labels = new string[n];
+
+                    // КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: вычисляем радиусы относительно реальных границ данных
+                    double dataRange = maxValue - minValue;
+
                     for (int i = 0; i < n; i++)
                     {
                         double value = circleValues[i];
-                        double r;
-                        if (i == 0)
-                            r = r0;
-                        else if (i == n - 1)
-                            r = rN;
-                        else
-                            r = r0 + (rN - r0) * i / (n - 1);
+
+                        // Радиус вычисляется как процент от реального диапазона данных
+                        double r = dataRange > 0 ? 100 * (value - minValue) / dataRange : 100;
+
+                        r = Math.Max(minRadius, Math.Min(100, r));
+
                         positions[i] = r;
-                        labels[i] = i == n - 1 ? "" : isLogScale ? $"{Math.Round(value, 1)} дБ" : $"{Math.Round(value, 1)}";
+
+                        // Не показываем подпись для внешнего круга (r = 100) или если круг за пределами
+                        labels[i] = (r >= 99.9 || value > maxValue) ? "" :
+                                   (isLogScale ? $"{Math.Round(value, 1)} дБ" : $"{Math.Round(value, 1)}");
                     }
                 }
                 else
                 {
+                    // Если не удалось создать достаточно кругов, используем простое деление
                     double value70 = minValue + (maxValue - minValue) * 0.7;
                     double value40 = minValue + (maxValue - minValue) * 0.4;
                     double value10 = minValue + (maxValue - minValue) * 0.1;
+
                     positions = new double[] { 10, 40, 70, 100 };
                     labels = new string[] {
-                isLogScale ? $"{Math.Round(value10, 1)} дБ" : $"{Math.Round(value10, 1)}",
-                isLogScale ? $"{Math.Round(value40, 1)} дБ" : $"{Math.Round(value40, 1)}",
-                isLogScale ? $"{Math.Round(value70, 1)} дБ" : $"{Math.Round(value70, 1)}",
-                ""
-            };
+                    isLogScale ? $"{Math.Round(value10, 1)} дБ" : $"{Math.Round(value10, 1)}",
+                    isLogScale ? $"{Math.Round(value40, 1)} дБ" : $"{Math.Round(value40, 1)}",
+                    isLogScale ? $"{Math.Round(value70, 1)} дБ" : $"{Math.Round(value70, 1)}",
+                    ""
+                    };
                 }
             }
             else

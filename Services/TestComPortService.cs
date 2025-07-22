@@ -18,9 +18,7 @@ public class TestComPortService : IComPortService, IDisposable
     private CancellationTokenSource? _cts;
     private Task? _generatorTask;
     private int _counter = 0;
-    private double _receiverAngle = 300.0;
-    private int _repeatCounter = 0;
-    private double? _lastRepeatedAngle = null;
+    private int _receiverAngle = 3000;
     private int _antennaType = 0;
     private int _modeAutoHand = 0;
     private int _rareChangeCounter = 0;
@@ -49,23 +47,8 @@ public class TestComPortService : IComPortService, IDisposable
         while (!token.IsCancellationRequested)
         {
             // Циклическое изменение ReceiverAngleDeg
-            double angle = Math.Round(_receiverAngle, 1);
+            double angle = Math.Round(_receiverAngle/10.0, 1);
 
-            // Иногда повторяем значение (серии дублей)
-            if (_repeatCounter > 0)
-            {
-                angle = _lastRepeatedAngle!.Value;
-                _repeatCounter--;
-            }
-            else if (rand.NextDouble() < 0.08) // 8% шанс начать серию дублей
-            {
-                _repeatCounter = rand.Next(1, 3); // 1-2 повтора
-                _lastRepeatedAngle = angle;
-            }
-            else
-            {
-                _lastRepeatedAngle = null;
-            }
 
             // ReceiverAngleDeg10 всегда = ReceiverAngleDeg*10
             int angle10 = (int)Math.Round(angle * 10);
@@ -85,12 +68,13 @@ public class TestComPortService : IComPortService, IDisposable
             double transmitterAngle = transmitterAngle10 / 10.0;
 
             // PowerDbm: плавное изменение с двумя знаками после запятой
-            _powerPhase += 0.05; // скорость изменения
+            _powerPhase = angle * 2 * Math.PI / 360; // скорость изменения
             if (_powerPhase > Math.PI * 2) _powerPhase -= Math.PI * 2;
-            double basePower = -65 + 20 * Math.Sin(_powerPhase); // от -55 до -15
+            double basePower = -65 + 20 * Math.Sin(_powerPhase*5); // от -55 до -15
             double noise = (rand.NextDouble() - 0.5) * 2.0; // небольшой шум
-           //double powerDbm = Math.Round(basePower + noise, 2);
-           double powerDbm = -angle/10;
+            //double powerDbm = Math.Round(basePower, 2);
+            double powerDbm = -89.8;
+            //double powerDbm = -angle/10;
 
             var data = new AntennaData
             {
@@ -109,9 +93,12 @@ public class TestComPortService : IComPortService, IDisposable
             _counter++;
 
             // Увеличиваем угол с шагом 0.1, циклически
-            _receiverAngle += 0.1;
-            if (_receiverAngle >= 360.0)
-                _receiverAngle = 0.0;
+
+            if (rand.NextDouble() > 0.08)
+                _receiverAngle++;
+                
+            if (_receiverAngle >= 3600)
+                _receiverAngle = 0;
 
             Thread.Sleep(20);
         }
