@@ -1,0 +1,10 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="AntennaAV.Views.CalibrationWindow"
+        Title="Калибровка"
+        Width="400" Height="250">
+    <StackPanel Margin="20">
+        <TextBlock Text="Окно калибровки" FontSize="20" Margin="0,0,0,20" HorizontalAlignment="Center" />
+        <!-- Здесь будет содержимое для калибровки -->
+    </StackPanel>
+</Window> 

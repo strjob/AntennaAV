@@ -782,6 +782,18 @@
                         </Button.Styles>
                     </Button>
                     <Button
+                        x:Name="CalibrationButton"
+                        Grid.Row="2"
+                        Grid.Column="3"
+                        Height="32"
+                        Margin="10,8,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Bottom"
+                        Click="CalibrationButton_Click"
+                        Content="Калибровка"
+                        IsEnabled="{CompiledBinding IsPortOpen}"
+ />
+                    <Button
                         x:Name="StopButton"
                         Grid.Row="2"
                         Grid.Column="0"
@@ -811,7 +823,6 @@
                 </Grid>
 
             </Grid>
-
 
             <StackPanel Grid.Column="5">
                 <Button

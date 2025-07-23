@@ -498,5 +498,11 @@ namespace AntennaAV.Views
             };
         }
 
+        private void CalibrationButton_Click(object? sender, RoutedEventArgs e)
+        {
+            var calibrationWindow = new CalibrationWindow();
+            calibrationWindow.ShowDialog(this);
+        }
+
     }
 }
