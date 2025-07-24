@@ -500,8 +500,20 @@ namespace AntennaAV.Views
 
         private void CalibrationButton_Click(object? sender, RoutedEventArgs e)
         {
-            var calibrationWindow = new CalibrationWindow();
-            calibrationWindow.ShowDialog(this);
+            var mainWindowViewModel = DataContext as MainWindowViewModel;
+            if (mainWindowViewModel != null && mainWindowViewModel._comPortService != null)
+            {
+                var calibrationWindow = new CalibrationWindow
+                {
+                    DataContext = new CalibrationWindowViewModel(mainWindowViewModel._comPortService)
+                };
+                calibrationWindow.ShowDialog(this);
+                // Do NOT change MainWindow's DataContext!
+            }
+            else
+            {
+                throw new InvalidOperationException("MainWindowViewModel or _comPortService is null.");
+            }
         }
 
     }

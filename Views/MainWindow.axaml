@@ -512,20 +512,15 @@
                     </StackPanel>
 
                     <Button
-
-                    Height="28"
-                    Margin="4,0,0,0"
-                    HorizontalAlignment="Left"
-                    IsEnabled="{CompiledBinding CanUseWhenPortOpen}"
-                    Content="{CompiledBinding RxAntennaCounter,
-                                               StringFormat='Счетчик: {0:0.0}° | Сброс'}"
-					Command="{CompiledBinding ResetRxAntennaCounterCommand}">
-
-
-                </Button>
-
+                        Width="180"
+                        Height="28"
+                        Margin="4,0,0,0"
+                        HorizontalAlignment="Left"
+                        Command="{CompiledBinding ResetRxAntennaCounterCommand}"
+                        Content="{CompiledBinding RxAntennaCounter,
+                                                  StringFormat='Счетчик: {0:0.0}° | Сброс'}"
+                        IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
                 </StackPanel>
-
             </Grid>
 
             <Grid
@@ -791,8 +786,7 @@
                         VerticalAlignment="Bottom"
                         Click="CalibrationButton_Click"
                         Content="Калибровка"
-                        IsEnabled="{CompiledBinding IsPortOpen}"
- />
+                        IsEnabled="{CompiledBinding IsPortOpen}" />
                     <Button
                         x:Name="StopButton"
                         Grid.Row="2"
@@ -895,8 +889,8 @@
                                         Margin="5,0,0,2"
                                         HorizontalAlignment="Left"
                                         IsVisible="{CompiledBinding IsAutoscale}"
-                                        ToolTip.Tip="На графике точки со значениями ниже этого параметра будут отображаться в центре"
-                                        Text="Ограничение минимума, дб:" />
+                                        Text="Ограничение минимума, дб:"
+                                        ToolTip.Tip="На графике точки со значениями ниже этого параметра будут отображаться в центре" />
                                     <NumericUpDown
                                         Name="NumericUpDownAutoLimit"
                                         Width="125"
@@ -915,8 +909,8 @@
                                         Margin="5,5,0,2"
                                         HorizontalAlignment="Left"
                                         IsVisible="{CompiledBinding IsAutoscale}"
-                                        ToolTip.Tip="При маломеняющихся данных точка в центре графика будет соответсвовать этому значению со знаком минус"
-                                        Text="Минимальный размах, дб:" />
+                                        Text="Минимальный размах, дб:"
+                                        ToolTip.Tip="При маломеняющихся данных точка в центре графика будет соответсвовать этому значению со знаком минус" />
                                     <NumericUpDown
                                         Width="125"
                                         Margin="10,0,5,0"

@@ -24,7 +24,6 @@ namespace AntennaAV.ViewModels
     public partial class MainWindowViewModel : ViewModelBase
     {
         // 1. приватные поля
-        private readonly IComPortService _comPortService;
         private int? _firstSystick = null;
         private DateTime _lastDataReceivedTime = DateTime.MinValue;
         private readonly DispatcherTimer _uiTimer = new();
@@ -74,6 +73,7 @@ namespace AntennaAV.ViewModels
 
 
         // 3. Публичные свойства
+        public readonly IComPortService _comPortService;
         public TabManager TabManager { get; } = new TabManager();
         public ObservableCollection<TabViewModel> Tabs => TabManager.Tabs;
         public int SelectedTabIndex { get => TabManager.SelectedTabIndex; set { TabManager.SelectedTabIndex = value; OnPropertyChanged(); OnPropertyChanged(nameof(SelectedTab)); } }

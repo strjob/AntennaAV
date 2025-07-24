@@ -1,10 +1,48 @@
-<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        x:Class="AntennaAV.Views.CalibrationWindow"
-        Title="Калибровка"
-        Width="400" Height="250">
-    <StackPanel Margin="20">
-        <TextBlock Text="Окно калибровки" FontSize="20" Margin="0,0,0,20" HorizontalAlignment="Center" />
-        <!-- Здесь будет содержимое для калибровки -->
-    </StackPanel>
-</Window> 
+<Window
+    x:Class="AntennaAV.Views.CalibrationWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:AntennaAV.ViewModels"
+    Title="Калибровка"
+    Width="400"
+    Height="250"
+    x:DataType="vm:CalibrationWindowViewModel"
+    WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Border>
+            <StackPanel>
+                <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+					<TextBox
+						x:Name="CalibrationvalueText"
+						Width="130"
+                        Height="32"
+                        Margin="10"
+                        Watermark="Мощность, дБм" />
+                    <Button
+                        Margin="10"
+                        Command="{CompiledBinding SendCalibrationPointCommand}"
+                        CommandParameter="{CompiledBinding Text, ElementName=CalibrationvalueText}" 
+                    Content="Установить точку" />
+                </StackPanel>
+				<TextBlock
+					Margin="10,0,0,0"
+                    Foreground="Red"
+					Text="{CompiledBinding CalibrationErrorText}"
+					/>
+				<Button
+                    Margin="10"
+                    Command="{CompiledBinding ClearCalibrationCommand}"
+                    Content="Очистить калибровку"
+                    ToolTip.Tip="Сброс калибровки для текущего режима" />
+                <Button
+                    Margin="10"
+                    Command="{CompiledBinding SaveCalibrationCommand}"
+                    Content="Сохранить всё"
+                    ToolTip.Tip="Сохранение каливбровки для всех режимов в энергонезависимую память" />
+
+
+            </StackPanel>
+        </Border>
+
+    </Grid>
+</Window>

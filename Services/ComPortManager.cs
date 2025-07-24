@@ -21,6 +21,8 @@ namespace AntennaAV.Services
         public List<AntennaData> AllRecordedData { get; } = new();
 
         public readonly ConcurrentQueue<AntennaData> DataQueue = new();
+        public readonly ConcurrentQueue<AntennaData> CalibrationQueue = new();
+
         public string? ConnectedPortName { get; private set; }
 
         private readonly int _baudRate;
@@ -265,84 +267,6 @@ namespace AntennaAV.Services
 
             return false;
         }
-
-
-        //private void ReadLoop()
-        //{
-        //    var buffer = new StringBuilder();
-        //    while (_reading && _port != null && _port.IsOpen)
-        //    {
-        //        try
-        //        {
-        //            if (_port.BytesToRead > 0)
-        //            {
-        //                string data = _port.ReadExisting();
-        //                buffer.Append(data);
-
-        //                // Разбираем все сообщения из буфера
-        //                while (true)
-        //                {
-        //                    int start = buffer.ToString().IndexOf('#');
-        //                    int end = buffer.ToString().IndexOf('$', start + 1);
-        //                    if (start >= 0 && end > start)
-        //                    {
-        //                        string message = buffer.ToString().Substring(start, end - start + 1);
-        //                        buffer.Remove(0, end + 1);
-
-        //                        var parsed = ParseDataString(message);
-        //                        if (parsed != null)
-        //                            DataQueue.Enqueue(parsed);
-        //                    }
-        //                    else
-        //                    {
-        //                        // Нет полного сообщения
-        //                        break;
-        //                    }
-        //                }
-        //            }
-        //            else
-        //            {
-        //                Thread.Sleep(10);
-        //            }
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            Debug.WriteLine($"ReadLoop error: {ex}");
-        //        }
-        //    }
-        //}
-
-        //private AntennaData? ParseDataString(string input)
-        //{
-        //    if (!input.StartsWith("#xx/ANT") || !input.EndsWith("$"))
-        //        return null;
-
-        //    var trimmed = input.Trim('#', '$');
-        //    var parts = trimmed.Split('/');
-
-        //    if (parts.Length < 11) return null;
-
-        //    try
-        //    {
-        //        return new AntennaData
-        //        {
-        //            Systick = int.Parse(parts[3]),
-        //            ReceiverAngleDeg10 = int.Parse(parts[4]),
-        //            TransmitterAngleDeg10 = int.Parse(parts[5]),
-        //            ReceiverAngleDeg = int.Parse(parts[4]) / 10.0,
-        //            TransmitterAngleDeg = int.Parse(parts[5]) / 10.0,
-        //            RxAntennaCounter = int.Parse(parts[6]),
-        //            TxAntennaCounter = int.Parse(parts[7]),
-        //            PowerDbm = double.Parse(parts[8], CultureInfo.InvariantCulture),
-        //            AntennaType = int.Parse(parts[9]),
-        //            ModeAutoHand = int.Parse(parts[10]),
-        //        };
-        //    }
-        //    catch
-        //    {
-        //        return null;
-        //    }
-        //}
 
         private void ReadLoop()
         {
