@@ -1,15 +1,16 @@
-﻿using System;
+﻿using AntennaAV.Models;
+using HarfBuzzSharp;
+using RJCP.IO.Ports;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using RJCP.IO.Ports;
-using AntennaAV.Models;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace AntennaAV.Services
 {
@@ -21,12 +22,11 @@ namespace AntennaAV.Services
         public List<AntennaData> AllRecordedData { get; } = new();
 
         public readonly ConcurrentQueue<AntennaData> DataQueue = new();
-        public readonly ConcurrentQueue<AntennaData> CalibrationQueue = new();
+        public readonly ConcurrentQueue<string> CalibrationQueue = new();
 
         public string? ConnectedPortName { get; private set; }
 
         private readonly int _baudRate;
-
         public bool IsOpen => _port?.IsOpen == true;
         public IEnumerable<AntennaData> GetAllRecordedData() => AllRecordedData;
 
@@ -225,31 +225,40 @@ namespace AntennaAV.Services
            return WriteCommand(ant + "=STOP", "ANT");
         }
 
+        public bool SetAdcGain(int gain)
+        {
+            return WriteCommand($"P={gain}", "ANT");
+        }
+
+        public bool SetDefaultRFGain(int gain)
+        {
+            return WriteCommand($"D={gain}", "ANT");
+        }
+
         public bool SetAntennaAngle(double angle, string antenna, string direction)
         {
-            Debug.WriteLine(angle);
-            if (angle < 0.0 || angle > 359.9)
+            if (angle < 0.0 || angle > 359.94)
                 throw new ArgumentOutOfRangeException(nameof(angle), "Угол должен быть от 0.0 до 359.9");
 
             if (antenna != "R" && antenna != "T")
                 throw new ArgumentOutOfRangeException(nameof(antenna), "Неверное имя антенны");
 
-            if (direction != "+" && direction != "-" && direction != "S" && direction != "G")
+            if (direction != "+" && direction != "-" && direction != "S" && direction != "G" && direction != "Z")
                 throw new ArgumentOutOfRangeException(nameof(direction), "Неверное направление");
 
             int value = (int)Math.Round(angle * 10);
             return WriteCommand($"{antenna}={direction}{value}", "ANT");
         }
 
-        public bool ReadCalibration() => WriteCommand("R", "AA");
-        public bool ClearCalibration() => WriteCommand("C", "AA");
-        public bool SaveCalibration() => WriteCommand("S", "AA");
+        public bool ReadCalibration() => SendCommand("R", "AA");
+        public bool ClearCalibration() => SendCommand("C", "AA");
+        public bool SaveCalibration() => SendCommand("S", "AA");
 
         public bool SetCalibrationPoint(double value)
         {
             if (_port != null && _port.IsOpen)
             { 
-                WriteCommand($"W/{value.ToString("0.####", CultureInfo.InvariantCulture)}", "AA");
+                WriteCommand($"{value.ToString("0.####", CultureInfo.InvariantCulture)}", "AA");
                 return true;
             }
             return false;
@@ -264,7 +273,18 @@ namespace AntennaAV.Services
                 _port.Write(fullCommand);
                 return true;
             }
+            return false;
+        }
 
+        public bool SendCommand(string body, string prefix)
+        {
+            if (_port != null && _port.IsOpen)
+            {
+                string fullCommand = $"#{prefix}/xx/{body}$";
+                Debug.WriteLine(fullCommand);
+                _port.Write(fullCommand);
+                return true;
+            }
             return false;
         }
 
@@ -361,36 +381,48 @@ namespace AntennaAV.Services
 
         private AntennaData? ParseDataString(string input)
         {
-            if (!input.StartsWith("#xx/ANT", StringComparison.Ordinal) || !input.EndsWith("$"))
-                return null;
-
-            var trimmed = input.Trim('#', '$');
-            var parts = trimmed.Split('/');
-
-            if (parts.Length < 11) return null;
-
-            if (!int.TryParse(parts[3], out int systick)) return null;
-            if (!int.TryParse(parts[4], out int receiverAngleDeg10)) return null;
-            if (!int.TryParse(parts[5], out int transmitterAngleDeg10)) return null;
-            if (!int.TryParse(parts[6], out int rxAntennaCounter)) return null;
-            if (!int.TryParse(parts[7], out int txAntennaCounter)) return null;
-            if (!double.TryParse(parts[8], NumberStyles.Float, Invariant, out double powerDbm)) return null;
-            if (!int.TryParse(parts[9], out int antennaType)) return null;
-            if (!int.TryParse(parts[10], out int modeAutoHand)) return null;
-
-            return new AntennaData
+            if (input.StartsWith("#xx/ANT", StringComparison.Ordinal) || !input.EndsWith("$"))
             {
-                Systick = systick,
-                ReceiverAngleDeg10 = receiverAngleDeg10,
-                TransmitterAngleDeg10 = transmitterAngleDeg10,
-                ReceiverAngleDeg = receiverAngleDeg10 / 10.0,
-                TransmitterAngleDeg = transmitterAngleDeg10 / 10.0,
-                RxAntennaCounter = rxAntennaCounter,
-                TxAntennaCounter = txAntennaCounter,
-                PowerDbm = powerDbm,
-                AntennaType = antennaType,
-                ModeAutoHand = modeAutoHand,
-            };
+
+                var trimmed = input.Trim('#', '$');
+                var parts = trimmed.Split('/');
+
+                if (parts.Length < 12) return null;
+
+                if (!int.TryParse(parts[3], out int systick)) return null;
+                if (!int.TryParse(parts[4], out int receiverAngleDeg10)) return null;
+                if (!int.TryParse(parts[5], out int transmitterAngleDeg10)) return null;
+                if (!int.TryParse(parts[6], out int rxAntennaCounter)) return null;
+                if (!int.TryParse(parts[7], out int txAntennaCounter)) return null;
+                if (!double.TryParse(parts[8], NumberStyles.Float, Invariant, out double powerDbm)) return null;
+                if (!double.TryParse(parts[9], NumberStyles.Float, Invariant, out double voltage)) return null;
+                if (!int.TryParse(parts[10], out int antennaType)) return null;
+                if (!int.TryParse(parts[11], out int modeAutoHand)) return null;
+
+                return new AntennaData
+                {
+                    Systick = systick,
+                    ReceiverAngleDeg10 = receiverAngleDeg10,
+                    TransmitterAngleDeg10 = transmitterAngleDeg10,
+                    ReceiverAngleDeg = receiverAngleDeg10 / 10.0,
+                    TransmitterAngleDeg = transmitterAngleDeg10 / 10.0,
+                    RxAntennaCounter = rxAntennaCounter,
+                    TxAntennaCounter = txAntennaCounter,
+                    PowerDbm = powerDbm,
+                    Voltage = voltage,
+                    AntennaType = antennaType,
+                    ModeAutoHand = modeAutoHand,
+                };
+            }
+            else
+            {
+                if(input.StartsWith("#xx/AA", StringComparison.Ordinal) || !input.EndsWith("$"))
+                {
+                    var trimmed = input.Trim('#', '$');
+                    CalibrationQueue.Enqueue(trimmed);
+                }
+                return null;
+            }
         }
 
         private bool TryOpenPortWithTimeout(SerialPortStream port, int timeoutMs)

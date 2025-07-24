@@ -353,7 +353,7 @@
                         <TextBlock
                             Margin="1"
                             FontSize="16"
-                            Text="dfd" />
+                            Text="{CompiledBinding Voltage, StringFormat={}{0:0.0}}}" />
                     </StackPanel>
 
                     <!--<TextBlock Text="Tx Antenna Counter:" />
@@ -512,8 +512,8 @@
                     </StackPanel>
 
                     <Button
-                        Width="180"
-                        Height="28"
+                        Width="200"
+                        Height="30"
                         Margin="4,0,0,0"
                         HorizontalAlignment="Left"
                         Command="{CompiledBinding ResetRxAntennaCounterCommand}"

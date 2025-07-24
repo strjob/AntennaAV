@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -17,6 +18,12 @@ namespace AntennaAV.ViewModels
         [ObservableProperty]
         private string calibrationErrorText = "";
 
+        // Добавлено: варианты усиления
+        public ObservableCollection<int> GainOptions { get; } = new() { 1, 2, 4, 8, 16, 32, 64, 128 };
+
+        [ObservableProperty]
+        private int selectedGain = 1;
+
         public CalibrationWindowViewModel(IComPortService comPortService)
         {
             _comPortService = comPortService;
@@ -24,19 +31,28 @@ namespace AntennaAV.ViewModels
 
 
         [RelayCommand]
-        public void SendCalibrationPoint(string valueFromTextBox)
+        public void SendCalibrationPoint(string? valueFromTextBox)
         {
-            // Заменяем запятую на точку для универсального парсинга
-            var normalized = valueFromTextBox.Replace(',', '.');
-            if (double.TryParse(normalized.Trim(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double parsedValue))
+
+            if (String.IsNullOrEmpty(valueFromTextBox))
             {
-                _comPortService.SetCalibrationPoint(parsedValue);
-                CalibrationErrorText = "";
+                CalibrationErrorText = "Поле не должно быть пустым";
+                return;
             }
             else
             {
-                CalibrationErrorText = "Ошибка: не удлось распознать число";
+                var normalized = valueFromTextBox.Replace(',', '.');
+                if (double.TryParse(normalized.Trim(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double parsedValue))
+                {
+                    _comPortService.SetCalibrationPoint(parsedValue);
+                    CalibrationErrorText = "";
+                }
+                else
+                {
+                    CalibrationErrorText = "Не удлось распознать число";
+                }
             }
+
         }
 
         [RelayCommand]
@@ -58,6 +74,18 @@ namespace AntennaAV.ViewModels
         {
             // Прочитать калибровку
             _comPortService.ReadCalibration();
+        }
+
+        [RelayCommand]
+        private void SetGain()
+        {
+            _comPortService.SetAdcGain(SelectedGain);
+        }
+
+        [RelayCommand]
+        private void SetDefaultRfGain()
+        {
+            _comPortService.SetDefaultRFGain(SelectedGain);
         }
     }
 }

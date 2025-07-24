@@ -31,7 +31,11 @@ public interface IComPortService
     bool ClearCalibration();
     bool ReadCalibration();
 
+    bool SetAdcGain(int gain);
+    bool SetDefaultRFGain(int gain);
     IEnumerable<AntennaData> GetAllRecordedData();
     IEnumerable<string> GetAvailablePortNames();
     bool TryDequeue(out AntennaData? data);
 }
+
+

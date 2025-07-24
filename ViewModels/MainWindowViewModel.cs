@@ -44,6 +44,7 @@ namespace AntennaAV.ViewModels
         [ObservableProperty] private double receiverAngleDeg;
         [ObservableProperty] private double transmitterAngleDeg;
         [ObservableProperty] private double powerDbm;
+        [ObservableProperty] private double voltage;
         [ObservableProperty] private int deviceMode;
         [ObservableProperty] private string deviceModeStr = "-"; 
         [ObservableProperty] private double rxAntennaCounter = 0;
@@ -540,6 +541,7 @@ namespace AntennaAV.ViewModels
                     ReceiverAngleDeg = lastData.ReceiverAngleDeg;
                     TransmitterAngleDeg = lastData.TransmitterAngleDeg;
                     PowerDbm = lastData.PowerDbm;
+                    Voltage = lastData.Voltage;
                     DeviceMode = lastData.AntennaType;
                     RxAntennaCounter = Math.Round(lastData.RxAntennaCounter / 10.0, 1);
                     TxAntennaCounter = Math.Round(lastData.TxAntennaCounter/10.0, 1);

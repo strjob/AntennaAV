@@ -11,6 +11,7 @@ namespace AntennaAV.Models
         public int RxAntennaCounter { get; set; }
         public int TxAntennaCounter { get; set; }
         public double PowerDbm { get; set; }
+        public double Voltage { get; set; }
         public int AntennaType { get; set; }
         public int ModeAutoHand { get; set; }
         public int Systick { get; set; }
