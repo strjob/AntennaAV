@@ -47,7 +47,7 @@ namespace AntennaAV.ViewModels
                     x => x.PowerDbm),
 
                 new FormattedStringColumn<GridAntennaData>(
-                    "V, мкВ",
+                    "V, мВ",
                     x => x.VoltageStr,
                     x => x.Voltage),
 

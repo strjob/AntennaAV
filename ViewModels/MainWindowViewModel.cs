@@ -51,6 +51,7 @@ namespace AntennaAV.ViewModels
         [ObservableProperty] private double txAntennaCounter = 0;
         [ObservableProperty] private bool isDiagramAcquisitionRunning;
         [ObservableProperty] private bool isPortOpen;
+        [ObservableProperty] private string voltageHeaderStr = "Напряжение: ";
         [ObservableProperty] private string sectorSize = "180";
         [ObservableProperty] private string sectorCenter = "0";
         [ObservableProperty] private bool showAntenna = true;
@@ -71,6 +72,8 @@ namespace AntennaAV.ViewModels
         [ObservableProperty] private string rxAntennaCounterErrorStr = "";
         [ObservableProperty] private bool isDarkTheme;
         [ObservableProperty] private string lastEvent = "";
+        [ObservableProperty] private string handModeErrorStr = "";
+
 
 
         // 3. Публичные свойства
@@ -541,10 +544,27 @@ namespace AntennaAV.ViewModels
                     ReceiverAngleDeg = lastData.ReceiverAngleDeg;
                     TransmitterAngleDeg = lastData.TransmitterAngleDeg;
                     PowerDbm = lastData.PowerDbm;
-                    Voltage = lastData.Voltage;
                     DeviceMode = lastData.AntennaType;
                     RxAntennaCounter = Math.Round(lastData.RxAntennaCounter / 10.0, 1);
                     TxAntennaCounter = Math.Round(lastData.TxAntennaCounter/10.0, 1);
+                    if (DeviceModeStr.Contains("СВЧ"))
+                    {
+                        Voltage = lastData.Voltage;
+                        VoltageHeaderStr = "Напряжение дет., мкВ: ";
+                    }
+                    else if(DeviceModeStr.Contains("УКВ"))
+                    {
+                        Voltage = AntennaDiagramCollector.CalculateVoltageFromDBm(PowerDbm);
+                        VoltageHeaderStr = "Напряжение 50 Ом, мВ: "; 
+                    }
+                    else
+                    {
+                        Voltage = -1; 
+                    }
+                    if(lastData.ModeAutoHand == 0)
+                    {
+                        HandModeErrorStr = "🔴 Установка находится в ручном режиме";
+                    }
                 }
                 if (dataReceived)
                 {

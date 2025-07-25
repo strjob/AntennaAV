@@ -43,9 +43,7 @@ namespace AntennaAV.Services
                 return;
 
             // Пересчёт PowerDbm -> Voltage (uV)
-            double powerWatt = Math.Pow(10, (powerDbm - 30) / 10.0);
-            double voltageRms = Math.Sqrt(powerWatt * 50);
-            double voltageMicroV = voltageRms * 1_000_000;
+            double voltageMicroV = CalculateVoltageFromDBm(powerDbm);
 
             // Проверяем, изменились ли максимумы
             bool powerMaxChangedNow = powerDbm > _maxPowerDbm;
@@ -103,6 +101,13 @@ namespace AntennaAV.Services
             }
 
             InvalidateCache();
+        }
+        public static double CalculateVoltageFromDBm(double powerDbm)
+        {
+            // Преобразование из dBm в RMS напряжение (в мВ)
+            double powerWatt = Math.Pow(10, (powerDbm - 30) / 10.0);
+            double voltageRms = Math.Sqrt(powerWatt * 50);
+            return voltageRms * 1000; // Возвращаем в мВ
         }
 
         public void FinalizeData()

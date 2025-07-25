@@ -64,8 +64,8 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition
                     Width="0.2*"
-                    MinWidth="255"
-                    MaxWidth="320" />
+                    MinWidth="290"
+                    MaxWidth="330" />
                 <ColumnDefinition Width="1" />
                 <ColumnDefinition Width="0.62*" MinWidth="300" />
                 <ColumnDefinition Width="1" />
@@ -89,21 +89,6 @@
                 Margin="0,0,0,0" />
 
 
-
-
-            <!--<ToggleSwitch
-            Grid.Row="0"
-            Grid.Column="1"
-            Margin="0,10,10,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            Content="Реальное время"
-            IsChecked="{CompiledBinding IsRealtimeMode,
-                                        Mode=TwoWay}"
-            IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}"
-            OffContent="Выкл"
-            OnContent="Вкл"
-            ZIndex="2" />-->
 
             <Button
                 x:Name="SavePngButton"
@@ -150,7 +135,7 @@
                 Grid.Column="0"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
-                Background="{DynamicResource SystemBackgroundColor}"
+                Background="{DynamicResource SystemChromeLowColor}"
                 ShowGridLines="False">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="0.2*" MinHeight="160" />
@@ -182,7 +167,7 @@
                     FontSize="24"
                     Text="{CompiledBinding TransmitterAngleDeg, StringFormat={}{0:0.0}}}" />
                 <TextBlock
-                    Margin="2"
+                    Margin="2,2,2,-6"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Bottom"
                     FontSize="12"
@@ -196,7 +181,7 @@
 
                 <StackPanel
                     Grid.Row="1"
-                    Margin="10"
+                    Margin="6"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Top">
                     <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
@@ -290,6 +275,7 @@
                             <Svg Path="{CompiledBinding ChevronsRightIconPath}" />
                         </Button>
                         <Button
+                            Height="29"
                             Margin="1"
                             HorizontalAlignment="Left"
                             Command="{CompiledBinding StopAntennaCommand}"
@@ -315,53 +301,50 @@
 
 
                 <!--  Средний ряд - Существующие текстовые блоки  -->
-
-                <StackPanel
+                <Border
                     Grid.Row="2"
-                    Margin="5"
-                    VerticalAlignment="Top">
+                    BorderThickness="1"
+					Background="{DynamicResource SystemRegionColor}"
+					Margin="10"
+					BoxShadow="3 3 6 0 DarkGray"
+                    CornerRadius="8">
                     <StackPanel
-                        Grid.Row="2"
-                        Margin="10,2,2,2"
-                        HorizontalAlignment="Stretch"
+                        Margin="5"
                         VerticalAlignment="Top"
-                        Orientation="Horizontal">
+                        Background="{DynamicResource SystemBackgroundColor}">
+						<Grid Margin="10,2,2,2">
+                            <TextBlock FontSize="16" Text="Режим: " />
+                            <TextBlock
+                                HorizontalAlignment="Right"
+                                FontSize="16"
+                                Text="{CompiledBinding DeviceModeStr}" />
+						</Grid>
 
-                        <TextBlock FontSize="16" Text="Режим: " />
-                        <TextBlock
-                            Margin="1,1,1,1"
-                            FontSize="16"
-                            Text="{CompiledBinding DeviceModeStr}" />
+                        <Grid Margin="10,2,2,2">
+                            <TextBlock
+                                HorizontalAlignment="Left"
+                                FontSize="16"
+                                Text="Мощность, дБм: " />
+                            <TextBlock
+                                HorizontalAlignment="Right"
+                                FontSize="16"
+                                Text="{CompiledBinding PowerDbm,
+                                                       StringFormat={}{0:0.0}}" />
+                        </Grid>
+
+                        <Grid Margin="10,2,2,2">
+                            <TextBlock
+                                HorizontalAlignment="Left"
+                                FontSize="16"
+                                Text="{CompiledBinding VoltageHeaderStr}" />
+                            <TextBlock
+                                HorizontalAlignment="Right"
+                                FontSize="16"
+                                Text="{CompiledBinding Voltage,
+                                                       StringFormat={}{0:0.0}}" />
+                        </Grid>
                     </StackPanel>
-                    <StackPanel
-                        Grid.Row="2"
-                        Margin="10,2,2,2"
-                        VerticalAlignment="Top"
-                        Orientation="Horizontal">
-                        <TextBlock FontSize="16" Text="Мощность, дБм: " />
-                        <TextBlock
-                            Margin="1"
-                            FontSize="16"
-                            Text="{CompiledBinding PowerDbm, StringFormat={}{0:0.0}}}" />
-                    </StackPanel>
-                    <StackPanel
-                        Grid.Row="2"
-                        Margin="10,2,2,2"
-                        VerticalAlignment="Top"
-                        Orientation="Horizontal">
-                        <TextBlock FontSize="16" Text="Напряжение, мкВ: " />
-                        <TextBlock
-                            Margin="1"
-                            FontSize="16"
-                            Text="{CompiledBinding Voltage, StringFormat={}{0:0.0}}}" />
-                    </StackPanel>
-
-                    <!--<TextBlock Text="Tx Antenna Counter:" />
-                <TextBlock Margin="1" Text="{CompiledBinding TxAntennaCounterStr}" />-->
-
-
-                </StackPanel>
-
+                </Border>
                 <!--  Нижний ряд - Приемная антенна  -->
                 <ScottPlot:AvaPlot
                     x:Name="AvaPlotRx"
@@ -379,7 +362,7 @@
                     Text="{CompiledBinding ReceiverAngleDeg, StringFormat={}{0:0.0}}}" />
                 <TextBlock
                     Grid.Row="3"
-                    Margin="2"
+                    Margin="2,2,2,-6"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Bottom"
                     FontSize="12"
@@ -394,7 +377,7 @@
 
                 <StackPanel
                     Grid.Row="4"
-                    Margin="10"
+                    Margin="6"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Top">
                     <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
@@ -489,6 +472,7 @@
                             <Svg Path="{CompiledBinding ChevronsRightIconPath}" />
                         </Button>
                         <Button
+                            Height="29"
                             Margin="1"
                             HorizontalAlignment="Left"
                             Command="{CompiledBinding StopAntennaCommand}"
@@ -991,6 +975,10 @@
                         Margin="10,0,0,0"
                         FontSize="14"
                         Text="{CompiledBinding DataFlowStatus}" />
+                    <TextBlock
+                        Margin="10,0,0,0"
+                        FontSize="14"
+                        Text="{CompiledBinding HandModeErrorStr}" />
                 </StackPanel>
 
                 <TextBlock
