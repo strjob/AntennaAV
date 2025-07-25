@@ -57,8 +57,10 @@ namespace AntennaAV.Services
         private double? _globalMin = null;
         private double? _globalMax = null;
         private bool _avaPlotMainNeedsRefresh = false;
+        private bool _avaPlotMainNeedsAutoscale = false;
 
         private ScottPlot.Plottables.Polygon? _sectorPolygon;
+        private ScottPlot.Plottables.Polygon? _backgroundPolygon;
         private ScottPlot.Plottables.PolarAxis? _polarAxisMain;
         private ScottPlot.Plottables.Arrow? _angleArrow;
         private double? _pendingSectorStart = null;
@@ -719,9 +721,7 @@ namespace AntennaAV.Services
         {
             lock (_plotMainLock)
             {
-                if (_avaPlotMain != null)
-                    _avaPlotMain.Plot.Axes.AutoScale();
-                _avaPlotMainNeedsRefresh = true;
+                _avaPlotMainNeedsAutoscale = true;
             }
         }
 
@@ -803,7 +803,45 @@ namespace AntennaAV.Services
             }
         }
 
+        private void CreateBackgroundPolygon(AvaPlot? plot, bool isDark)
+        {
+            if (plot?.Plot == null) return;
+            lock (_plotMainLock)
+            {
+                // Вычисляем новые точки для сектора
+                var points = new List<ScottPlot.Coordinates>();
+                double radius = Constants.DefaultPlotRadius;
 
+                points.Add(new ScottPlot.Coordinates(0, 0));
+                double step = 1; // 1 градус
+                
+                    for (double angle = 0; angle <= 360; angle += step)
+                    {
+                        double theta = (angle + 90) * Math.PI / 180.0;
+                        points.Add(new ScottPlot.Coordinates(-radius * Math.Cos(theta), radius * Math.Sin(theta)));
+                    }
+
+                if (_backgroundPolygon == null)
+                {
+                    if (plot != null)
+                    {
+                        _backgroundPolygon = plot.Plot.Add.Polygon(points.ToArray());
+                        if(isDark)
+                            _backgroundPolygon.FillColor = Color.FromHex("#ffffff");
+                        else
+                            _backgroundPolygon.FillColor = Color.FromHex("#ffffff");
+                        _backgroundPolygon.LineWidth = 0;
+                        plot.Plot.MoveToBack(_backgroundPolygon);
+                    }
+                }
+                else
+                {
+                    return;
+                }
+                
+                _avaPlotMainNeedsRefresh = true;
+            }
+        }
         public void UpdatePolarAxisCircles(AvaPlot plot, bool isLog, double min, double max, bool isDark)
         {
             if (plot == null || plot?.Plot == null || _polarAxisMain == null)
@@ -837,7 +875,7 @@ namespace AntennaAV.Services
                     _scaleSettings.IsDark = isDark;
                     Plots.UpdatePolarAxisTheme(_polarAxisMain, isDark);
                     Plots.AddCustomSpokeLines(avaPlotMain, _polarAxisMain, isDark);
-                    Plots.SetScottPlotTheme(isDark, false, avaPlotMain);
+                    Plots.SetScottPlotTheme(isDark, true, avaPlotMain);
                 }
 
             }
@@ -850,6 +888,7 @@ namespace AntennaAV.Services
             _polarAxisMain = Plots.Initialize(plot, isDark) ?? throw new InvalidOperationException("Failed to initialize main polar axis");
             ApplyThemeToMainPlot(isDark, plot);
             UpdatePolarAxisCircles(plot, true, -50.0, 0, isDark);
+            CreateBackgroundPolygon(plot, isDark);
             InitializeRefreshTimer();
         }
 
@@ -864,6 +903,13 @@ namespace AntennaAV.Services
                     InternalUpdateSectorPolygon(_avaPlotMain, _pendingSectorStart.Value, _pendingSectorEnd.Value, _pendingSectorVisible.Value);
                     MoveAngleArrowToFront(_avaPlotMain);
                     _sectorUpdatePending = false;
+                }
+                if (_avaPlotMainNeedsAutoscale && _avaPlotMain != null && _avaPlotMain?.Plot != null)
+                {
+                    _avaPlotMain.Plot.Axes.AutoScale();
+                    _avaPlotMainNeedsAutoscale = false;
+                    _avaPlotMainNeedsRefresh = true; 
+
                 }
 
                 if (_avaPlotMainNeedsRefresh && _avaPlotMain != null && _avaPlotMain?.Plot != null)

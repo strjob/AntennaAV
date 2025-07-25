@@ -9,6 +9,19 @@
         <local:ViewLocator/>
     </Application.DataTemplates>
 
+	<Application.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.ThemeDictionaries>
+				<ResourceDictionary x:Key="Light">
+					<BoxShadows x:Key="CardBoxShadow">2 2 4 0 DarkGray</BoxShadows>
+				</ResourceDictionary>
+				<ResourceDictionary x:Key="Dark">
+					<BoxShadows x:Key="CardBoxShadow">2 2 4 0 Black</BoxShadows>
+				</ResourceDictionary>
+			</ResourceDictionary.ThemeDictionaries>
+		</ResourceDictionary>
+	</Application.Resources>
+
   <Application.Styles>
     <FluentTheme>
       <FluentTheme.Palettes>

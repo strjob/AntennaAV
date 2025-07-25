@@ -59,12 +59,13 @@ namespace AntennaAV.Views
 
             }
 
-            //OnThemeChanged(this, EventArgs.Empty);
+            AvaPlotMain.SizeChanged += AvaPlotMain_SizeChanged;
+
 
             this.GetObservable(Window.ClientSizeProperty).Subscribe(_ =>
             {
                 _plotManagerSmall.ResetPlotAxes();
-                _plotManagerMain.ResetPlotAxes();
+                //_plotManagerMain.ResetPlotAxes();
             });
 
             NumericUpDownSectorSize.AddHandler(InputElement.KeyDownEvent, NumericUpDown_KeyDown, RoutingStrategies.Tunnel);
@@ -88,6 +89,11 @@ namespace AntennaAV.Views
         private void OnSettingsClick(object sender, RoutedEventArgs e)
         {
             SettingsOverlay.IsVisible = !SettingsOverlay.IsVisible;
+        }
+
+        private void AvaPlotMain_SizeChanged(object? sender, SizeChangedEventArgs e)
+        {
+            _plotManagerMain.ResetPlotAxes();
         }
 
 
