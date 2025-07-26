@@ -108,25 +108,6 @@ namespace AntennaAV.ViewModels
         }
     }
 
-    //public partial class PlotData : ObservableObject
-    //{
-    //    public double[] Angles { get; set; } = Array.Empty<double>();
-    //    public double[] PowerNormValues { get; set; } = Array.Empty<double>();
-    //    public double[] VoltageNormValues { get; set; } = Array.Empty<double>();
-
-    //    [ObservableProperty]
-    //    private string colorHex = "#0000FF";
-
-    //    [ObservableProperty]
-    //    private bool isVisible = true;
-
-    //    // Добавляем событие
-    //    public event Action? ColorChanged;
-    //    partial void OnColorHexChanged(string value)
-    //    {
-    //        ColorChanged?.Invoke();
-    //    }
-    //}
     public partial class PlotData : ObservableObject
     {
         public double[] Angles { get; set; } = Array.Empty<double>();

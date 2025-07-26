@@ -46,9 +46,6 @@ namespace AntennaAV.Services
 
     }
 
-    
-
-
     public class PlotManagerMain
     {
         private readonly object _plotMainLock = new();
@@ -58,7 +55,6 @@ namespace AntennaAV.Services
         private double? _globalMax = null;
         private bool _avaPlotMainNeedsRefresh = false;
         private bool _avaPlotMainNeedsAutoscale = false;
-
         private ScottPlot.Plottables.Polygon? _sectorPolygon;
         private ScottPlot.Plottables.Polygon? _backgroundPolygon;
         private ScottPlot.Plottables.PolarAxis? _polarAxisMain;
@@ -67,18 +63,10 @@ namespace AntennaAV.Services
         private double? _pendingSectorEnd = null;
         private bool? _pendingSectorVisible = null;
         private bool _sectorUpdatePending = false;
-
         private ScaleMode _currentScaleMode = ScaleMode.Auto;
         private ScaleSettings _scaleSettings = new();
-
-
         private readonly List<TabViewModel> _activePlotTabs = new();
 
-
-
-        /// <summary>
-        /// МОДИФИЦИРОВАННЫЙ метод DrawPolarPlot
-        /// </summary>
         public void DrawPolarPlot(IEnumerable<TabViewModel> tabs,
             TabViewModel currentTab,
             string? label = null)
@@ -192,7 +180,6 @@ namespace AntennaAV.Services
             RemoveExcessSegments(plotData, segments.Count);
         }
 
-
         private List<(List<double> segAngles, List<double> segValues)> CreateSegmentsOptimized(double[] angles, double[] values)
         {
             var segments = new List<(List<double>, List<double>)>();
@@ -271,8 +258,6 @@ namespace AntennaAV.Services
                     segmentData.ScatterPlot.Color = color;
                 }
             }
-
-            // Set legend only for the first segment
             segmentData.ScatterPlot.LegendText = isFirst && !string.IsNullOrEmpty(label) ? label : "";
         }
 
@@ -298,33 +283,22 @@ namespace AntennaAV.Services
 
             for (int i = 0; i < pointCount; i++)
             {
-                // Fix angle orientation - ensure consistent coordinate system
                 double mirroredAngle = (360 - segmentData.SegmentAngles[i]) % 360;
                 double r;
 
                 if (_scaleSettings.IsLogScale)
                 {
-                    // For log scale, ensure we have a valid range
                     if (max > min)
                     {
-                        // Log scale calculation
-                        //double logMin = Math.Log10(min);
-                        //double logMax = Math.Log10(max);
-                        //double logValue = Math.Log10(Math.Max(segmentData.SegmentValues[i], min)); // Prevent log(0)
-                        //r = r_max * (logValue - logMin) / (logMax - logMin);
                         r = (max - min) > 0 ? r_max * (segmentData.SegmentValues[i] - min) / (max - min) : r_max;
                     }
                     else
                     {
-                        // Fallback for invalid log range
                         r = (max - min) > 0 ? r_max * (segmentData.SegmentValues[i] - min) / (max - min) : 0;
-                    }
-
-                    
+                    }                  
                 }
                 else
                 {
-                    // Linear scale calculation
                     if (max > 0)
                     {
                         r = r_max * (segmentData.SegmentValues[i] / max);
@@ -334,14 +308,10 @@ namespace AntennaAV.Services
                         r = 0;
                     }
                 }
-
-                // Ensure r is within valid bounds
                 r = Math.Max(0, Math.Min(r, r_max));
-
                 segmentData.CoordinatesArray[i] = _polarAxisMain!.GetCoordinates(r, mirroredAngle);
             }
 
-            // Fill remaining array elements with the last valid coordinate
             var lastCoord = pointCount > 0 ? segmentData.CoordinatesArray[pointCount - 1] : new ScottPlot.Coordinates(0, 0);
             for (int i = pointCount; i < segmentData.CoordinatesArray.Length; i++)
             {
@@ -350,11 +320,8 @@ namespace AntennaAV.Services
 
             segmentData.ValidPointCount = pointCount;
         }
-
-        // This is the expensive operation - only called when global min/max changes
         private void UpdateAllPlotCoordinates(IEnumerable<TabViewModel> tabs, double min, double max)
         {
-            // Update active tabs cache to avoid repeated enumeration
             _activePlotTabs.Clear();
             foreach (var tab in tabs)
             {
@@ -363,8 +330,6 @@ namespace AntennaAV.Services
                     _activePlotTabs.Add(tab);
                 }
             }
-
-            // Update coordinates for all active plots
             foreach (var tab in _activePlotTabs)
             {
                 foreach (var segmentData in tab.Plot!.PlotSegments!)
@@ -384,22 +349,10 @@ namespace AntennaAV.Services
                 if (_currentScaleMode != value)
                 {
                     _currentScaleMode = value;
-                    OnScaleModeChanged?.Invoke(value);
                 }
             }
         }
 
-        public ScaleSettings ScaleSettings => _scaleSettings;
-
-        // НОВЫЕ СОБЫТИЯ
-        public event Action<ScaleMode>? OnScaleModeChanged;
-        public event Action<double, double>? OnScaleRangeChanged;
-
-        // НОВЫЕ ПУБЛИЧНЫЕ МЕТОДЫ
-
-        /// <summary>
-        /// Устанавливает режим масштабирования
-        /// </summary>
         private void SetScaleMode(ScaleMode mode)
         {
             lock (_plotMainLock)
@@ -426,9 +379,7 @@ namespace AntennaAV.Services
             SetScaleMode(mode);
         }
 
-        /// <summary>
         /// Устанавливает ручной диапазон масштабирования
-        /// </summary>
         public bool SetManualRange(int min, int max)
         {
             // Валидация
@@ -446,15 +397,12 @@ namespace AntennaAV.Services
                 if (_currentScaleMode == ScaleMode.Manual)
                 {
                     ApplyManualRange();
-                    OnScaleRangeChanged?.Invoke(min, max);
                 }
             }
             return true;
         }
 
-        /// <summary>
         /// Получает текущий эффективный диапазон (авто или ручной)
-        /// </summary>
         public (double min, double max) GetCurrentRange()
         {
             lock (_plotMainLock)
@@ -470,9 +418,7 @@ namespace AntennaAV.Services
             }
         }
 
-        /// <summary>
         /// Применяет ручной диапазон ко всем графикам
-        /// </summary>
         public void ApplyManualRange()
         {
             if (_currentScaleMode != ScaleMode.Manual) return;
@@ -501,9 +447,8 @@ namespace AntennaAV.Services
                 _avaPlotMainNeedsRefresh = true;
             }
         }
-        /// <summary>
+
         /// Обновляет координаты всех существующих графиков (кроме текущего в процессе отрисовки)
-        /// </summary>
         private void UpdateAllExistingPlotCoordinates(double min, double max)
         {
             foreach (var tab in _activePlotTabs)
@@ -520,8 +465,6 @@ namespace AntennaAV.Services
                 }
             }
         }
-
-
         public void SetAutoMinLimit(bool enabled, double limit)
         {
             lock (_plotMainLock)
@@ -589,17 +532,10 @@ namespace AntennaAV.Services
                     changed = true;
                 }
 
-                if (changed)
-                {
-                    OnScaleRangeChanged?.Invoke(_globalMin.Value, _globalMax.Value);
-                }
-
                 return changed;
             }
         }
 
-
-        // Replacement for DrawAllVisiblePlots - use for scale changes, theme changes, etc.
         public void RefreshAllVisiblePlots(IEnumerable<TabViewModel> tabs)
         {
             if (_avaPlotMain == null || _polarAxisMain == null)
@@ -651,8 +587,6 @@ namespace AntennaAV.Services
             }
         }
 
-
-        // Helper method to recalculate global range from all visible plots
         public void RecalculateGlobalRange(IEnumerable<TabViewModel> tabs)
         {
             lock (_plotMainLock)
@@ -674,7 +608,6 @@ namespace AntennaAV.Services
             }
             _avaPlotMainNeedsRefresh = true;
         }
-
 
         public void ClearCurrentTabPlot(TabViewModel tab, AvaPlot? plot = null)
         {
@@ -706,7 +639,6 @@ namespace AntennaAV.Services
             }
         }
 
-        // Method to reset global range when starting new acquisition series
         public void ResetGlobalRange()
         {
             lock (_plotMainLock)
@@ -716,7 +648,6 @@ namespace AntennaAV.Services
             }
         }
 
-
         public void ResetPlotAxes()
         {
             lock (_plotMainLock)
@@ -724,7 +655,6 @@ namespace AntennaAV.Services
                 _avaPlotMainNeedsAutoscale = true;
             }
         }
-
        
         public void CreateOrUpdateSectorPolygon(AvaPlot? plot, double start, double end, bool isVisible)
         {
@@ -803,45 +733,6 @@ namespace AntennaAV.Services
             }
         }
 
-        private void CreateBackgroundPolygon(AvaPlot? plot, bool isDark)
-        {
-            if (plot?.Plot == null) return;
-            lock (_plotMainLock)
-            {
-                // Вычисляем новые точки для сектора
-                var points = new List<ScottPlot.Coordinates>();
-                double radius = Constants.DefaultPlotRadius;
-
-                points.Add(new ScottPlot.Coordinates(0, 0));
-                double step = 1; // 1 градус
-                
-                    for (double angle = 0; angle <= 360; angle += step)
-                    {
-                        double theta = (angle + 90) * Math.PI / 180.0;
-                        points.Add(new ScottPlot.Coordinates(-radius * Math.Cos(theta), radius * Math.Sin(theta)));
-                    }
-
-                if (_backgroundPolygon == null)
-                {
-                    if (plot != null)
-                    {
-                        _backgroundPolygon = plot.Plot.Add.Polygon(points.ToArray());
-                        if(isDark)
-                            _backgroundPolygon.FillColor = Color.FromHex("#ffffff");
-                        else
-                            _backgroundPolygon.FillColor = Color.FromHex("#ffffff");
-                        _backgroundPolygon.LineWidth = 0;
-                        plot.Plot.MoveToBack(_backgroundPolygon);
-                    }
-                }
-                else
-                {
-                    return;
-                }
-                
-                _avaPlotMainNeedsRefresh = true;
-            }
-        }
         public void UpdatePolarAxisCircles(AvaPlot plot, bool isLog, double min, double max, bool isDark)
         {
             if (plot == null || plot?.Plot == null || _polarAxisMain == null)
@@ -852,7 +743,6 @@ namespace AntennaAV.Services
             }
             _avaPlotMainNeedsRefresh = true;
         }
-
 
         public void SetSectorVisibility(bool isVisible)
         {
@@ -888,10 +778,8 @@ namespace AntennaAV.Services
             _polarAxisMain = Plots.Initialize(plot, isDark) ?? throw new InvalidOperationException("Failed to initialize main polar axis");
             ApplyThemeToMainPlot(isDark, plot);
             UpdatePolarAxisCircles(plot, true, -50.0, 0, isDark);
-            CreateBackgroundPolygon(plot, isDark);
             InitializeRefreshTimer();
         }
-
 
         private void InitializeRefreshTimer()
         {

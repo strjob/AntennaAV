@@ -75,25 +75,26 @@
                 Grid.Column="3"
                 Width="1"
                 VerticalAlignment="Stretch"
+				HorizontalAlignment="Right"
                 Fill="{DynamicResource SystemChromeDisabledHighColor}" />
             <GridSplitter
                 Grid.Column="3"
                 HorizontalAlignment="Stretch"
                 Background="Transparent" />
-            <!--<Border
+            <Border
                 Grid.Row="0"
                 Grid.Column="2"
-                Margin="10"
-                Padding="5"
+                Margin="5,10,5,8"
+                Padding="5,0,5,0"
                 Background="{DynamicResource SystemRegionColor}"
                 BorderThickness="1"
                 BoxShadow="{DynamicResource CardBoxShadow}"
-                CornerRadius="8">-->
+                CornerRadius="8">
                 <Grid Grid.Column="2">
                     <ScottPlot:AvaPlot x:Name="AvaPlotMain" />
                     <Button
                         x:Name="SavePngButton"
-                        Margin="10"
+                        Margin="8"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Top"
                         Click="SavePngButton_Click"
@@ -128,7 +129,7 @@
                     </StackPanel>
 
                 </Grid>
-            <!--</Border>-->
+            </Border>
             <Grid
                 Grid.Row="0"
                 Grid.Column="0"
@@ -146,7 +147,7 @@
                 <!--  Верхний ряд - Передающая антенна  -->
                 <Border
                     Grid.Row="0"
-                    Margin="15,10,15,5"
+                    Margin="15,10,15,7"
                     Padding="5"
                     Background="{DynamicResource SystemRegionColor}"
                     BorderThickness="1"
@@ -319,7 +320,7 @@
                 <!--  Средний ряд - Существующие текстовые блоки  -->
                 <Border
                     Grid.Row="1"
-                    Margin="15,10,15,10"
+                    Margin="15,5,15,8"
                     Background="{DynamicResource SystemRegionColor}"
                     BorderThickness="1"
                     BoxShadow="{DynamicResource CardBoxShadow}"
@@ -328,7 +329,7 @@
                         Margin="5"
                         VerticalAlignment="Top"
                         Background="{DynamicResource SystemBackgroundColor}">
-                        <Grid Margin="10,5,5,2">
+                        <Grid Margin="10,4,5,2">
                             <TextBlock FontSize="16" Text="Режим: " />
                             <TextBlock
                                 HorizontalAlignment="Right"
@@ -348,7 +349,7 @@
                                                        StringFormat={}{0:0.0}}" />
                         </Grid>
 
-                        <Grid Margin="10,2,5,5">
+                        <Grid Margin="10,2,5,4">
                             <TextBlock
                                 HorizontalAlignment="Left"
                                 FontSize="16"
@@ -365,7 +366,7 @@
 
                 <Border
                     Grid.Row="2"
-                    Margin="15,5,15,15"
+                    Margin="15,5,15,10"
                     Padding="5"
                     Background="{DynamicResource SystemRegionColor}"
                     BorderThickness="1"
@@ -522,16 +523,11 @@
                                             </Style.Resources>
                                         </Style>
                                     </Button.Styles>
-                                    <!--<PathIcon Data="{StaticResource stop_regular}" />-->
                                 </Button>
                             </StackPanel>
                         </StackPanel>
                     </Grid>
                 </Border>
-
-
-
-
             </Grid>
 
             <Grid
@@ -639,7 +635,7 @@
                         <DataTemplate DataType="{x:Type vm:TabViewModel}">
                             <Border
                                 Grid.Row="2"
-                                Margin="4"
+                                Margin="0,2,0,3"
                                 Padding="5"
                                 Background="{DynamicResource SystemRegionColor}"
                                 BorderThickness="1"
@@ -659,7 +655,7 @@
                 </TabControl>
                 <Border
                     Grid.Row="2"
-                    Margin="15"
+                    Margin="12,10,12,8"
                     Padding="5"
                     Background="{DynamicResource SystemRegionColor}"
                     BorderThickness="1"
@@ -1012,17 +1008,17 @@
 			BorderBrush="{DynamicResource SystemChromeHighColor}"
             BorderThickness="0">
 
-            <Grid Background="{DynamicResource SystemChromeLowColor}">
+            <Grid Background="{DynamicResource SystemListMediumColor}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="0.2*" />
                     <ColumnDefinition Width="0.8*" />
                 </Grid.ColumnDefinitions>
 
-				<Rectangle VerticalAlignment="Top"
+				<!--<Rectangle VerticalAlignment="Top"
 						   HorizontalAlignment="Stretch"
 						   Height="1"
 						   Grid.ColumnSpan="2"
-						   Fill="{DynamicResource SystemChromeDisabledHighColor}"/>
+						   Fill="{DynamicResource SystemChromeDisabledHighColor}"/>-->
                 <StackPanel
                     Grid.Row="0"
                     Grid.Column="0"
