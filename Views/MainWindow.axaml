@@ -68,14 +68,14 @@
                 <ColumnDefinition Width="1" />
                 <ColumnDefinition Width="0.65*" MinWidth="300" />
                 <ColumnDefinition Width="5" />
-                <ColumnDefinition Width="0.35*" MinWidth="450" />
+                <ColumnDefinition Width="0.35*" MinWidth="430" />
             </Grid.ColumnDefinitions>
 
             <Rectangle
                 Grid.Column="3"
                 Width="1"
+                HorizontalAlignment="Right"
                 VerticalAlignment="Stretch"
-				HorizontalAlignment="Right"
                 Fill="{DynamicResource SystemChromeDisabledHighColor}" />
             <GridSplitter
                 Grid.Column="3"
@@ -353,6 +353,7 @@
                             <TextBlock
                                 HorizontalAlignment="Left"
                                 FontSize="16"
+								ToolTip.Tip="В режиме СВЧ: напряжение на выходе диодного детектора, в режиме УКВ: напряжение на нагрузке 50 Ом"
                                 Text="{CompiledBinding VoltageHeaderStr}" />
                             <TextBlock
                                 HorizontalAlignment="Right"
@@ -616,16 +617,23 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBox
                                     MinWidth="100"
+                                    MinHeight="24"
                                     IsVisible="{CompiledBinding IsEditingHeader}"
                                     KeyDown="HeaderEdit_KeyDown"
                                     LostFocus="HeaderEdit_LostFocus"
                                     Text="{CompiledBinding Header,
                                                            Mode=TwoWay}" />
-                                <TextBlock
+                                <Border
                                     MinWidth="100"
+                                    MinHeight="24"
+                                    Background="Transparent"
                                     DoubleTapped="Header_DoubleTapped"
-                                    IsVisible="{CompiledBinding !IsEditingHeader}}"
-                                    Text="{CompiledBinding Header}" />
+                                    IsVisible="{CompiledBinding !IsEditingHeader}}">
+                                    <TextBlock
+                                        MinWidth="100"
+                                        MinHeight="24"
+                                        Text="{CompiledBinding Header}" />
+                                </Border>
                             </StackPanel>
                         </DataTemplate>
                     </TabControl.ItemTemplate>
@@ -852,7 +860,7 @@
                             VerticalAlignment="Top"
                             Click="CalibrationButton_Click"
                             Content="Калибровка"
-                            IsEnabled="{CompiledBinding IsPortOpen}" />
+                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
                     </Grid>
                 </Border>
             </Grid>
@@ -1005,7 +1013,7 @@
             Grid.Row="1"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
-			BorderBrush="{DynamicResource SystemChromeHighColor}"
+            BorderBrush="{DynamicResource SystemChromeHighColor}"
             BorderThickness="0">
 
             <Grid Background="{DynamicResource SystemListMediumColor}">
@@ -1014,7 +1022,7 @@
                     <ColumnDefinition Width="0.8*" />
                 </Grid.ColumnDefinitions>
 
-				<!--<Rectangle VerticalAlignment="Top"
+                <!--<Rectangle VerticalAlignment="Top"
 						   HorizontalAlignment="Stretch"
 						   Height="1"
 						   Grid.ColumnSpan="2"

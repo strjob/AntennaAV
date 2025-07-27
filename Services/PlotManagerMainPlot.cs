@@ -56,7 +56,6 @@ namespace AntennaAV.Services
         private bool _avaPlotMainNeedsRefresh = false;
         private bool _avaPlotMainNeedsAutoscale = false;
         private ScottPlot.Plottables.Polygon? _sectorPolygon;
-        private ScottPlot.Plottables.Polygon? _backgroundPolygon;
         private ScottPlot.Plottables.PolarAxis? _polarAxisMain;
         private ScottPlot.Plottables.Arrow? _angleArrow;
         private double? _pendingSectorStart = null;
@@ -96,14 +95,11 @@ namespace AntennaAV.Services
                 double actualMin, actualMax;
                 bool globalRangeChanged = false;
 
-                // НОВАЯ ЛОГИКА: разное поведение для разных режимов масштабирования
                 if (_currentScaleMode == ScaleMode.Manual)
                 {
-                    // Используем ручные значения
                     var (min, max) = GetCurrentRange();
                     actualMin = min;
                     actualMax = max;
-                    // В ручном режиме диапазон не меняется, но нужно обновить оси при первом вызове
                     globalRangeChanged = (_globalMin != actualMin || _globalMax != actualMax);
                     _globalMin = _scaleSettings.IsLogScale ? actualMin : 0;
                     _globalMax = _scaleSettings.IsLogScale ? actualMax : 1;
@@ -111,7 +107,6 @@ namespace AntennaAV.Services
                 }
                 else
                 {
-                    // Оригинальная логика для Auto режима
                     globalRangeChanged = UpdateGlobalMinMax(values);
                     actualMin = _scaleSettings.IsLogScale ? _globalMin!.Value : 0;
                     actualMax = _scaleSettings.IsLogScale ? _globalMax!.Value : 1;
@@ -120,12 +115,10 @@ namespace AntennaAV.Services
 
                 if (globalRangeChanged)
                 {
-                    // Обновляем оси и координаты всех существующих графиков
                     Plots.AutoUpdatePolarAxisCircles(_avaPlotMain, _polarAxisMain, _scaleSettings.IsLogScale, actualMin, actualMax, _scaleSettings.IsDark);
                     UpdateAllPlotCoordinates(tabs, actualMin, actualMax);
                 }
 
-                // Обновляем текущую вкладку
                 UpdateCurrentTabPlot(plotData, actualMin, actualMax, label);
                 _avaPlotMainNeedsRefresh = true;
             }
@@ -133,16 +126,13 @@ namespace AntennaAV.Services
 
         private void UpdateCurrentTabPlot(PlotData plotData, double min, double max, string? label)
         {
-            // Initialize segments if not exists
             plotData.PlotSegments ??= new List<PlotSegmentData>();
 
-            // Get values and create segments - optimized for frequent updates
             double[] values = _scaleSettings.IsLogScale ? plotData.PowerNormValues : plotData.VoltageNormValues;
             var segments = CreateSegmentsOptimized(plotData.Angles, values);
             var color = ScottPlot.Color.FromHex(plotData.ColorHex);
             bool first = true;
 
-            // Update existing segments or create new ones
             for (int segIndex = 0; segIndex < segments.Count; segIndex++)
             {
                 var (segAngles, segValues) = segments[segIndex];
@@ -150,7 +140,6 @@ namespace AntennaAV.Services
 
                 PlotSegmentData segmentData = GetOrCreateSegmentData(plotData, segIndex);
 
-                // Only update arrays if they're different (avoid unnecessary allocations)
                 if (NeedsDataUpdate(segmentData, segAngles, segValues))
                 {
                     if (segmentData.SegmentAngles?.Length != segAngles.Count)
@@ -162,21 +151,17 @@ namespace AntennaAV.Services
                         segmentData.SegmentValues = new double[segValues.Count];
                     }
 
-                    // Копируем данные без создания новых массивов
                     segAngles.CopyTo(segmentData.SegmentAngles, 0);
                     segValues.CopyTo(segmentData.SegmentValues, 0);
                 }
 
 
-                // Update coordinates in the fixed array
                 UpdateSegmentCoordinates(segmentData, min, max);
 
-                // Create or update scatter plot
                 CreateOrUpdateScatterPlot(segmentData, color, first, segIndex == 0 ? label : null);
                 first = false;
             }
 
-            // Remove excess segments
             RemoveExcessSegments(plotData, segments.Count);
         }
 
@@ -606,7 +591,6 @@ namespace AntennaAV.Services
                     }
                 }
             }
-            _avaPlotMainNeedsRefresh = true;
         }
 
         public void ClearCurrentTabPlot(TabViewModel tab, AvaPlot? plot = null)

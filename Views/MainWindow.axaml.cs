@@ -106,7 +106,6 @@ namespace AntennaAV.Views
 
                 var point = e.GetPosition(AvaPlotTx);
 
-                // Радиус внешнего круга в пикселях (например, 90% от половины минимального размера)
                 double plotRadiusPix = 0.6 * Math.Min(AvaPlotTx.Bounds.Width, AvaPlotTx.Bounds.Height) / 2.0;
                 double threshold = PointerThreshold;
                 double snappedAngle;
@@ -135,7 +134,6 @@ namespace AntennaAV.Views
 
                 var point = e.GetPosition(AvaPlotRx);
 
-                // Радиус внешнего круга в пикселях (например, 90% от половины минимального размера)
                 double plotRadiusPix = 0.6 * Math.Min(AvaPlotRx.Bounds.Width, AvaPlotRx.Bounds.Height) / 2.0;
                 double threshold = PointerThreshold;
                 double snappedAngle;
@@ -154,22 +152,45 @@ namespace AntennaAV.Views
                 }
             }
         }
+        //private void Header_DoubleTapped(object sender, RoutedEventArgs e)
+        //{
+        //    if (sender is TextBlock tb && tb.DataContext is TabViewModel vm)
+        //        vm.IsEditingHeader = true;
+        //}
         private void Header_DoubleTapped(object sender, RoutedEventArgs e)
         {
-            if (sender is TextBlock tb && tb.DataContext is TabViewModel vm)
+            if (sender is Control control && control.DataContext is TabViewModel vm)
+            {
                 vm.IsEditingHeader = true;
+            }
         }
 
         private void HeaderEdit_LostFocus(object sender, RoutedEventArgs e)
         {
             if (sender is TextBox tb && tb.DataContext is TabViewModel vm)
+            {
                 vm.IsEditingHeader = false;
+                if (DataContext is MainWindowViewModel mainVm)
+                {
+                    var limitValue = mainVm.IsAutoscale ? mainVm.AutoscaleLimitValue : mainVm.ManualScaleValue;
+                    RefreshAllPlots(mainVm.Tabs, mainVm.IsPowerNormSelected, isDark, limitValue);
+                }
+            }
+                
         }
 
         private void HeaderEdit_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == (Key)HeaderEditKeyEnter && sender is TextBox tb && tb.DataContext is TabViewModel vm)
+            { 
                 vm.IsEditingHeader = false;
+                if (DataContext is MainWindowViewModel mainVm)
+                {
+                    var limitValue = mainVm.IsAutoscale ? mainVm.AutoscaleLimitValue : mainVm.ManualScaleValue;
+                    RefreshAllPlots(mainVm.Tabs, mainVm.IsPowerNormSelected, isDark, limitValue);
+                }
+            }
+
         }
 
         private bool IsDescendantOfTextBox(object? source)
@@ -193,10 +214,20 @@ namespace AntennaAV.Views
             {
                 if (DataContext is MainWindowViewModel vm)
                 {
+                    bool wasEditing = false;
                     foreach (var tab in vm.Tabs)
                     {
                         if (tab.IsEditingHeader)
+                        {
+                            wasEditing = true;
                             tab.IsEditingHeader = false;
+                        }
+                            
+                    }
+                    if (wasEditing)
+                    {
+                        var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue : vm.ManualScaleValue;
+                        RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
                     }
                 }
             }
@@ -458,7 +489,7 @@ namespace AntennaAV.Views
                         _plotManagerMain.DrawPolarPlot(
                             vm.Tabs,
                             vm.SelectedTab,
-                            vm.SelectedTab.Header // label для легенды
+                            vm.SelectedTab.Header 
                         );
                     }
                 });

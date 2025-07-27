@@ -550,12 +550,12 @@ namespace AntennaAV.ViewModels
                     if (DeviceModeStr.Contains("СВЧ"))
                     {
                         Voltage = lastData.Voltage;
-                        VoltageHeaderStr = "Напряжение дет., мкВ: ";
+                        VoltageHeaderStr = "Напряжение, мкВ: ";
                     }
                     else if(DeviceModeStr.Contains("УКВ"))
                     {
                         Voltage = AntennaDiagramCollector.CalculateVoltageFromDBm(PowerDbm);
-                        VoltageHeaderStr = "Напряжение 50 Ом, мВ: "; 
+                        VoltageHeaderStr = "Напряжение, мВ: "; 
                     }
                     else
                     {
