@@ -278,17 +278,39 @@ namespace AntennaAV.Views
             }
         }
 
+        //private void TogglePlotVisibility_Click(object? sender, RoutedEventArgs e)
+        //{
+        //    if (this.DataContext is MainWindowViewModel vm && vm.SelectedTab != null && vm.SelectedTab.Plot != null)
+        //    {
+        //        var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue : vm.ManualScaleValue;
+        //        Dispatcher.UIThread.Post(() =>
+        //        {
+        //            vm.SelectedTab.Plot.IsVisible = !vm.SelectedTab.Plot.IsVisible;
+        //            RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
+        //        });
+
+        //    }
+        //}
+
         private void TogglePlotVisibility_Click(object? sender, RoutedEventArgs e)
         {
             if (this.DataContext is MainWindowViewModel vm && vm.SelectedTab != null && vm.SelectedTab.Plot != null)
             {
-                var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue : vm.ManualScaleValue;
                 Dispatcher.UIThread.Post(() =>
                 {
-                    vm.SelectedTab.Plot.IsVisible = !vm.SelectedTab.Plot.IsVisible;
-                    RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
+                    if (vm.SelectedTab.Plot.IsVisible)
+                    {
+                        // Скрываем график
+                        _plotManagerMain.HidePlotAndRecalculateRange(vm.SelectedTab, vm.Tabs);
+                    }
+                    else
+                    {
+                        // Показываем график
+                        vm.SelectedTab.Plot.IsVisible = true;
+                        var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue : vm.ManualScaleValue;
+                        RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
+                    }
                 });
-
             }
         }
 
@@ -420,7 +442,6 @@ namespace AntennaAV.Views
                     _plotManagerMain.UpdateScaleMode(isAutoscale);
                     _plotManagerMain.SetAutoMinLimit(true, AutoscaleLimitValue!.Value);
                     _plotManagerMain.SetManualRange(ManualScaleValue!.Value, 0);
-                    RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
                 });
             };
 

@@ -124,6 +124,75 @@ namespace AntennaAV.Services
             }
         }
 
+        /// <summary>
+        /// Обновляет видимость графика без полной перерисовки
+        /// </summary>
+        public void UpdatePlotVisibility(TabViewModel tab, bool isVisible)
+        {
+            if (tab?.Plot == null)
+                return;
+
+            lock (_plotMainLock)
+            {
+                tab.Plot.IsVisible = isVisible;
+
+                if (tab.Plot.PlotSegments != null)
+                {
+                    foreach (var segmentData in tab.Plot.PlotSegments)
+                    {
+                        if (segmentData.ScatterPlot != null)
+                        {
+                            segmentData.ScatterPlot.IsVisible = isVisible;
+                        }
+                    }
+                }
+
+                _avaPlotMainNeedsRefresh = true;
+            }
+        }
+
+        /// <summary>
+        /// Скрывает график и пересчитывает диапазон
+        /// </summary>
+        public void HidePlotAndRecalculateRange(TabViewModel tab, IEnumerable<TabViewModel> allTabs)
+        {
+            if (tab?.Plot == null)
+                return;
+
+            lock (_plotMainLock)
+            {
+                // Скрываем график
+                ClearCurrentTabPlot(tab);
+                tab.Plot.IsVisible = false;
+
+                // Пересчитываем диапазон только для видимых графиков
+                var visibleTabs = allTabs.Where(t => t.Plot?.IsVisible == true);
+                if (visibleTabs.Any())
+                {
+                    RecalculateGlobalRange(visibleTabs);
+
+                    // Обновляем координаты оставшихся видимых графиков
+                    var (min, max) = GetCurrentRange();
+                    double actualMin = _scaleSettings.IsLogScale ? min : 0;
+                    double actualMax = _scaleSettings.IsLogScale ? max : 1;
+
+                    if (_avaPlotMain != null && _polarAxisMain != null)
+                    {
+                        Plots.AutoUpdatePolarAxisCircles(_avaPlotMain, _polarAxisMain, _scaleSettings.IsLogScale, actualMin, actualMax, _scaleSettings.IsDark);
+                    }
+
+                    UpdateAllPlotCoordinates(visibleTabs, actualMin, actualMax);
+                }
+                else
+                {
+                    // Если нет видимых графиков, сбрасываем диапазон
+                    ResetGlobalRange();
+                }
+
+                _avaPlotMainNeedsRefresh = true;
+            }
+        }
+
         private void UpdateCurrentTabPlot(PlotData plotData, double min, double max, string? label)
         {
             plotData.PlotSegments ??= new List<PlotSegmentData>();
@@ -567,6 +636,7 @@ namespace AntennaAV.Services
                     {
                         UpdateCurrentTabPlot(tab.Plot, actualMin, actualMax, tab.Header);
                     }
+
                 }
                 _avaPlotMainNeedsRefresh = true;
             }
@@ -589,6 +659,7 @@ namespace AntennaAV.Services
                             UpdateGlobalMinMax(values);
                         }
                     }
+
                 }
             }
         }
