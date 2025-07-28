@@ -479,8 +479,8 @@ namespace AntennaAV.Helpers
                     {
                         if(main)
                         {
-                            avaPlot.Plot.FigureBackground.Color = Color.FromHex("#151515");
-                            avaPlot.Plot.DataBackground.Color = Color.FromHex("#151515");
+                            avaPlot.Plot.FigureBackground.Color = Color.FromHex("#1A1A1A");
+                            avaPlot.Plot.DataBackground.Color = Color.FromHex("#1A1A1A");
                             avaPlot.Plot.Axes.Color(Color.FromHex("#d7d7d7"));
                             avaPlot.Plot.Grid.MajorLineColor = Color.FromHex("#404040");
                             avaPlot.Plot.Legend.BackgroundColor = Color.FromHex("#404040");
@@ -491,8 +491,8 @@ namespace AntennaAV.Helpers
                         else
                         {
 
-                            avaPlot.Plot.FigureBackground.Color = Color.FromHex("#151515");
-                            avaPlot.Plot.DataBackground.Color = Color.FromHex("#151515");
+                            avaPlot.Plot.FigureBackground.Color = Color.FromHex("#1A1A1A");
+                            avaPlot.Plot.DataBackground.Color = Color.FromHex("#1A1A1A");
                             avaPlot.Plot.Axes.Color(Color.FromHex("#d7d7d7"));
                             avaPlot.Plot.Grid.MajorLineColor = Color.FromHex("#404040");
                             avaPlot.Plot.Legend.BackgroundColor = Color.FromHex("#404040");

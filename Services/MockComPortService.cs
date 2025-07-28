@@ -27,6 +27,7 @@ public class MockComPortService : IComPortService
     public bool ReadCalibration() => true;
     public bool SetAdcGain(int gain) => true;
     public bool SetDefaultRFGain(int gain) => true;
+    public bool CalibrateZeroSVCH() => true;
     public IEnumerable<AntennaData> GetAllRecordedData() =>
         new List<AntennaData>
         {

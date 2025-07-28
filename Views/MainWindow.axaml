@@ -353,8 +353,8 @@
                             <TextBlock
                                 HorizontalAlignment="Left"
                                 FontSize="16"
-								ToolTip.Tip="В режиме СВЧ: напряжение на выходе диодного детектора, в режиме УКВ: напряжение на нагрузке 50 Ом"
-                                Text="{CompiledBinding VoltageHeaderStr}" />
+                                Text="{CompiledBinding VoltageHeaderStr}"
+                                ToolTip.Tip="В режиме СВЧ: напряжение на выходе диодного детектора, в режиме УКВ: напряжение на нагрузке 50 Ом" />
                             <TextBlock
                                 HorizontalAlignment="Right"
                                 FontSize="16"
@@ -545,7 +545,7 @@
 
                 <StackPanel
                     Grid.Row="0"
-                    Margin="5"
+                    Margin="5,5,5,0"
                     HorizontalAlignment="Left"
                     Orientation="Horizontal">
                     <Button
@@ -616,22 +616,24 @@
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
                                 <TextBox
-                                    MinWidth="100"
-                                    MinHeight="24"
+                                    MinWidth="50"
+                                    MinHeight="20"
+                                    FontSize="20"
                                     IsVisible="{CompiledBinding IsEditingHeader}"
                                     KeyDown="HeaderEdit_KeyDown"
                                     LostFocus="HeaderEdit_LostFocus"
                                     Text="{CompiledBinding Header,
                                                            Mode=TwoWay}" />
                                 <Border
-                                    MinWidth="100"
-                                    MinHeight="24"
+                                    MinWidth="50"
+                                    MinHeight="20"
                                     Background="Transparent"
                                     DoubleTapped="Header_DoubleTapped"
                                     IsVisible="{CompiledBinding !IsEditingHeader}}">
                                     <TextBlock
-                                        MinWidth="100"
-                                        MinHeight="24"
+                                        MinWidth="50"
+                                        MinHeight="20"
+                                        FontSize="20"
                                         Text="{CompiledBinding Header}" />
                                 </Border>
                             </StackPanel>
@@ -860,6 +862,17 @@
                             VerticalAlignment="Top"
                             Click="CalibrationButton_Click"
                             Content="Калибровка"
+                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
+                        <Button
+                            Grid.Row="2"
+                            Grid.Column="2"
+                            Grid.ColumnSpan="3"
+                            Height="32"
+                            Margin="77,50,0,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Command="{CompiledBinding CalibrateZeroSvchCommand}"
+                            Content="Калибровка 0"
                             IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
                     </Grid>
                 </Border>

@@ -196,6 +196,7 @@ namespace AntennaAV.ViewModels
                 LastEvent = $"Ошибка импорта: {ex.Message}";
             }
         }
+        [RelayCommand] public void CalibrateZeroSvch() => _comPortService.CalibrateZeroSVCH();
         [RelayCommand] public void ResetRxAntennaCounter() => SetAntennaAngle("0", "R", "Z");
         [RelayCommand] public void MoveTransmitterToAngle() => SetAntennaAngle(TransmitterAngle, "T", "G");
         [RelayCommand] public void SetTransmitterAngle() => SetAntennaAngle(TransmitterAngle, "T", "S");
@@ -561,10 +562,13 @@ namespace AntennaAV.ViewModels
                     {
                         Voltage = -1; 
                     }
-                    if(lastData.ModeAutoHand == 0)
+
+                    HandModeErrorStr = lastData.ModeAutoHand switch
                     {
-                        HandModeErrorStr = "🔴 Установка находится в ручном режиме";
-                    }
+                        0 => "🔴 Установка находится в ручном режиме",
+                        _ => ""
+                    };
+
                 }
                 if (dataReceived)
                 {
@@ -573,7 +577,9 @@ namespace AntennaAV.ViewModels
             }
         }
 
-        private string CheckAntennaCounter(double antennaCounter)
+
+
+    private string CheckAntennaCounter(double antennaCounter)
         {
             return Math.Abs(antennaCounter) >= Constants.MaxAntennaCounter
                 ? "Защита от перекручивания кабеля"

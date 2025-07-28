@@ -256,12 +256,12 @@ namespace AntennaAV.Services
 
         public bool SetCalibrationPoint(double value)
         {
-            if (_port != null && _port.IsOpen)
-            { 
-                WriteCommand($"{value.ToString("0.####", CultureInfo.InvariantCulture)}", "AA");
-                return true;
-            }
-            return false;
+            return WriteCommand($"{value.ToString("0.####", CultureInfo.InvariantCulture)}", "AA");
+        }
+
+        public bool CalibrateZeroSVCH()
+        {
+            return SendCommand("K", "AA");
         }
 
         public bool WriteCommand(string body, string prefix)
