@@ -7,31 +7,33 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq.Expressions;
 
-
 namespace AntennaAV.ViewModels
 {
+    // ViewModel для отдельной вкладки с данными диаграммы направленности
+    // Управляет таблицей данных, заголовком вкладки и настройками отображения графика
     public partial class TabViewModel : ObservableObject
     {
         [ObservableProperty]
         private string header = string.Empty;
 
+        // Коллекция данных антенны для отображения в таблице
         public FastObservableCollection<GridAntennaData> AntennaDataCollection { get; } = new();
 
         [ObservableProperty]
         private bool isEditingHeader;
 
+        // Источник данных для TreeDataGrid компонента
         public FlatTreeDataGridSource<GridAntennaData> AntennaSource { get; }
 
+        // Данные для построения графика диаграммы направленности
         public PlotData Plot { get; set; } = new PlotData();
 
-        //public List<ScottPlot.Plottables.Scatter> DataScatters { get; } = new();
-
+        // Флаг изменения цвета графика для обновления отображения
         public bool IsPlotColorChanged { get; set; }
 
+        // Инициализирует новую вкладку с настройками таблицы данных
         public TabViewModel()
         {
-
-
             AntennaSource = new FlatTreeDataGridSource<GridAntennaData>(AntennaDataCollection)
             {
                 Columns =
@@ -71,18 +73,21 @@ namespace AntennaAV.ViewModels
             };
         }
 
+        // Добавляет новые данные антенны в коллекцию
         public void AddAntennaData(IEnumerable<GridAntennaData> newItems)
         {
             AntennaDataCollection.AddRange(newItems);
         }
 
+        // Очищает все данные в таблице
         public void ClearTableData()
         {
             AntennaDataCollection.Clear();
         }
     }
 
-
+    // Кастомная колонка для TreeDataGrid с форматированным отображением и корректной сортировкой
+    // Позволяет показывать отформатированные строки, но сортировать по числовым значениям
     public class FormattedStringColumn<TModel> : TextColumn<TModel, string?> where TModel : class
     {
         private readonly Func<TModel, IComparable?> _sortKeySelector;
@@ -96,6 +101,7 @@ namespace AntennaAV.ViewModels
             _sortKeySelector = sortKeySelector;
         }
 
+        // Возвращает компаратор для сортировки по числовым значениям
         public override Comparison<TModel>? GetComparison(ListSortDirection direction)
         {
             return (x, y) =>
@@ -108,10 +114,17 @@ namespace AntennaAV.ViewModels
         }
     }
 
+    // Данные для отображения графика диаграммы направленности
+    // Содержит массивы углов, мощностей, напряжений и настройки визуализации
     public partial class PlotData : ObservableObject
     {
+        // Массив углов в градусах
         public double[] Angles { get; set; } = Array.Empty<double>();
+        
+        // Массив нормализованных значений мощности
         public double[] PowerNormValues { get; set; } = Array.Empty<double>();
+        
+        // Массив нормализованных значений напряжения
         public double[] VoltageNormValues { get; set; } = Array.Empty<double>();
 
         [ObservableProperty]
@@ -120,12 +133,13 @@ namespace AntennaAV.ViewModels
         [ObservableProperty]
         private bool isVisible = true;
 
-        // Move segments into PlotData
+        // Сегменты данных для составных графиков
         public List<PlotSegmentData>? PlotSegments { get; set; }
 
-        // Event for color changes
+        // Событие изменения цвета графика
         public event Action? ColorChanged;
 
+        // Вызывается при изменении цвета для уведомления подписчиков
         partial void OnColorHexChanged(string value)
         {
             ColorChanged?.Invoke();

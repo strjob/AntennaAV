@@ -27,6 +27,8 @@ public class MockComPortService : IComPortService
     public bool ReadCalibration() => true;
     public bool SetAdcGain(int gain) => true;
     public bool SetDefaultRFGain(int gain) => true;
+
+    public bool SetGenState(bool isOff) => true;
     public bool CalibrateZeroSVCH() => true;
     public IEnumerable<AntennaData> GetAllRecordedData() =>
         new List<AntennaData>
@@ -40,7 +42,8 @@ public class MockComPortService : IComPortService
                 RxAntennaCounter = 7,
                 ReceiverAngleDeg = 123.4,
                 TransmitterAngleDeg = 321.0,
-                Systick = 10
+                Systick = 10,
+                GenOnOff = 0
             }
         };
 
@@ -53,7 +56,8 @@ public class MockComPortService : IComPortService
             PowerDbm = -30.1,
             AntennaType = 2,
             RxAntennaCounter = 3,
-            Systick = 10
+            Systick = 10,
+            GenOnOff = 0
         };
         return true;
     }

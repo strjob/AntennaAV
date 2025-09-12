@@ -1,15 +1,20 @@
 using Microsoft.VisualBasic;
 using System;
+
 namespace AntennaAV.Helpers
 {
+    // Утилиты для работы с углами в системе антенного позиционирования
+    // Обрабатывает нормализацию углов, вычисление разностей и проверку диапазонов
     public static class AngleUtils
     {
+        // Вычисляет минимальную угловую разность между двумя углами с учетом цикличности
         public static double AngleDiff(double a, double b)
         {
             double diff = Math.Abs(a - b) % 360.0;
             return diff > 180.0 ? 360.0 - diff : diff;
         }
 
+        // Проверяет, находится ли угол в заданном диапазоне с учетом перехода через 0°
         public static bool IsAngleInRange(double angle, double from, double to)
         {
             angle = NormalizeAngle(angle);
@@ -21,13 +26,15 @@ namespace AntennaAV.Helpers
             return diffFromAngle <= diffFromTo;
         }
 
+        // Определяет параметры движения антенны для сбора диаграммы
+        // Возвращает стартовый угол, конечный угол, направление и признак полного круга
         public static (double startAngleOvershoot, double stopAngleOvershoot, string direction, bool isFullCircle) DetermineStartEndDir(double currentAngle, double from, double to, double currentCounter)
         {
             double startAngle, stopAngle, startAngleOvershoot, stopAngleOvershoot;
             string direction;
             bool isFullCircle = false;
-            //Определение стартового угла
-            //Особый случай, если полный круг
+            
+            // Особый случай полного круга (360°)
             if (AngleUtils.AngleDiff(from, to) < 0.1)
             {
                 startAngleOvershoot = currentAngle;
@@ -46,7 +53,7 @@ namespace AntennaAV.Helpers
             }
             else
             {
-                //Определяем какая точка ближе к текущему положению
+                // Определяем ближайшую стартовую точку
                 if (AngleUtils.AngleDiff(currentAngle, from) <= AngleUtils.AngleDiff(currentAngle, to))
                 {
                     startAngle = from;
@@ -57,7 +64,8 @@ namespace AntennaAV.Helpers
                     startAngle = to;
                     stopAngle = from;
                 }
-                //Определяем направление и углы
+                
+                // Определяем направление движения и углы с перебегом
                 if (AngleUtils.IsAngleInRange(startAngle + 1, from, to))
                 {
                     startAngleOvershoot = AngleUtils.NormalizeAngle(startAngle - Constants.Overshoot);
@@ -74,12 +82,13 @@ namespace AntennaAV.Helpers
             return (startAngleOvershoot, stopAngleOvershoot, direction, isFullCircle);
         }
 
-
+        // Нормализует угол к диапазону [0, 360) с округлением до 0.1°
         public static double NormalizeAngle(double angle)
         {
             return Math.Round((angle + 360) % 360, 1);
         }
 
+        // Вычисляет диапазон углов сектора по его размеру и центру
         public static (double from, double to) CalculateSectorRange(double size, double center)
         {
             // Нормализуем центр к диапазону [0, 360)
@@ -92,6 +101,7 @@ namespace AntennaAV.Helpers
             return (from, to);
         }
 
+        // Проверяет валидность строкового представления угла
         public static string ValidateAngle(string value, out double parsedValue)
         {
             if (string.IsNullOrWhiteSpace(value))

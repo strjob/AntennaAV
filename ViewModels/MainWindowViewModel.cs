@@ -20,7 +20,9 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AntennaAV.ViewModels
 {
-
+    // Главная ViewModel для основного окна приложения AntennaAV
+    // Управляет данными антенн, построением диаграмм направленности, интерфейсом пользователя
+    // Обеспечивает связь между View и моделями данных через MVVM паттерн
     public partial class MainWindowViewModel : ViewModelBase
     {
         // 1. приватные поля
@@ -42,6 +44,7 @@ namespace AntennaAV.ViewModels
         [ObservableProperty] private string connectionStatus = "⏳ Не подключено";
         [ObservableProperty] private string dataFlowStatus = "🔴 Нет данных";
         [ObservableProperty] private double receiverAngleDeg;
+        [ObservableProperty] private bool isGenOn;
         [ObservableProperty] private double transmitterAngleDeg;
         [ObservableProperty] private double powerDbm;
         [ObservableProperty] private double voltage;
@@ -118,6 +121,7 @@ namespace AntennaAV.ViewModels
         public event Action<double?>? AutoscaleMinValueChanged;
 
         // 5. RelayCommand
+        // Строит полярную диаграмму на основе настроек размера и центра сектора
         public void BuildRadar()
         {
             if (double.TryParse(SectorSize, out var size) && double.TryParse(SectorCenter, out var center))
@@ -127,39 +131,48 @@ namespace AntennaAV.ViewModels
                 OnBuildRadar?.Invoke(from, to);
             }
         }
+
+        // Добавляет новую вкладку для отображения данных диаграммы
         [RelayCommand] private void AddTab() => TabManager.AddTab();
+
+        // Удаляет выбранную вкладку и очищает связанные с ней данные графика
         [RelayCommand(CanExecute = nameof(CanEditOrDelete))]
         private void RemoveTab()
         {
-            //TabManager.RemoveTab();
             if(SelectedTab != null)
             {
                 SelectedTab.Plot.Angles = Array.Empty<double>();
                 SelectedTab.Plot.PowerNormValues = Array.Empty<double>();
                 SelectedTab.Plot.VoltageNormValues = Array.Empty<double>();
             }
-
             RequestDeleteCurrentPlot?.Invoke();
         }
 
+        // Устанавливает размер сектора в 120 градусов с центром в 0
         [RelayCommand]
         public void Set120Degrees()
         {
             SectorSize = "120";
             SectorCenter = "0";
         }
+
+        // Устанавливает размер сектора в 180 градусов с центром в 0
         [RelayCommand]
         public void Set180Degrees()
         {
             SectorSize = "180";
             SectorCenter = "0";
         }
+
+        // Устанавливает размер сектора в 360 градусов (полный круг) с центром в 0
         [RelayCommand]
         public void Set360Degrees()
         {
             SectorSize = "360";
             SectorCenter = "0";
         }
+
+        // Экспортирует данные выбранной вкладки в CSV файл
         [RelayCommand]
         public async Task ExportSelectedTabAsync(Window window)
         {
@@ -175,6 +188,8 @@ namespace AntennaAV.ViewModels
                 LastEvent = $"Ошибка экспорта: {ex.Message}";
             }
         }
+
+        // Импортирует данные из CSV файла в текущую вкладку
         [RelayCommand]
         public async Task ImportTableFromCsvAsync(Window window)
         {
@@ -187,7 +202,7 @@ namespace AntennaAV.ViewModels
                 {
                     SelectedTab.ClearTableData();
                     SelectedTab.AddAntennaData(newRows.ToArray());
-                    UpdatePlotFromTable(); // <-- строим график по таблице
+                    UpdatePlotFromTable(); // строим график по таблице
                     LastEvent = $"✅ Импортировано строк: {newRows.Count}";
                 }
             }
@@ -197,15 +212,42 @@ namespace AntennaAV.ViewModels
             }
         }
         [RelayCommand] public void CalibrateZeroSvch() => _comPortService.CalibrateZeroSVCH();
+
+        // Устанавливает состояние генератора (включен/выключен)
+        [RelayCommand] public void SetGenState(bool setGenOff) => _comPortService.SetGenState(setGenOff);
+
+        // Переключает состояние генератора
+        [RelayCommand]
+        public void ToggleGenerator()
+        {
+            SetGenState(IsGenOn); 
+        }
+
+        // Сбрасывает счетчик приемной антенны в ноль
         [RelayCommand] public void ResetRxAntennaCounter() => SetAntennaAngle("0", "R", "Z");
+
+        // Перемещает передающую антенну к указанному углу
         [RelayCommand] public void MoveTransmitterToAngle() => SetAntennaAngle(TransmitterAngle, "T", "G");
+
+        // Устанавливает угол передающей антенны напрямую
         [RelayCommand] public void SetTransmitterAngle() => SetAntennaAngle(TransmitterAngle, "T", "S");
+
+        // Перемещает приемную антенну к указанному углу
         [RelayCommand] public void MoveReceiverToAngle() => SetAntennaAngle(ReceiverAngle, "R", "G");
+
+        // Устанавливает угол приемной антенны напрямую  
         [RelayCommand] public void SetReceiverAngle() => SetAntennaAngle(ReceiverAngle, "R", "S");
+
+        // Останавливает движение указанной антенны
         [RelayCommand] public void StopAntenna(string antenna) => _comPortService.StopAntenna(antenna);
+
+        // Перемещает передающую антенну на относительный угол от текущей позиции
         [RelayCommand] public void MoveTxAntennaToRelativeAngle(double angle) => _comPortService.SetAntennaAngle(AngleUtils.NormalizeAngle(angle + TransmitterAngleDeg), "T", "G");
+
+        // Перемещает приемную антенну на относительный угол от текущей позиции
         [RelayCommand] public void MoveRxAntennaToRelativeAngle(double angle) => _comPortService.SetAntennaAngle(AngleUtils.NormalizeAngle(angle + ReceiverAngleDeg), "R", "G");
 
+        // Запускает автоматический сбор диаграммы направленности антенны
         [RelayCommand]
         public async Task StartDiagramAcquisition()
         {
@@ -234,6 +276,8 @@ namespace AntennaAV.ViewModels
                 }
             }
         }
+
+        // Отменяет текущий процесс сбора диаграммы направленности
         [RelayCommand]
         public void CancelDiagramAcquisition()
         {
@@ -241,12 +285,10 @@ namespace AntennaAV.ViewModels
             _acquisitionCts?.Dispose();
             _acquisitionCts = null;
             _isDiagramDataCollecting = false;
-            //lock (_dataLock)
-                //_collector.FinalizeData();
-                //UpdatePlotWithNormalizedData();
             _comPortService.StopAntenna("R");
         }
 
+        // Очищает все данные в таблице и на графике текущей вкладки
         [RelayCommand]
         public void ClearTable()
         {
@@ -274,7 +316,22 @@ namespace AntennaAV.ViewModels
         }
 
         // Вспомогательные методы
+        public bool GenToggleState
+        {
+            get => IsGenOn;
+            set
+            {
+                if (value != IsGenOn)
+                {
+                    ToggleGenerator();
+                }
+            }
+        }
 
+        partial void OnIsGenOnChanged(bool value)
+        {
+            OnPropertyChanged(nameof(GenToggleState));
+        }
         private async Task WaitStartAngleAsync(double start, CancellationToken cancellationToken)
         {
             while (AngleUtils.AngleDiff(ReceiverAngleDeg, start) > 1.0)
@@ -285,7 +342,7 @@ namespace AntennaAV.ViewModels
             await Task.Delay(500, cancellationToken);
         }
 
-
+        // Инициализирует процесс сбора данных диаграммы направленности
         private void StartDataCollection()
         {
             _isDiagramDataCollecting = true;
@@ -295,6 +352,7 @@ namespace AntennaAV.ViewModels
             StartTableUpdateTimer();
         }
 
+        // Ожидает начала движения антенны с таймаутом
         private async Task WaitForMovementStartAsync(double initialAngle, CancellationToken cancellationToken)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -315,18 +373,17 @@ namespace AntennaAV.ViewModels
             }
         }
 
+        // Ожидает достижения конечного угла измерения
         private async Task WaitForEndAngleAsync(double overshootEnd, CancellationToken cancellationToken)
         {
             while (AngleUtils.AngleDiff(ReceiverAngleDeg, overshootEnd) > 1.0)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    Debug.WriteLine("❌ Отмена в основном цикле");
                     throw new TaskCanceledException();
                 }
                 if (!_comPortService.IsOpen)
                 {
-                    Debug.WriteLine("❌ Связь потеряна во время снятия диаграммы");
                     ConnectionStatus = "⚠ Связь потеряна во время снятия диаграммы";
                     throw new OperationCanceledException("Связь потеряна");
                 }
@@ -334,11 +391,13 @@ namespace AntennaAV.ViewModels
             }
         }
 
+        // Останавливает обмен сообщениями с COM портом
         public void StopMessaging()
         {
             _comPortService.StopMessaging();
         }
 
+        // Останавливает движение всех антенн
         public void StopAntennas()
         {
             _comPortService.StopAntenna("T");
@@ -348,10 +407,11 @@ namespace AntennaAV.ViewModels
 
         // 7. Приватные методы
         private bool CanEditOrDelete() => SelectedTab != null;
+
+        // Асинхронно подключается к COM порту устройства
         private async Task ConnectToPortAsync()
         {
             var result = await Task.Run(() => _comPortService.AutoDetectAndConnect());
-
             IsPortOpen = _comPortService.IsOpen;
             ConnectionStatus = result switch
             {
@@ -363,23 +423,17 @@ namespace AntennaAV.ViewModels
                 ConnectResult.ExceptionOccurred => "💥 Ошибка при подключении",
                 _ => "❓ Неизвестный результат"
             };
-
             if (result == ConnectResult.Success)
                 _comPortService.StartReading();
         }
 
+        // Выполняет полный цикл автоматического сбора диаграммы направленности
         private async Task StartDiagramAcquisitionAsync(double from, double to, CancellationToken cancellationToken)
         {
             try
             {
-                Debug.WriteLine($"Начинаем сбор диаграммы: размер сектора = {to - from:F1}°, центр = {(from + to) / 2:F1}°");
-
-                if (IsDiagramAcquisitionRunning)
-                {
-                    Debug.WriteLine("❌ Диаграмма уже запущена, выход");
-                    return;
-                }
-
+                if (IsDiagramAcquisitionRunning) return;
+                
                 IsDiagramAcquisitionRunning = true;
                 _isDiagramDataCollecting = false;
 
@@ -388,15 +442,11 @@ namespace AntennaAV.ViewModels
 
                 double currentAngle = ReceiverAngleDeg;
                 double currentCounter = RxAntennaCounter;
-                Debug.WriteLine($"Текущее положение: угол={currentAngle:F1}°, counter={currentCounter}");
 
-                // Определяем углы и параметры
-                //(double startAngle, double endAngle) = DetermineStartAndEndAngles(currentAngle, from, to);
                 (double startAngleOvershoot, double stopAngleOvershoot, string direction, bool isFullCircle) = AngleUtils.DetermineStartEndDir(currentAngle, from, to, currentCounter);
                 _acquisitionFrom = from;
                 _acquisitionTo = to;
 
-                //Если полный круг, то едем сразу к конечной точке, иначе - к стартовой
                 if (isFullCircle)
                 {
                     StartDataCollection();
@@ -411,16 +461,8 @@ namespace AntennaAV.ViewModels
                     StartDataCollection();
                 }
 
-                // Движение к конечной точке
                 _comPortService.SetAntennaAngle(stopAngleOvershoot, "R", direction);
-                Debug.WriteLine($"Направление движения: {direction}");
-
                 await WaitForEndAngleAsync(stopAngleOvershoot, cancellationToken);
-
-                // Завершение
-                Debug.WriteLine($"🔄 Завершение сбора данных");
-                //FinalizeDataCollection();
-                Debug.WriteLine("✅ Диаграмма успешно завершена");
             }
             catch (TaskCanceledException)
             {
@@ -432,7 +474,6 @@ namespace AntennaAV.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"💥 Неожиданная ошибка: {ex.Message}");
                 LastEvent = $"Ошибка сбора диаграммы: {ex.Message}";
             }
             finally
@@ -441,14 +482,14 @@ namespace AntennaAV.ViewModels
                 IsDiagramAcquisitionRunning = false;
                 _comPortService.StopAntenna("R");
                 _isFinalizingDiagram = true;
-                UpdateTable(); // Обновляем таблицу после сбора данных
+                UpdateTable();
                 _isFinalizingDiagram = false;
                 StopTableUpdateTimer();
                 RequestPlotRedraw?.Invoke();
-                Debug.WriteLine("=== КОНЕЦ СНЯТИЯ ДИАГРАММЫ ===");
             }
         }
 
+        // Обработчик тика UI таймера для обновления интерфейса
         private void OnUiTimerTick()
         {
             ProcessComPortData();
@@ -460,6 +501,7 @@ namespace AntennaAV.ViewModels
             CheckForPlotRedraw();
         }
 
+        // Запускает таймер обновления таблицы данных
         private void StartTableUpdateTimer()
         {
             if (_tableUpdateTimer == null)
@@ -470,11 +512,14 @@ namespace AntennaAV.ViewModels
             }
             _tableUpdateTimer.Start();
         }
+
+        // Останавливает таймер обновления таблицы
         private void StopTableUpdateTimer()
         {
             _tableUpdateTimer?.Stop();
         }
 
+        // Обновляет данные таблицы и график в реальном времени
         private void UpdateTable()
         {
             lock (_dataLock)
@@ -497,6 +542,7 @@ namespace AntennaAV.ViewModels
             }
         }
 
+        // Устанавливает угол антенны с проверкой валидности данных
         private void SetAntennaAngle(string angleStr, string antennaType, string command)
         {
             if (string.IsNullOrWhiteSpace(angleStr) || !_comPortService.IsOpen) return;
@@ -506,6 +552,7 @@ namespace AntennaAV.ViewModels
             }
         }
 
+        // Обрабатывает входящие данные от COM порта и обновляет свойства
         private void ProcessComPortData()
         {
             bool dataReceived = false;
@@ -540,6 +587,7 @@ namespace AntennaAV.ViewModels
                         dataReceived = true;
                     }
                 }
+                
                 if (lastData != null)
                 {
                     ReceiverAngleDeg = lastData.ReceiverAngleDeg;
@@ -548,6 +596,7 @@ namespace AntennaAV.ViewModels
                     DeviceMode = lastData.AntennaType;
                     RxAntennaCounter = Math.Round(lastData.RxAntennaCounter / 10.0, 1);
                     TxAntennaCounter = Math.Round(lastData.TxAntennaCounter/10.0, 1);
+                    
                     if (DeviceModeStr.Contains("СВЧ"))
                     {
                         Voltage = lastData.Voltage;
@@ -569,7 +618,13 @@ namespace AntennaAV.ViewModels
                         _ => ""
                     };
 
+                    IsGenOn = lastData.GenOnOff switch
+                    {
+                        0 => true,
+                        _ => false
+                    };
                 }
+                
                 if (dataReceived)
                 {
                     _lastDataReceivedTime = DateTime.Now;
@@ -577,15 +632,15 @@ namespace AntennaAV.ViewModels
             }
         }
 
-
-
-    private string CheckAntennaCounter(double antennaCounter)
+        // Проверяет счетчик антенны на предмет защиты от перекручивания кабеля
+        private string CheckAntennaCounter(double antennaCounter)
         {
             return Math.Abs(antennaCounter) >= Constants.MaxAntennaCounter
                 ? "Защита от перекручивания кабеля"
                 : string.Empty;
         }
 
+        // Обновляет статус потока данных
         private void UpdateDataFlowStatus(bool dataReceived)
         {
             if (dataReceived)
@@ -602,6 +657,7 @@ namespace AntennaAV.ViewModels
             }
         }
 
+        // Обрабатывает автоматическое переподключение при потере связи
         private void HandleReconnection()
         {
             if (!_comPortService.IsOpen && !_isReconnecting)
@@ -615,6 +671,7 @@ namespace AntennaAV.ViewModels
             }
         }
 
+        // Проверяет необходимость перерисовки графика
         private void CheckForPlotRedraw()
         {
             bool needRedraw = false;
@@ -808,6 +865,8 @@ namespace AntennaAV.ViewModels
                 DeviceModeStr = "СВЧ";
             }
         }
+
+        // Основной конструктор с dependency injection COM порта
         public MainWindowViewModel(IComPortService comPortService)
         {
             _comPortService = comPortService;
@@ -816,6 +875,7 @@ namespace AntennaAV.ViewModels
             var actualTheme = Avalonia.Application.Current?.ActualThemeVariant;
             IsDarkTheme = actualTheme == Avalonia.Styling.ThemeVariant.Dark;
 
+            // Подписка на события изменения коллекции вкладок
             Tabs.CollectionChanged += (_, _) =>
             {
                 OnPropertyChanged(nameof(HasTabs));
@@ -823,6 +883,7 @@ namespace AntennaAV.ViewModels
                 OnPropertyChanged(nameof(CanRemoveTabWhenPortOpen));
             };
 
+            // Подписка на события изменения TabManager
             TabManager.PropertyChanged += (s, e) =>
             {
                 if (e.PropertyName == nameof(TabManager.SelectedTabIndex))
@@ -836,13 +897,14 @@ namespace AntennaAV.ViewModels
             };
 
             AddTab();
-
             _ = ConnectToPortAsync();
 
+            // Инициализация UI таймера
             _uiTimer.Interval = TimeSpan.FromMilliseconds(Constants.UiTimerUpdateIntervalMs);
             _uiTimer.Tick += (_, _) => OnUiTimerTick();
             _uiTimer.Start();
 
+            // Подписка на события выбора углов антенн
             OnTransmitterAngleSelected += angle => _comPortService.SetAntennaAngle(angle, "T", "G");
             OnReceiverAngleSelected += angle => _comPortService.SetAntennaAngle(angle, "R", "G");
         }

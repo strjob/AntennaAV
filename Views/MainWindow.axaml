@@ -852,17 +852,7 @@
                             Content="{CompiledBinding RxAntennaCounter,
                                                       StringFormat='Счетчик: {0:0.0}° | Сброс'}"
                             IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
-                        <Button
-                            x:Name="CalibrationButton"
-                            Grid.Row="2"
-                            Grid.Column="3"
-                            Height="32"
-                            Margin="10,7,0,0"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            Click="CalibrationButton_Click"
-                            Content="Калибровка"
-                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
+
                         <Button
                             Grid.Row="2"
                             Grid.Column="2"
@@ -874,6 +864,19 @@
                             Command="{CompiledBinding CalibrateZeroSvchCommand}"
                             Content="Калибровка 0"
                             IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
+                        <ToggleSwitch
+                            Grid.Row="1"
+							Grid.RowSpan="2"
+                            Grid.Column="2"
+                            Grid.ColumnSpan="3"
+							Margin="10,40,20,10"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Command="{Binding ToggleGeneratorCommand}"
+                            Content="Генератор"
+                            IsChecked="{Binding GenToggleState}"
+                            OffContent="Выкл"
+                            OnContent="Вкл" />
                     </Grid>
                 </Border>
             </Grid>
@@ -910,8 +913,8 @@
                         <ToggleSwitch
                             Grid.Row="2"
                             Grid.Column="3"
-                            Margin="0,0,10,0"
-                            HorizontalAlignment="Right"
+                            Margin="10"
+                            HorizontalAlignment="Left"
                             VerticalAlignment="Center"
                             Content="Тёмная тема"
                             IsChecked="{CompiledBinding IsDarkTheme,
@@ -1011,12 +1014,21 @@
 
                             </StackPanel>
                         </Border>
+                        <StackPanel HorizontalAlignment="Stretch" Orientation="Horizontal">
+                            <Button
+                                x:Name="CalibrationButton"
+                                Height="32"
+                                Margin="10"
+                                Click="CalibrationButton_Click"
+                                Content="Калибровка"
+                                IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
+                            <Button
+                                Margin="5,5,5,5"
+                                HorizontalAlignment="Right"
+                                Click="OnSettingsClick"
+                                Content="Скрыть" />
+                        </StackPanel>
 
-                        <Button
-                            Margin="5"
-                            HorizontalAlignment="Right"
-                            Click="OnSettingsClick"
-                            Content="Скрыть" />
                     </StackPanel>
                 </Border>
             </StackPanel>

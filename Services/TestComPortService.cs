@@ -21,6 +21,7 @@ public class TestComPortService : IComPortService, IDisposable
     private int _receiverAngle = 3000;
     private int _antennaType = 0;
     private int _modeAutoHand = 0;
+    private int _genOnOff = 0;
     private int _rareChangeCounter = 0;
     private double _powerPhase = 0.0;
 
@@ -61,6 +62,7 @@ public class TestComPortService : IComPortService, IDisposable
             if (_rareChangeCounter % 150 == 0)
             {
                 _modeAutoHand = rand.Next(0, 2);
+                _genOnOff = rand.Next(0, 2);
             }
 
             // TransmitterAngleDeg10 и TransmitterAngleDeg
@@ -87,7 +89,8 @@ public class TestComPortService : IComPortService, IDisposable
                 RxAntennaCounter = _counter,
                 TxAntennaCounter = _counter * 2,
                 ModeAutoHand = _modeAutoHand,
-                Systick = _counter*20 + 4534543
+                Systick = _counter*20 + 4534543,
+                GenOnOff = _genOnOff
             };
             _queue.Enqueue(data);
             _counter++;
@@ -119,6 +122,7 @@ public class TestComPortService : IComPortService, IDisposable
     public bool ReadCalibration() => true;
     public bool SetAdcGain(int gain) => true;
     public bool SetDefaultRFGain(int gain) => true;
+    public bool SetGenState(bool isOff) => true;
     public bool CalibrateZeroSVCH() => true;
 
     

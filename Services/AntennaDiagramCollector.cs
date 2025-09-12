@@ -4,7 +4,9 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AntennaAV.Services
 {
-
+    // Коллектор данных диаграммы направленности антенны
+    // Собирает, нормализует и кэширует измерения мощности и напряжения по углам
+    // Обеспечивает эффективное обновление графиков и таблиц в реальном времени
     public class AntennaDiagramCollector
     {
         private readonly Dictionary<int, GridAntennaData> _data = new();
@@ -24,6 +26,7 @@ namespace AntennaAV.Services
         private double[]? _cachedAngles;
         private bool _anglesInvalidated = true;
 
+        // Сбрасывает все данные и возвращает коллектор в начальное состояние
         public void Reset()
         {
             _data.Clear();
@@ -37,6 +40,7 @@ namespace AntennaAV.Services
             InvalidateCache();
         }
 
+        // Добавляет новую точку измерения с автоматической нормализацией
         public void AddPoint(int receiverAngleDeg10, double powerDbm, DateTime timestamp)
         {
             if (receiverAngleDeg10 < 0 || receiverAngleDeg10 >= 3600)
@@ -102,6 +106,8 @@ namespace AntennaAV.Services
 
             InvalidateCache();
         }
+
+        // Преобразует мощность из dBm в RMS напряжение в мВ
         public static double CalculateVoltageFromDBm(double powerDbm)
         {
             // Преобразование из dBm в RMS напряжение (в мВ)
@@ -110,10 +116,9 @@ namespace AntennaAV.Services
             return voltageRms * 1000; // Возвращаем в мВ
         }
 
+        // Финализирует данные, пересчитывая нормализованные значения для всех точек
         public void FinalizeData()
         {
-
-
             if (_powerMaxChanged)
             {
                 foreach (var key in _data.Keys)
@@ -146,6 +151,7 @@ namespace AntennaAV.Services
             }
         }
 
+        // Возвращает данные для таблицы, отсортированные по времени (новые сначала)
         public List<GridAntennaData> GetTableData()
         {
             if (_tableDataInvalidated || _cachedTableData == null)
@@ -165,6 +171,7 @@ namespace AntennaAV.Services
             return _cachedTableData;
         }
 
+        // Возвращает отсортированный массив углов для построения графика
         public double[] GetGraphAngles()
         {
             if (_anglesInvalidated || _cachedAngles == null)
@@ -179,6 +186,7 @@ namespace AntennaAV.Services
             return _cachedAngles;
         }
 
+        // Возвращает значения для графика, извлеченные селектором и отсортированные по углу
         public double[] GetGraphValues(Func<GridAntennaData, double> selector)
         {
             // Для графика данные нужно сортировать по углу
@@ -193,6 +201,7 @@ namespace AntennaAV.Services
             return result;
         }
 
+        // Инвалидирует кэш данных для принудительного пересчета
         private void InvalidateCache()
         {
             _tableDataInvalidated = true;
@@ -200,6 +209,7 @@ namespace AntennaAV.Services
         }
     }
 
+    // Результат операции нормализации данных с метриками производительности
     public struct NormalizationResult
     {
         public bool PowerMaxChanged;
