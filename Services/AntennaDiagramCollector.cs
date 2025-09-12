@@ -107,6 +107,7 @@ namespace AntennaAV.Services
             // Преобразование из dBm в RMS напряжение (в мВ)
             double powerWatt = Math.Pow(10, (powerDbm - 30) / 10.0);
             double voltageRms = Math.Sqrt(powerWatt * 50);
+            return powerDbm;
             return voltageRms * 1000; // Возвращаем в мВ
         }
 

@@ -31,6 +31,7 @@ public interface IComPortService
     bool ClearCalibration();
     bool ReadCalibration();
     bool CalibrateZeroSVCH();
+    bool SetGenState(bool isOff);
 
     bool SetAdcGain(int gain);
     bool SetDefaultRFGain(int gain);

@@ -235,6 +235,12 @@ namespace AntennaAV.Services
             return WriteCommand($"D={gain}", "ANT");
         }
 
+        public bool SetGenState(bool isOff)
+        {
+            if(isOff) return WriteCommand($"P/1", "AA");
+            else return WriteCommand($"P/0", "AA");
+        }
+
         public bool SetAntennaAngle(double angle, string antenna, string direction)
         {
             if (angle < 0.0 || angle > 359.94)
@@ -398,6 +404,7 @@ namespace AntennaAV.Services
                 if (!double.TryParse(parts[9], NumberStyles.Float, Invariant, out double voltage)) return null;
                 if (!int.TryParse(parts[10], out int antennaType)) return null;
                 if (!int.TryParse(parts[11], out int modeAutoHand)) return null;
+                if (!int.TryParse(parts[12], out int genOnOff)) return null;
 
                 return new AntennaData
                 {
@@ -412,6 +419,7 @@ namespace AntennaAV.Services
                     Voltage = voltage,
                     AntennaType = antennaType,
                     ModeAutoHand = modeAutoHand,
+                    GenOnOff = genOnOff,
                 };
             }
             else

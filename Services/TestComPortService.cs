@@ -87,7 +87,8 @@ public class TestComPortService : IComPortService, IDisposable
                 RxAntennaCounter = _counter,
                 TxAntennaCounter = _counter * 2,
                 ModeAutoHand = _modeAutoHand,
-                Systick = _counter*20 + 4534543
+                Systick = _counter*20 + 4534543,
+                GenOnOff = 0
             };
             _queue.Enqueue(data);
             _counter++;
@@ -119,6 +120,7 @@ public class TestComPortService : IComPortService, IDisposable
     public bool ReadCalibration() => true;
     public bool SetAdcGain(int gain) => true;
     public bool SetDefaultRFGain(int gain) => true;
+    public bool SetGenState(bool isOff) => true;
     public bool CalibrateZeroSVCH() => true;
 
     

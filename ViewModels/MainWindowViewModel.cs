@@ -42,6 +42,7 @@ namespace AntennaAV.ViewModels
         [ObservableProperty] private string connectionStatus = "⏳ Не подключено";
         [ObservableProperty] private string dataFlowStatus = "🔴 Нет данных";
         [ObservableProperty] private double receiverAngleDeg;
+        [ObservableProperty] private bool isGenOn;
         [ObservableProperty] private double transmitterAngleDeg;
         [ObservableProperty] private double powerDbm;
         [ObservableProperty] private double voltage;
@@ -197,6 +198,8 @@ namespace AntennaAV.ViewModels
             }
         }
         [RelayCommand] public void CalibrateZeroSvch() => _comPortService.CalibrateZeroSVCH();
+
+        [RelayCommand] public void SetGenState(bool setGenOff) => _comPortService.SetGenState(setGenOff);
         [RelayCommand] public void ResetRxAntennaCounter() => SetAntennaAngle("0", "R", "Z");
         [RelayCommand] public void MoveTransmitterToAngle() => SetAntennaAngle(TransmitterAngle, "T", "G");
         [RelayCommand] public void SetTransmitterAngle() => SetAntennaAngle(TransmitterAngle, "T", "S");
@@ -569,6 +572,12 @@ namespace AntennaAV.ViewModels
                         _ => ""
                     };
 
+                    IsGenOn = lastData.GenOnOff switch
+                    {
+                        0 => true,
+                        _ => false
+                    };
+
                 }
                 if (dataReceived)
                 {
@@ -576,8 +585,6 @@ namespace AntennaAV.ViewModels
                 }
             }
         }
-
-
 
     private string CheckAntennaCounter(double antennaCounter)
         {

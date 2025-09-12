@@ -15,6 +15,7 @@ namespace AntennaAV.Models
         public int AntennaType { get; set; } = 4;
         public int ModeAutoHand { get; set; } = 4;
         public int Systick { get; set; }
+        public int GenOnOff { get; set; }
     }
 }
 
