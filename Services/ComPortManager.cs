@@ -237,8 +237,8 @@ namespace AntennaAV.Services
 
         public bool SetGenState(bool isOff)
         {
-            if(isOff) return WriteCommand($"P/1", "AA");
-            else return WriteCommand($"P/0", "AA");
+            if(isOff) return SendCommand($"P/1", "AA");
+            else return SendCommand($"P/0", "AA");
         }
 
         public bool SetAntennaAngle(double angle, string antenna, string direction)

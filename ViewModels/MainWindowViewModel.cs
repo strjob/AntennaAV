@@ -593,7 +593,7 @@ namespace AntennaAV.ViewModels
                     ReceiverAngleDeg = lastData.ReceiverAngleDeg;
                     TransmitterAngleDeg = lastData.TransmitterAngleDeg;
                     PowerDbm = lastData.PowerDbm;
-                    DeviceMode = lastData.AntennaType;
+                    DeviceMode = lastData.AntennaType - 4;
                     RxAntennaCounter = Math.Round(lastData.RxAntennaCounter / 10.0, 1);
                     TxAntennaCounter = Math.Round(lastData.TxAntennaCounter/10.0, 1);
                     
