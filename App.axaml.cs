@@ -34,7 +34,6 @@ namespace AntennaAV
                 var splash = new SplashWindow();
                 splash.Show();
 
-                // Имитация прогресса (можно заменить на реальные этапы)
                 Task.Run(async () =>
                 {
                     await Task.Delay(50);

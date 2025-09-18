@@ -1010,9 +1010,14 @@
                                         Value="{CompiledBinding ManualScaleValue,
                                                                 Mode=TwoWay}" />
                                 </StackPanel>
-
+                              <CheckBox
+                                                          Margin="10"
+                                                          Content="При закрытии перемещать антенны в 0°"
+                                                          IsChecked="{CompiledBinding MoveToZeroOnClose,
+                                                        Mode=TwoWay}" />
 
                             </StackPanel>
+                          
                         </Border>
                         <StackPanel HorizontalAlignment="Stretch" Orientation="Horizontal">
                             <Button

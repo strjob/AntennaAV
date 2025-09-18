@@ -63,6 +63,7 @@ namespace AntennaAV.ViewModels
         [ObservableProperty] private bool isAutoscale = true;
         [ObservableProperty] private bool isRealtimeMode = true;
         [ObservableProperty] private bool showLegend = true;
+        [ObservableProperty] private bool moveToZeroOnClose = false;
         [ObservableProperty] private bool showMarkers = false;
         [ObservableProperty] private string transmitterAngle = "0";
         [ObservableProperty] private int? manualScaleValue = -30;
@@ -76,7 +77,7 @@ namespace AntennaAV.ViewModels
         [ObservableProperty] private bool isDarkTheme;
         [ObservableProperty] private string lastEvent = "";
         [ObservableProperty] private string handModeErrorStr = "";
-
+        
 
 
         // 3. Публичные свойства
@@ -115,6 +116,7 @@ namespace AntennaAV.ViewModels
         public event Action<bool>? IsPowerNormSelectedChanged;
         public event Action<bool, int?, double?>? IsAutoscaleChanged;
         public event Action<bool>? ShowLegendChanged;
+        public event Action<bool>? MoveToZeroOnCloseChanged;
         public event Action<double>? TransmitterAngleDegChanged; 
         public event Action<int?>? ManualScaleValueChanged;
         public event Action<double?>? AutoscaleLimitValueChanged;
@@ -403,6 +405,13 @@ namespace AntennaAV.ViewModels
             _comPortService.StopAntenna("T");
             Thread.Sleep(100);
             _comPortService.StopAntenna("R");
+        }
+
+        public void MoveAntennasToZero()
+        {
+            _comPortService.SetAntennaAngle(0.0, "T", "G");
+            Thread.Sleep(100);
+            _comPortService.SetAntennaAngle(0.0, "T", "G");
         }
 
         // 7. Приватные методы
@@ -849,6 +858,10 @@ namespace AntennaAV.ViewModels
         partial void OnShowLegendChanged(bool value)
         {
             ShowLegendChanged?.Invoke(value);
+        }
+        partial void OnMoveToZeroOnCloseChanged(bool value)
+        {
+            MoveToZeroOnCloseChanged?.Invoke(value);
         }
 
 

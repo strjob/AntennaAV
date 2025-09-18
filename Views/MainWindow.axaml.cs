@@ -20,6 +20,7 @@ namespace AntennaAV.Views
     {
 
         private bool isDark = false;
+        private bool moveToZero = false;
 
         private readonly PlotManagerMain _plotManagerMain = new PlotManagerMain();
         private readonly PlotManagerSmall _plotManagerSmall = new PlotManagerSmall();
@@ -275,6 +276,10 @@ namespace AntennaAV.Views
                 vm.StopMessaging();
                 System.Threading.Thread.Sleep(100);
                 vm.StopAntennas();
+                if(moveToZero)
+                {
+                    vm.MoveAntennasToZero();
+                }
             }
         }
 
@@ -488,6 +493,11 @@ namespace AntennaAV.Views
             vm.ShowLegendChanged += value =>
             {
                 Dispatcher.UIThread.Post(() => _plotManagerMain.SetLegendVisibility(value));
+            };
+
+            vm.MoveToZeroOnCloseChanged += value =>
+            {
+                Dispatcher.UIThread.Post(() => moveToZero = value);
             };
 
             vm.ReceiverAngleDegChanged += angle =>

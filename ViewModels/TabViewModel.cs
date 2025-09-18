@@ -101,7 +101,6 @@ namespace AntennaAV.ViewModels
             _sortKeySelector = sortKeySelector;
         }
 
-        // Возвращает компаратор для сортировки по числовым значениям
         public override Comparison<TModel>? GetComparison(ListSortDirection direction)
         {
             return (x, y) =>
