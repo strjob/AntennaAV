@@ -851,7 +851,7 @@
                             Command="{CompiledBinding ResetRxAntennaCounterCommand}"
                             Content="{CompiledBinding RxAntennaCounter,
                                                       StringFormat='Счетчик: {0:0.0}° | Сброс'}"
-                            IsEnabled="{CompiledBinding CanUseWhenPortOpen}" />
+                            IsEnabled="{CompiledBinding IsPortOpen}" />
 
                         <Button
                             Grid.Row="2"
@@ -1080,7 +1080,7 @@
                 <TextBlock
                     Grid.Row="0"
                     Grid.Column="2"
-                    Margin="5"
+                    Margin="5,5,15,5"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center"
                     FontSize="14"

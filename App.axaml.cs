@@ -40,8 +40,8 @@ namespace AntennaAV
 
                 Dispatcher.UIThread.Post(()  =>
                     {
-                        //IComPortService comPortService = new TestComPortService();
-                        IComPortService comPortService = new ComPortManager();
+                        IComPortService comPortService = new TestComPortService();
+                        //IComPortService comPortService = new ComPortManager();
                         var mainViewModel = new MainWindowViewModel(comPortService);
                         var mainWindow = new MainWindow
                         {
@@ -49,7 +49,6 @@ namespace AntennaAV
                         };
                         desktop.MainWindow = mainWindow;
                         mainWindow.Show();
-                        
                         // Загружаем настройки после показа окна
                         mainViewModel.LoadSettings();
                         

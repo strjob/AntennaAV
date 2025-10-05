@@ -341,7 +341,7 @@ namespace AntennaAV.ViewModels
             {
                 await Task.Delay(50, cancellationToken);
             }
-            Debug.WriteLine($"✅ Достигнута начальная точка: {ReceiverAngleDeg:F1}°");
+            LastEvent = $"✅ Достигнута начальная точка: {ReceiverAngleDeg:F1}°";
             await Task.Delay(500, cancellationToken);
         }
 
@@ -349,8 +349,8 @@ namespace AntennaAV.ViewModels
         private void StartDataCollection()
         {
             _isDiagramDataCollecting = true;
+            LastEvent = "Идет сбор данных";
             RequestMinMaxReset?.Invoke();
-            Debug.WriteLine("🔄 Начинаем сбор данных");
             _collector.Reset();
             StartTableUpdateTimer();
         }
@@ -410,10 +410,10 @@ namespace AntennaAV.ViewModels
 
         public void MoveAntennasToZero()
         {
-            
-            SetAntennaAngle("0", "R", "Z");
+
+            _comPortService.SetAntennaAngle(0.0, "R", "Z");
             Thread.Sleep(10);
-            SetAntennaAngle("0", "T", "Z");
+            _comPortService.SetAntennaAngle(0.0, "T", "Z");
             Thread.Sleep(10);
             _comPortService.SetAntennaAngle(0.0, "R", "G");
             Thread.Sleep(10);
@@ -473,20 +473,22 @@ namespace AntennaAV.ViewModels
                 else
                 {
                     _comPortService.SetAntennaAngle(startAngleOvershoot, "R", "G");
+                    LastEvent = $"Ожидание начальной точки: {startAngleOvershoot:F1}°";
                     await WaitStartAngleAsync(startAngleOvershoot, cancellationToken);
                     StartDataCollection();
                 }
 
                 _comPortService.SetAntennaAngle(stopAngleOvershoot, "R", direction);
                 await WaitForEndAngleAsync(stopAngleOvershoot, cancellationToken);
+                LastEvent = "✅ Построение диаграммы завершено";
             }
             catch (TaskCanceledException)
             {
-                Debug.WriteLine("❌ Операция была отменена пользователем");
+                LastEvent = "❌ Операция была отменена пользователем";
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine("❌ Операция была отменена");
+                LastEvent = "❌ Операция была отменена";
             }
             catch (Exception ex)
             {
@@ -502,6 +504,7 @@ namespace AntennaAV.ViewModels
                 _isFinalizingDiagram = false;
                 StopTableUpdateTimer();
                 RequestPlotRedraw?.Invoke();
+                
             }
         }
 
@@ -937,7 +940,7 @@ namespace AntennaAV.ViewModels
             AutoscaleLimitValue = settings.AutoscaleLimitValue;
             AutoscaleMinValue = settings.AutoscaleMinValue;
             
-            Debug.WriteLine($"🎨 Загружены настройки: тема={IsDarkTheme}, легенда={ShowLegend}, автоподбор={IsAutoscale}, перемещение в 0°={MoveToZeroOnClose}");
+            //Debug.WriteLine($"🎨 Загружены настройки: тема={IsDarkTheme}, легенда={ShowLegend}, автоподбор={IsAutoscale}, перемещение в 0°={MoveToZeroOnClose}");
             
             // Применяем загруженную тему к приложению
             ((App)Avalonia.Application.Current!).SetTheme(
@@ -956,7 +959,7 @@ namespace AntennaAV.ViewModels
                 AutoscaleLimitValue = AutoscaleLimitValue,
                 AutoscaleMinValue = AutoscaleMinValue
             };
-            Debug.WriteLine($"💾 Сохраняются настройки: тема={IsDarkTheme}, легенда={ShowLegend}, автоподбор={IsAutoscale}, перемещение в 0°={MoveToZeroOnClose}");
+            //Debug.WriteLine($"💾 Сохраняются настройки: тема={IsDarkTheme}, легенда={ShowLegend}, автоподбор={IsAutoscale}, перемещение в 0°={MoveToZeroOnClose}");
             _settingsService.SaveSettings(settings);
         }
     }

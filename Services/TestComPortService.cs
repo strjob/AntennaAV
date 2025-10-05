@@ -57,7 +57,7 @@ public class TestComPortService : IComPortService, IDisposable
             // AntennaType и ModeAutoHand меняются редко
             if (_rareChangeCounter++ % 100 == 0)
             {
-                _antennaType = rand.Next(0, 4);
+                _antennaType = rand.Next(4, 8);
             }
             if (_rareChangeCounter % 150 == 0)
             {
