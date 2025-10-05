@@ -49,6 +49,10 @@ namespace AntennaAV
                         };
                         desktop.MainWindow = mainWindow;
                         mainWindow.Show();
+                        
+                        // Загружаем настройки после показа окна
+                        mainViewModel.LoadSettings();
+                        
                         splash.Close();
                     });
                 });

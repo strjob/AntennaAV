@@ -39,6 +39,7 @@ namespace AntennaAV.ViewModels
         private bool _isFinalizingDiagram = false;
         private readonly object _dataLock = new();
         private readonly CsvService _csvService = new CsvService();
+        private readonly ISettingsService _settingsService = new SettingsService();
 
         // 2. ObservableProperty
         [ObservableProperty] private string connectionStatus = "⏳ Не подключено";
@@ -409,9 +410,15 @@ namespace AntennaAV.ViewModels
 
         public void MoveAntennasToZero()
         {
+            
+            SetAntennaAngle("0", "R", "Z");
+            Thread.Sleep(10);
+            SetAntennaAngle("0", "T", "Z");
+            Thread.Sleep(10);
+            _comPortService.SetAntennaAngle(0.0, "R", "G");
+            Thread.Sleep(10);
             _comPortService.SetAntennaAngle(0.0, "T", "G");
-            Thread.Sleep(100);
-            _comPortService.SetAntennaAngle(0.0, "T", "G");
+
         }
 
         // 7. Приватные методы
@@ -884,10 +891,6 @@ namespace AntennaAV.ViewModels
         {
             _comPortService = comPortService;
 
-            // Синхронизация состояния переключателя с реальной темой
-            var actualTheme = Avalonia.Application.Current?.ActualThemeVariant;
-            IsDarkTheme = actualTheme == Avalonia.Styling.ThemeVariant.Dark;
-
             // Подписка на события изменения коллекции вкладок
             Tabs.CollectionChanged += (_, _) =>
             {
@@ -920,6 +923,41 @@ namespace AntennaAV.ViewModels
             // Подписка на события выбора углов антенн
             OnTransmitterAngleSelected += angle => _comPortService.SetAntennaAngle(angle, "T", "G");
             OnReceiverAngleSelected += angle => _comPortService.SetAntennaAngle(angle, "R", "G");
+        }
+
+        // Методы для работы с настройками
+        public void LoadSettings()
+        {
+            var settings = _settingsService.LoadSettings();
+            IsDarkTheme = settings.IsDarkTheme;
+            ShowLegend = settings.ShowLegend;
+            IsAutoscale = settings.IsAutoscale;
+            MoveToZeroOnClose = settings.MoveToZeroOnClose;
+            ManualScaleValue = settings.ManualScaleValue;
+            AutoscaleLimitValue = settings.AutoscaleLimitValue;
+            AutoscaleMinValue = settings.AutoscaleMinValue;
+            
+            Debug.WriteLine($"🎨 Загружены настройки: тема={IsDarkTheme}, легенда={ShowLegend}, автоподбор={IsAutoscale}, перемещение в 0°={MoveToZeroOnClose}");
+            
+            // Применяем загруженную тему к приложению
+            ((App)Avalonia.Application.Current!).SetTheme(
+                IsDarkTheme ? ThemeVariant.Dark : ThemeVariant.Light);
+        }
+
+        public void SaveSettings()
+        {
+            var settings = new AppSettings
+            {
+                IsDarkTheme = IsDarkTheme,
+                ShowLegend = ShowLegend,
+                IsAutoscale = IsAutoscale,
+                MoveToZeroOnClose = MoveToZeroOnClose,
+                ManualScaleValue = ManualScaleValue,
+                AutoscaleLimitValue = AutoscaleLimitValue,
+                AutoscaleMinValue = AutoscaleMinValue
+            };
+            Debug.WriteLine($"💾 Сохраняются настройки: тема={IsDarkTheme}, легенда={ShowLegend}, автоподбор={IsAutoscale}, перемещение в 0°={MoveToZeroOnClose}");
+            _settingsService.SaveSettings(settings);
         }
     }
 }

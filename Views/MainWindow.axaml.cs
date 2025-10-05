@@ -13,6 +13,7 @@ using ScottPlot.Avalonia;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
 
 namespace AntennaAV.Views
 {
@@ -273,6 +274,8 @@ namespace AntennaAV.Views
         {
             if (this.DataContext is MainWindowViewModel vm)
             {
+                Debug.WriteLine("🔄 Начинается закрытие приложения...");
+                
                 vm.StopMessaging();
                 System.Threading.Thread.Sleep(100);
                 vm.StopAntennas();
@@ -280,6 +283,11 @@ namespace AntennaAV.Views
                 {
                     vm.MoveAntennasToZero();
                 }
+                
+                // Сохраняем настройки при закрытии
+                Debug.WriteLine("💾 Сохраняем настройки при закрытии...");
+                vm.SaveSettings();
+                Debug.WriteLine("✅ Настройки сохранены");
             }
         }
 

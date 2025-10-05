@@ -993,7 +993,7 @@
                                     <RadioButton
                                         Content="Ручной"
                                         GroupName="Scale"
-                                        IsChecked="{x:Null}"
+                                        IsChecked="{CompiledBinding !IsAutoscale}"
                                         IsEnabled="{CompiledBinding !IsDiagramAcquisitionRunning}" />
                                     <NumericUpDown
                                         Name="NumericUpDownManualLimit"
