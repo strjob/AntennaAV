@@ -395,13 +395,19 @@ namespace AntennaAV.Services
 
                 if (parts.Length < 12) return null;
 
+
                 if (!int.TryParse(parts[3], out int systick)) return null;
                 if (!int.TryParse(parts[4], out int receiverAngleDeg10)) return null;
                 if (!int.TryParse(parts[5], out int transmitterAngleDeg10)) return null;
                 if (!int.TryParse(parts[6], out int rxAntennaCounter)) return null;
                 if (!int.TryParse(parts[7], out int txAntennaCounter)) return null;
+
+                if (string.Equals(parts[8], "inf", StringComparison.OrdinalIgnoreCase)) parts[8] = "Infinity";
                 if (!double.TryParse(parts[8], NumberStyles.Float, Invariant, out double powerDbm)) return null;
+
+                if (string.Equals(parts[9], "inf", StringComparison.OrdinalIgnoreCase)) parts[9] = "Infinity";
                 if (!double.TryParse(parts[9], NumberStyles.Float, Invariant, out double voltage)) return null;
+
                 if (!int.TryParse(parts[10], out int antennaType)) return null;
                 if (!int.TryParse(parts[11], out int modeAutoHand)) return null;
                 if (!int.TryParse(parts[12], out int genOnOff)) return null;

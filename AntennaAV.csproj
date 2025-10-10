@@ -19,14 +19,14 @@
      <RuntimeIdentifier>win-x64</RuntimeIdentifier>
 		<BuiltInComInteropSupport>false</BuiltInComInteropSupport>
 		<TrimMode>link</TrimMode>
-	</PropertyGroup>
+	</PropertyGroup>-->
 
 	<ItemGroup>
 		<TrimmerRootAssembly Include="Avalonia.Themes.Fluent" />
 	</ItemGroup>
 	<ItemGroup>
 		<AvaloniaResource Include="Assets\**"/>
-	</ItemGroup>-->
+	</ItemGroup>
 	
 
   <ItemGroup>

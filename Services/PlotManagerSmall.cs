@@ -16,7 +16,9 @@ namespace AntennaAV.Services
         private AvaPlot? _avaPlotTx;
         private AvaPlot? _avaPlotRx;
         private bool _avaPlotTxNeedsRefresh = false;
+        private bool _avaPlotTxNeedsAutoScale = false;
         private bool _avaPlotRxNeedsRefresh = false;
+        private bool _avaPlotRxNeedsAutoScale = false;
 
         private ScottPlot.Plottables.PolarAxis? _polarAxisTx;
         private ScottPlot.Plottables.PolarAxis? _polarAxisRx;
@@ -28,18 +30,10 @@ namespace AntennaAV.Services
 
         public void ResetPlotAxes()
         {
-            lock (_plotTxLock)
-            {
-                if (_avaPlotTx != null)
-                    _avaPlotTx.Plot.Axes.AutoScale();
-                _avaPlotTxNeedsRefresh = true;
-            }
-            lock (_plotRxLock)
-            {
-                if (_avaPlotRx != null)
-                    _avaPlotRx.Plot.Axes.AutoScale();
-                _avaPlotRxNeedsRefresh = true;
-            }
+            _avaPlotTxNeedsAutoScale = true;
+            _avaPlotRxNeedsAutoScale = true;
+            _avaPlotTxNeedsRefresh = true;
+            _avaPlotRxNeedsRefresh = true;
         }
 
         public void DrawTransmitterAnglePoint(AvaPlot? plot, double angleDeg)
@@ -260,7 +254,12 @@ namespace AntennaAV.Services
                 if (_avaPlotTxNeedsRefresh && _avaPlotTx != null && _avaPlotTx?.Plot != null)
                 {
                     lock (_plotTxLock)
-                    {
+                    {  
+                        if(_avaPlotRxNeedsAutoScale)
+                        {
+                            _avaPlotTx.Plot.Axes.AutoScale();
+                            _avaPlotTxNeedsAutoScale = false;
+                        }
                         _avaPlotTx.Refresh();
                         _avaPlotTxNeedsRefresh = false;
                     }
@@ -269,6 +268,11 @@ namespace AntennaAV.Services
                 {
                     lock (_plotRxLock)
                     {
+                        if (_avaPlotRxNeedsAutoScale)
+                        {
+                            _avaPlotRx.Plot.Axes.AutoScale();
+                            _avaPlotRxNeedsAutoScale = false;
+                        }
                         _avaPlotRx.Refresh();
                         _avaPlotRxNeedsRefresh = false;
                     }

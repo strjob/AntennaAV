@@ -61,7 +61,11 @@ namespace AntennaAV.Views
 
             }
 
-            AvaPlotMain.SizeChanged += AvaPlotMain_SizeChanged;
+            if(AvaPlotMain != null)
+                AvaPlotMain.SizeChanged += AvaPlotMain_SizeChanged;
+
+            if(AvaPlotRx != null)
+                AvaPlotRx.SizeChanged += AvaPlotRx_SizeChanged;
 
 
             this.GetObservable(Window.ClientSizeProperty).Subscribe(_ =>
@@ -97,6 +101,12 @@ namespace AntennaAV.Views
         {
             _plotManagerMain.ResetPlotAxes();
         }
+
+        private void AvaPlotRx_SizeChanged(object? sender, SizeChangedEventArgs e)
+        {
+            _plotManagerSmall.ResetPlotAxes();
+        }
+
 
 
         private void AvaPlotTx_PointerMoved(object? sender, PointerEventArgs e)

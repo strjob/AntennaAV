@@ -159,6 +159,11 @@ namespace AntennaAV.Services
             if (tab?.Plot == null)
                 return;
 
+            bool hasData = tab.Plot.Angles.Length > 0 && tab.Plot.IsVisible;
+
+            if (!hasData)
+                return;
+
             lock (_plotMainLock)
             {
                 // Скрываем график
@@ -167,7 +172,8 @@ namespace AntennaAV.Services
 
                 // Пересчитываем диапазон только для видимых графиков
                 var visibleTabs = allTabs.Where(t => t.Plot?.IsVisible == true);
-                if (visibleTabs.Any())
+                
+                if (visibleTabs.Any() && hasData)
                 {
                     RecalculateGlobalRange(visibleTabs);
 

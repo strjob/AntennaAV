@@ -18,7 +18,7 @@ public class TestComPortService : IComPortService, IDisposable
     private CancellationTokenSource? _cts;
     private Task? _generatorTask;
     private int _counter = 0;
-    private int _receiverAngle = 3000;
+    private int _receiverAngle = 2600;
     private int _antennaType = 0;
     private int _modeAutoHand = 0;
     private int _genOnOff = 0;
