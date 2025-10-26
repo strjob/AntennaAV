@@ -10,18 +10,22 @@ using System.Linq;
 namespace AntennaAV.Services
 {
 
-    // Helper class to store plot segment data for coordinate updates
     public class PlotSegmentData
     {
         public double[] SegmentAngles { get; set; } = Array.Empty<double>(); // Angles for this segment
         public double[] SegmentValues { get; set; } = Array.Empty<double>(); // Values for this segment
         public ScottPlot.Coordinates[] CoordinatesArray { get; set; } // Fixed-length array for coordinates
         public Scatter? ScatterPlot { get; set; }
+        public Scatter? MarkerScatterPlot { get; set; }  // Для маркеров
+        public double[] MarkerXs { get; set; } = Array.Empty<double>();  // Новое: фиксированный массив X для маркеров
+        public double[] MarkerYs { get; set; } = Array.Empty<double>();  // Новое: фиксированный массив Y для маркеров
         public int ValidPointCount { get; set; } // How many points are actually used in the array
 
-        public PlotSegmentData(int maxCapacity = 3600)
+        public PlotSegmentData(int maxCapacity = 3600, int maxMarkers = 100)  // Добавьте параметр для маркеров
         {
             CoordinatesArray = new ScottPlot.Coordinates[maxCapacity];
+            MarkerXs = new double[maxMarkers];  // Фиксированная длина, e.g. 100
+            MarkerYs = new double[maxMarkers];
         }
     }
 
@@ -40,9 +44,12 @@ namespace AntennaAV.Services
         public double AutoMinLimit { get; set; } = -60; // Для логарифмического
 
         // Минимальный диапазон для случая min=max
-        public double MinRangeLog { get; set; } = 0.5; 
+        public double MinRangeLog { get; set; } = 0.5;
         public bool IsLogScale { get; set; } = true;
-        public bool IsDark{ get; set; } = true;
+        public bool IsDark { get; set; } = true;
+
+        public int LineWidth { get; set; } = 2;
+        public int MarkerSize { get; set; } = 7;
 
     }
 
@@ -65,6 +72,28 @@ namespace AntennaAV.Services
         private ScaleMode _currentScaleMode = ScaleMode.Auto;
         private ScaleSettings _scaleSettings = new();
         private readonly List<TabViewModel> _activePlotTabs = new();
+
+        private const int MarkerStep = 50; // every 50 points
+        private const int DefaultMaxMarkers = 100;
+        private int _currentMarkerSize = 0;
+
+        private static readonly ScottPlot.MarkerShape[] _perTabMarkerShapes = new[]
+{
+            ScottPlot.MarkerShape.FilledCircle,
+            ScottPlot.MarkerShape.FilledSquare,
+            ScottPlot.MarkerShape.FilledTriangleUp,
+            ScottPlot.MarkerShape.FilledTriangleDown,
+            ScottPlot.MarkerShape.FilledDiamond,
+            ScottPlot.MarkerShape.OpenCircle,
+            ScottPlot.MarkerShape.OpenSquare,
+            ScottPlot.MarkerShape.OpenTriangleUp,
+            ScottPlot.MarkerShape.Eks,
+            ScottPlot.MarkerShape.Cross,
+            ScottPlot.MarkerShape.Asterisk,
+            ScottPlot.MarkerShape.HashTag
+        };
+        private int _nextPerTabMarkerShapeIndex = 0;
+        private readonly Dictionary<PlotData, ScottPlot.MarkerShape> _assignedPerTabMarkerShapes = new();
 
         public void DrawPolarPlot(IEnumerable<TabViewModel> tabs,
             TabViewModel currentTab,
@@ -103,7 +132,7 @@ namespace AntennaAV.Services
                     globalRangeChanged = (_globalMin != actualMin || _globalMax != actualMax);
                     _globalMin = _scaleSettings.IsLogScale ? actualMin : 0;
                     _globalMax = _scaleSettings.IsLogScale ? actualMax : 1;
-                    
+
                 }
                 else
                 {
@@ -144,6 +173,10 @@ namespace AntennaAV.Services
                         {
                             segmentData.ScatterPlot.IsVisible = isVisible;
                         }
+                        if (segmentData.MarkerScatterPlot != null)
+                        {
+                            segmentData.MarkerScatterPlot.IsVisible = isVisible;
+                        }
                     }
                 }
 
@@ -172,7 +205,7 @@ namespace AntennaAV.Services
 
                 // Пересчитываем диапазон только для видимых графиков
                 var visibleTabs = allTabs.Where(t => t.Plot?.IsVisible == true);
-                
+
                 if (visibleTabs.Any() && hasData)
                 {
                     RecalculateGlobalRange(visibleTabs);
@@ -208,6 +241,15 @@ namespace AntennaAV.Services
             var color = ScottPlot.Color.FromHex(plotData.ColorHex);
             bool first = true;
 
+            // assign a per-tab marker shape once (do not overwrite if already assigned)
+            if (!_assignedPerTabMarkerShapes.ContainsKey(plotData))
+            {
+                var shape = _perTabMarkerShapes[_nextPerTabMarkerShapeIndex % _perTabMarkerShapes.Length];
+                _assignedPerTabMarkerShapes[plotData] = shape;
+                _nextPerTabMarkerShapeIndex++;
+                plotData.MarkerShape = shape;
+            }
+
             for (int segIndex = 0; segIndex < segments.Count; segIndex++)
             {
                 var (segAngles, segValues) = segments[segIndex];
@@ -234,6 +276,10 @@ namespace AntennaAV.Services
                 UpdateSegmentCoordinates(segmentData, min, max);
 
                 CreateOrUpdateScatterPlot(segmentData, color, first, segIndex == 0 ? label : null);
+
+                // Now update markers for this segment (creates or updates marker Scatter)
+                UpdateSegmentMarkers(segmentData, plotData, color);
+
                 first = false;
             }
 
@@ -297,18 +343,19 @@ namespace AntennaAV.Services
             }
             else
             {
-                var segmentData = new PlotSegmentData();
+                var segmentData = new PlotSegmentData(3600, DefaultMaxMarkers);
                 plotData.PlotSegments.Add(segmentData);
                 return segmentData;
             }
         }
+
 
         private void CreateOrUpdateScatterPlot(PlotSegmentData segmentData, ScottPlot.Color color, bool isFirst, string? label)
         {
             if (segmentData.ScatterPlot == null)
             {
                 segmentData.ScatterPlot = _avaPlotMain!.Plot.Add.Scatter(segmentData.CoordinatesArray, color: color);
-                segmentData.ScatterPlot.LineWidth = 2;
+                segmentData.ScatterPlot.LineWidth = _scaleSettings.LineWidth;
                 segmentData.ScatterPlot.MarkerSize = 0;
             }
             else
@@ -321,6 +368,198 @@ namespace AntennaAV.Services
             segmentData.ScatterPlot.LegendText = isFirst && !string.IsNullOrEmpty(label) ? label : "";
         }
 
+        // Marker-related helpers
+
+        private void UpdateSegmentMarkers(PlotSegmentData segmentData, PlotData plotData, ScottPlot.Color color)
+        {
+            // requires _avaPlotMain and polar axis to be initialized where needed
+            if (_avaPlotMain == null || _polarAxisMain == null)
+                return;
+
+            // Use effective marker size: per-plot if set, otherwise manager's current value
+            int effectiveMarkerSize = plotData.MarkerSize > 0 ? plotData.MarkerSize : _currentMarkerSize;
+
+            // If marker size disabled or not enough points, remove existing marker scatter
+            if (effectiveMarkerSize <= 0 || segmentData.ValidPointCount <= 1)
+            {
+                RemoveMarkerScatterPlot(segmentData);
+                return;
+            }
+
+            // Ensure backing arrays are large enough (reserve enough entries)
+            int expectedByStep = (segmentData.ValidPointCount + MarkerStep - 1) / MarkerStep;
+            int ensureLength = Math.Max(DefaultMaxMarkers, expectedByStep);
+            if (segmentData.MarkerXs.Length < ensureLength || segmentData.MarkerYs.Length < ensureLength)
+            {
+                segmentData.MarkerXs = new double[ensureLength];
+                segmentData.MarkerYs = new double[ensureLength];
+            }
+
+            // Clear arrays
+            Array.Clear(segmentData.MarkerXs, 0, segmentData.MarkerXs.Length);
+            Array.Clear(segmentData.MarkerYs, 0, segmentData.MarkerYs.Length);
+
+            // Choose target spacing in pixels and convert to world units using plotted radius -> pixel scale
+            const double targetSpacingPx = 100.0;
+
+            // Compute approximate pixels-per-world-unit using the plot control size and default polar radius
+            double plotRadiusPix = 0.6 * Math.Min(_avaPlotMain.Bounds.Width, _avaPlotMain.Bounds.Height) / 2.0;
+            double pixelsPerWorld = plotRadiusPix > 0 ? (plotRadiusPix / Constants.DefaultPlotRadius) : 1.0;
+            double targetSpacingWorld = targetSpacingPx / pixelsPerWorld;
+
+            int markerIndex = 0;
+            double acc = 0.0;
+            int lastChosenIndex = -1;
+
+            // Use polar arc-length sampling: s ≈ r * Δθ (Δθ in radians)
+            for (int i = 0; i < segmentData.ValidPointCount; i++)
+            {
+                var coord = segmentData.CoordinatesArray[i];
+                double r = Math.Sqrt(coord.X * coord.X + coord.Y * coord.Y);
+
+                // skip near-center points to avoid crowding
+                if (r <= 1e-6)
+                    continue;
+
+                if (lastChosenIndex < 0)
+                {
+                    // always choose the first non-center point
+                    segmentData.MarkerXs[markerIndex] = coord.X;
+                    segmentData.MarkerYs[markerIndex] = coord.Y;
+                    markerIndex++;
+                    lastChosenIndex = i;
+                    acc = 0.0;
+                    if (markerIndex >= segmentData.MarkerXs.Length) break;
+                    continue;
+                }
+
+                // angle values come from the original data (degrees)
+                // compute smallest angular difference
+                double degA = segmentData.SegmentAngles[lastChosenIndex];
+                double degB = segmentData.SegmentAngles[i];
+                double deltaDeg = Math.Abs(degB - degA);
+                if (deltaDeg > 180.0) deltaDeg = 360.0 - deltaDeg;
+                double deltaRad = deltaDeg * Math.PI / 180.0;
+
+                // approximate arc length at current radius
+                double s = r * deltaRad;
+                acc += s;
+
+                if (acc >= targetSpacingWorld)
+                {
+                    // commit marker (skip if projected extremely close to center in pixels)
+                    double px = coord.X * pixelsPerWorld;
+                    double py = coord.Y * pixelsPerWorld;
+                    double distToCenterPx = Math.Sqrt(px * px + py * py);
+                    if (distToCenterPx > 2.0) // 2 px tolerance
+                    {
+                        segmentData.MarkerXs[markerIndex] = coord.X;
+                        segmentData.MarkerYs[markerIndex] = coord.Y;
+                        markerIndex++;
+                        lastChosenIndex = i;
+                        acc = 0.0;
+                        if (markerIndex >= segmentData.MarkerXs.Length) break;
+                    }
+                    else
+                    {
+                        // don't reset lastChosenIndex so we keep accumulating
+                        acc = 0.0;
+                    }
+                }
+            }
+
+            // Fallback: if none selected, use coarse index-based sampling
+            if (markerIndex == 0)
+            {
+                for (int i = 0; i < segmentData.ValidPointCount; i += MarkerStep)
+                {
+                    if (markerIndex >= segmentData.MarkerXs.Length) break;
+                    var coord = segmentData.CoordinatesArray[i];
+                    segmentData.MarkerXs[markerIndex] = coord.X;
+                    segmentData.MarkerYs[markerIndex] = coord.Y;
+                    markerIndex++;
+                }
+            }
+
+            CreateOrUpdateMarkerScatterPlot(segmentData, color, markerIndex, plotData, effectiveMarkerSize);
+        }
+
+        private void CreateOrUpdateMarkerScatterPlot(PlotSegmentData segmentData, ScottPlot.Color color, int markerCount, PlotData plotData, int effectiveMarkerSize)
+        {
+            if (_avaPlotMain == null)
+                return;
+
+            if (markerCount == 0)
+            {
+                RemoveMarkerScatterPlot(segmentData);
+                return;
+            }
+
+            if (segmentData.MarkerScatterPlot == null)
+            {
+                // create scatter with Xs and Ys arrays
+                segmentData.MarkerScatterPlot = _avaPlotMain.Plot.Add.Scatter(segmentData.MarkerXs, segmentData.MarkerYs, color: color);
+                segmentData.MarkerScatterPlot.LineWidth = 0;
+                segmentData.MarkerScatterPlot.MarkerSize = effectiveMarkerSize;
+
+                segmentData.MarkerScatterPlot.MarkerShape = plotData.MarkerShape;
+
+                segmentData.MarkerScatterPlot.LegendText = ""; // do not add to legend
+
+
+
+                // Important: set MaxRenderIndex so only the first markerCount points render
+
+                segmentData.MarkerScatterPlot.MaxRenderIndex = markerCount - 1;
+
+
+
+                // Respect plot visibility
+
+                segmentData.MarkerScatterPlot.IsVisible = plotData.IsVisible;
+            }
+            else
+            {
+
+                // update arrays by reference (Scatter keeps reference to arrays)
+
+                // set MaxRenderIndex so only first markerCount points render
+
+                segmentData.MarkerScatterPlot.MaxRenderIndex = markerCount - 1;
+                if (segmentData.MarkerScatterPlot.Color.ToHex() != color.ToHex())
+                    segmentData.MarkerScatterPlot.Color = color;
+                if (segmentData.MarkerScatterPlot.MarkerSize != effectiveMarkerSize)
+                    segmentData.MarkerScatterPlot.MarkerSize = effectiveMarkerSize;
+                if (segmentData.MarkerScatterPlot.MarkerShape != plotData.MarkerShape)
+                    segmentData.MarkerScatterPlot.MarkerShape = plotData.MarkerShape;
+                // ensure MarkerScatterPlot visibility tracks plotData.IsVisible
+
+                segmentData.MarkerScatterPlot.IsVisible = plotData.IsVisible;
+            }
+        }
+
+        private void RemoveMarkerScatterPlot(PlotSegmentData segmentData)
+        {
+            if (_avaPlotMain == null)
+            {
+                segmentData.MarkerScatterPlot = null;
+                return;
+            }
+
+            if (segmentData.MarkerScatterPlot != null)
+            {
+                try
+                {
+                    _avaPlotMain.Plot.Remove(segmentData.MarkerScatterPlot);
+                }
+                catch
+                {
+                    // ignore removal exceptions
+                }
+                segmentData.MarkerScatterPlot = null;
+            }
+        }
+
         private void RemoveExcessSegments(PlotData plotData, int segmentCount)
         {
             while (plotData.PlotSegments!.Count > segmentCount)
@@ -330,6 +569,11 @@ namespace AntennaAV.Services
                 {
                     _avaPlotMain!.Plot.Remove(lastSegment.ScatterPlot);
                     lastSegment.ScatterPlot = null; // Обнуление ссылки
+                }
+                if (lastSegment.MarkerScatterPlot != null)  // Новое: удаляем маркеры
+                {
+                    _avaPlotMain!.Plot.Remove(lastSegment.MarkerScatterPlot);
+                    lastSegment.MarkerScatterPlot = null;
                 }
 
                 plotData.PlotSegments.RemoveAt(plotData.PlotSegments.Count - 1);
@@ -355,7 +599,7 @@ namespace AntennaAV.Services
                     else
                     {
                         r = (max - min) > 0 ? r_max * (segmentData.SegmentValues[i] - min) / (max - min) : 0;
-                    }                  
+                    }
                 }
                 else
                 {
@@ -380,6 +624,7 @@ namespace AntennaAV.Services
 
             segmentData.ValidPointCount = pointCount;
         }
+
         private void UpdateAllPlotCoordinates(IEnumerable<TabViewModel> tabs, double min, double max)
         {
             _activePlotTabs.Clear();
@@ -392,15 +637,20 @@ namespace AntennaAV.Services
             }
             foreach (var tab in _activePlotTabs)
             {
+                var color = ScottPlot.Color.FromHex(tab.Plot!.ColorHex);
                 foreach (var segmentData in tab.Plot!.PlotSegments!)
                 {
                     if (segmentData.SegmentAngles?.Length > 0 && segmentData.SegmentValues?.Length > 0)
                     {
                         UpdateSegmentCoordinates(segmentData, min, max);
+                        // update markers so they follow updated coordinates
+                        UpdateSegmentMarkers(segmentData, tab.Plot, color);
                     }
                 }
             }
         }
+
+
         public ScaleMode CurrentScaleMode
         {
             get => _currentScaleMode;
@@ -491,14 +741,14 @@ namespace AntennaAV.Services
                 max = _scaleSettings.IsLogScale ? _scaleSettings.ManualMax : 1;
 
                 // Принудительно устанавливаем глобальный диапазон
-                
+
                 _globalMin = min;
                 _globalMax = max;
 
                 // Обновляем оси
                 if (_avaPlotMain != null && _polarAxisMain != null)
                 {
-                    Plots.AutoUpdatePolarAxisCircles(_avaPlotMain, _polarAxisMain, _scaleSettings.IsLogScale, min, max, _scaleSettings.IsDark );
+                    Plots.AutoUpdatePolarAxisCircles(_avaPlotMain, _polarAxisMain, _scaleSettings.IsLogScale, min, max, _scaleSettings.IsDark);
                 }
 
                 // Обновляем координаты всех существующих графиков
@@ -515,16 +765,78 @@ namespace AntennaAV.Services
             {
                 if (tab.Plot?.PlotSegments != null)
                 {
+                    var color = ScottPlot.Color.FromHex(tab.Plot.ColorHex);
                     foreach (var segmentData in tab.Plot.PlotSegments)
                     {
                         if (segmentData.SegmentAngles?.Length > 0 && segmentData.SegmentValues?.Length > 0)
                         {
                             UpdateSegmentCoordinates(segmentData, min, max);
+                            UpdateSegmentMarkers(segmentData, tab.Plot, color);
                         }
                     }
                 }
             }
         }
+
+        public void SetMarkerSize(IEnumerable<TabViewModel> tabs, int markerSize)
+        {
+            if (_avaPlotMain == null || _polarAxisMain == null)
+                return;
+
+            lock (_plotMainLock)
+            {
+                // Remember global marker size so new tabs inherit the setting
+                _currentMarkerSize = markerSize;
+
+                foreach (var tab in tabs)
+                {
+                    if (tab?.Plot == null)
+                        continue;
+
+                    tab.Plot.MarkerSize = markerSize;
+
+                    if (tab.Plot.PlotSegments != null)
+                    {
+                        var color = ScottPlot.Color.FromHex(tab.Plot.ColorHex);
+                        foreach (var segmentData in tab.Plot.PlotSegments)
+                        {
+                            // If markers are being disabled, remove existing marker scatter immediately
+                            if (markerSize <= 0)
+                            {
+                                if (segmentData.MarkerScatterPlot != null)
+                                {
+                                    try { _avaPlotMain.Plot.Remove(segmentData.MarkerScatterPlot); } catch { }
+                                    segmentData.MarkerScatterPlot = null;
+                                }
+                                continue;
+                            }
+
+                            if (segmentData.MarkerScatterPlot != null)
+                            {
+                                // Update existing marker scatter properties
+                                segmentData.MarkerScatterPlot.MarkerSize = markerSize;
+                                segmentData.MarkerScatterPlot.IsVisible = tab.Plot.IsVisible;
+                                segmentData.MarkerScatterPlot.MarkerShape = tab.Plot.MarkerShape;
+                                if (segmentData.MarkerScatterPlot.Color.ToHex() != color.ToHex())
+                                    segmentData.MarkerScatterPlot.Color = color;
+
+                                int expectedCount = (segmentData.ValidPointCount + MarkerStep - 1) / MarkerStep;
+                                segmentData.MarkerScatterPlot.MaxRenderIndex = Math.Max(0, expectedCount - 1);
+                            }
+                            else
+                            {
+                                // Create markers on-demand for segments with enough points
+                                if (markerSize > 0 && segmentData.ValidPointCount > MarkerStep)
+                                {
+                                    UpdateSegmentMarkers(segmentData, tab.Plot, color);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         public void SetAutoMinLimit(bool enabled, double limit)
         {
             lock (_plotMainLock)
@@ -612,6 +924,8 @@ namespace AntennaAV.Services
                         {
                             if (segmentData.ScatterPlot != null)
                                 _avaPlotMain.Plot.Remove(segmentData.ScatterPlot);
+                            if (segmentData.MarkerScatterPlot != null)  // Новое: удаляем маркеры
+                                _avaPlotMain.Plot.Remove(segmentData.MarkerScatterPlot);
                         }
                         tab.Plot.PlotSegments.Clear();
                     }
@@ -640,6 +954,12 @@ namespace AntennaAV.Services
                 {
                     if (tab.Plot?.IsVisible == true && tab.Plot.Angles?.Length > 0)
                     {
+
+                        // Ensure new plot inherits current markers setting if its Plot.MarkerSize is zero
+
+                        if (tab.Plot.MarkerSize <= 0 && _currentMarkerSize > 0)
+                            tab.Plot.MarkerSize = _currentMarkerSize;
+
                         UpdateCurrentTabPlot(tab.Plot, actualMin, actualMax, tab.Header);
                     }
 
@@ -687,10 +1007,14 @@ namespace AntennaAV.Services
                             if (segmentData.ScatterPlot != null)
                                 plot.Plot.Remove(segmentData.ScatterPlot);
                         }
+                        foreach (var segmentData in tab.Plot.PlotSegments)
+                        {
+                            if (segmentData.MarkerScatterPlot != null)
+                                plot.Plot.Remove(segmentData.MarkerScatterPlot);
+                        }
                         tab.Plot.PlotSegments.Clear();
                     }
 
-                    //tab.DataScatters?.Clear();
                     _avaPlotMainNeedsRefresh = true;
                 }
                 catch (Exception ex)
@@ -699,6 +1023,7 @@ namespace AntennaAV.Services
                 }
             }
         }
+
 
         public void ResetGlobalRange()
         {
@@ -709,6 +1034,24 @@ namespace AntennaAV.Services
             }
         }
 
+        public void SetLineWidth(int lineWidth)
+        {
+            lock (_plotMainLock)
+            {
+                _scaleSettings.LineWidth = lineWidth;
+            }
+        }
+
+        public void IncrementLineWidth(int increment)
+        {
+            lock (_plotMainLock)
+            {
+                _scaleSettings.LineWidth = _scaleSettings.LineWidth + increment;
+                if(_scaleSettings.LineWidth < 1)
+                    _scaleSettings.LineWidth = 1;
+            }
+        }
+
         public void ResetPlotAxes()
         {
             lock (_plotMainLock)
@@ -716,7 +1059,7 @@ namespace AntennaAV.Services
                 _avaPlotMainNeedsAutoscale = true;
             }
         }
-       
+
         public void CreateOrUpdateSectorPolygon(AvaPlot? plot, double start, double end, bool isVisible)
         {
             if (plot == null)
@@ -857,7 +1200,7 @@ namespace AntennaAV.Services
                 {
                     _avaPlotMain.Plot.Axes.AutoScale();
                     _avaPlotMainNeedsAutoscale = false;
-                    _avaPlotMainNeedsRefresh = true; 
+                    _avaPlotMainNeedsRefresh = true;
 
                 }
 
@@ -925,6 +1268,17 @@ namespace AntennaAV.Services
             _avaPlotMainNeedsRefresh = true;
         }
 
+        public void SetLegendFontSize(int fontSize)
+        {
+            lock (_plotMainLock)
+            {
+                if (_avaPlotMain != null)
+                {
+                    _avaPlotMain.Plot.Legend.FontSize = fontSize;
+                }
+            }
+        }
+
         public void SetLegendVisibility(bool isVisible)
         {
             lock (_plotMainLock)
@@ -933,6 +1287,7 @@ namespace AntennaAV.Services
                 {
                     if (isVisible)
                     {
+                        _avaPlotMain.Plot.Legend.FontSize = 12;
                         _avaPlotMain.Plot.ShowLegend(Alignment.LowerRight, Orientation.Vertical);
                     }
                     else
@@ -944,9 +1299,10 @@ namespace AntennaAV.Services
             }
         }
 
+
         public async System.Threading.Tasks.Task SaveMainPlotToPngAsync(string filePath, bool isDark)
         {
-            if (_avaPlotMain == null)
+            if (_avaPlotMain == null || _polarAxisMain == null)
                 return;
             await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -963,15 +1319,36 @@ namespace AntennaAV.Services
                     // Применяем светлую тему
                     ApplyThemeToMainPlot(false, _avaPlotMain);
 
-                    _avaPlotMain.Refresh();
+
+                    for (int i = 0; i < _polarAxisMain.Spokes.Count; i++)
+                    {
+                        _polarAxisMain.Spokes[i].LabelStyle.FontSize = 24;
+                    }
+
+                    for (int i = 0; i < _polarAxisMain.Circles.Count; i++)
+                    {
+                        _polarAxisMain.Circles[i].LabelStyle.FontSize = 24;
+                    }
+
+                    SetLegendFontSize(28);
 
                     // Сохраняем PNG
-                    _avaPlotMain.Plot.SavePng(filePath, 900, 900);
+                    _avaPlotMain.Plot.SavePng(filePath, 2000, 2000);
+
 
                     // Возвращаем всё обратно
                     if (_angleArrow != null) _angleArrow.IsVisible = arrowVisible;
                     if (_sectorPolygon != null) _sectorPolygon.IsVisible = sectorVisible;
                     ApplyThemeToMainPlot(isDark, _avaPlotMain);
+                    for (int i = 0; i < _polarAxisMain.Spokes.Count; i++)
+                    {
+                        _polarAxisMain.Spokes[i].LabelStyle.FontSize = 12;
+                    }
+                    for (int i = 0; i < _polarAxisMain.Circles.Count; i++)
+                    {
+                        _polarAxisMain.Circles[i].LabelStyle.FontSize = 12;
+                    }
+                    SetLegendFontSize(12);
                     _avaPlotMain.Refresh();
                     ResetPlotAxes();
                 }
@@ -980,3 +1357,14 @@ namespace AntennaAV.Services
     }
 }
 
+
+// Add per-plot marker shape support as a small partial extension.
+// PlotData is partial in ViewModels; placing this partial in the same namespace ensures it merges.
+namespace AntennaAV.ViewModels
+{
+    public partial class PlotData
+    {
+        // Default marker shape per-plot. Can be changed per PlotData instance.
+        public ScottPlot.MarkerShape MarkerShape { get; set; } = ScottPlot.MarkerShape.FilledCircle;
+    }
+}

@@ -255,7 +255,7 @@ namespace AntennaAV.Services
                 {
                     lock (_plotTxLock)
                     {  
-                        if(_avaPlotRxNeedsAutoScale)
+                        if(_avaPlotTxNeedsAutoScale)
                         {
                             _avaPlotTx.Plot.Axes.AutoScale();
                             _avaPlotTxNeedsAutoScale = false;

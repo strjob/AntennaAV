@@ -16,6 +16,12 @@ namespace AntennaAV.ViewModels
         [ObservableProperty]
         private string header = string.Empty;
 
+        [ObservableProperty]
+        private double shiftAngleValue = 10.0;
+
+        // Event raised when ShiftAngleValue changes (source-generated partial will call OnShiftAngleValueChanged)
+        public event Action<double>? ShiftAngleValueChanged;
+
         // Коллекция данных антенны для отображения в таблице
         public FastObservableCollection<GridAntennaData> AntennaDataCollection { get; } = new();
 
@@ -84,6 +90,12 @@ namespace AntennaAV.ViewModels
         {
             AntennaDataCollection.Clear();
         }
+
+        // source generator will call this partial on property change
+        partial void OnShiftAngleValueChanged(double value)
+        {
+            ShiftAngleValueChanged?.Invoke(value);
+        }
     }
 
     // Кастомная колонка для TreeDataGrid с форматированным отображением и корректной сортировкой
@@ -119,18 +131,22 @@ namespace AntennaAV.ViewModels
     {
         // Массив углов в градусах
         public double[] Angles { get; set; } = Array.Empty<double>();
-        
+
         // Массив нормализованных значений мощности
         public double[] PowerNormValues { get; set; } = Array.Empty<double>();
-        
+
         // Массив нормализованных значений напряжения
         public double[] VoltageNormValues { get; set; } = Array.Empty<double>();
+
+
 
         [ObservableProperty]
         private string colorHex = "#0000FF";
 
         [ObservableProperty]
         private bool isVisible = true;
+
+        public int MarkerSize { get; set; } = 0;
 
         // Сегменты данных для составных графиков
         public List<PlotSegmentData>? PlotSegments { get; set; }
@@ -143,5 +159,7 @@ namespace AntennaAV.ViewModels
         {
             ColorChanged?.Invoke();
         }
+
+
     }
 }

@@ -88,6 +88,26 @@ namespace AntennaAV.Helpers
             return Math.Round((angle + 360) % 360, 1);
         }
 
+        // Сдвигает угол на указанное значение (в градусах) с учетом перехода через 0 и округлением до 0.1°
+
+        public static double ShiftAngle(double angle, double shift)
+        {
+            return NormalizeAngle(angle + shift);
+        }
+
+        // Сдвигает угол, представленный в десятых градуса (deg10), возвращает deg10 в диапазоне [0, 3599]
+
+        public static int ShiftAngleDeg10(int deg10, double shift)
+        {
+            // deg10 -> deg
+            double deg = deg10 / 10.0;
+            double shifted = ShiftAngle(deg, shift);
+            int shiftedDeg10 = (int)Math.Round(shifted * 10.0);
+            // Normalize to [0,3599]
+            shiftedDeg10 = ((shiftedDeg10 % 3600) + 3600) % 3600;
+            return shiftedDeg10;
+        }
+
         // Вычисляет диапазон углов сектора по его размеру и центру
         public static (double from, double to) CalculateSectorRange(double size, double center)
         {

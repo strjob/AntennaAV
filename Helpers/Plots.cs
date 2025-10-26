@@ -54,7 +54,7 @@ namespace AntennaAV.Helpers
         public static class ThemeColors
         {
             public static Color GetLineColor(bool isDark) =>
-                isDark ? Color.FromHex("#777777") : Color.FromHex("#BBBBBB");
+                isDark ? Color.FromHex("#777777") : Color.FromHex("#AAAAAA");
 
             public static Color GetCircleColor(bool isDark) =>
                 isDark ? Color.FromHex("#bbbbbb") : Color.FromHex("#666666");
@@ -83,7 +83,7 @@ namespace AntennaAV.Helpers
             for (int i = 0; i < polarAxis.Spokes.Count; i++)
             {
                 polarAxis.Spokes[i].LineWidth = 0;
-                polarAxis.Spokes[i].LabelPaddingFraction = 0.35;
+                polarAxis.Spokes[i].LabelPaddingFraction = 0.45;
                 polarAxis.Spokes[i].Length = 100;
                 polarAxis.Spokes[i].LabelStyle.ForeColor = labelColor;
             }
@@ -279,8 +279,8 @@ namespace AntennaAV.Helpers
             double minValue,
             double maxValue,
             bool isDark,
-            int minCircles = 3,
-            int maxCircles = 8)
+            int minCircles = 4,
+            int maxCircles = 9)
         {
             // Оставляем только внешний круг
             while (polarAxis.Circles.Count > 1)
@@ -292,7 +292,7 @@ namespace AntennaAV.Helpers
             var lineColor = ThemeColors.GetLineColor(isDark);
             var labelColor = ThemeColors.GetLabelColor(isDark);
             var circleColor = ThemeColors.GetCircleColor(isDark);
-            const double minRadius = 7;
+            const double minRadius = 3;
 
             if (isLogScale)
 

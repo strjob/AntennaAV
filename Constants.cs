@@ -34,10 +34,11 @@ namespace AntennaAV
         public const double PointerSnapStep = 10.0;
         public const double AngleGapThresholdEqual = 30.0;
         public const double AngleGapThresholdNotEqual = 1.0;
-        public const int MarkerSize = 10;
+        public const int MarkerSize = 8;
         public const int HoverMarkerSize = 8;
         public const int ArrowWidth = 4;
         public const int ArrowheadWidth = 10;
+        public const int MainPlotMarkerSize = 5;
 
         // Интервалы обновления таймеров в миллисекундах
         public const int UiTimerUpdateIntervalMs = 100;

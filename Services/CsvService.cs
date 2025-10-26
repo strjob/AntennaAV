@@ -1,13 +1,14 @@
 using AntennaAV.Models;
+using AntennaAV.ViewModels;
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using AntennaAV.ViewModels;
-using Avalonia.Platform.Storage;
-using System;
 
 namespace AntennaAV.Services
 {
@@ -30,11 +31,11 @@ namespace AntennaAV.Services
                 return false; // пользователь отменил
 
             var sb = new StringBuilder();
-            sb.AppendLine("Angle,PowerDbm,Voltage,PowerNorm,VoltageNorm,Time");
+            sb.AppendLine("Angle;PowerDbm;Voltage;PowerNorm;VoltageNorm;Time");
 
             foreach (var row in tab.AntennaDataCollection.ToArray())
             {
-                sb.AppendLine($"{row.AngleStr},{row.PowerDbmStr},{row.VoltageStr},{row.PowerNormStr},{row.VoltageNormStr},{row.TimeStr}");
+                sb.AppendLine($"{row.AngleStr};{row.PowerDbmStr};{row.VoltageStr};{row.PowerNormStr};{row.VoltageNormStr};{row.TimeStr}");
             }
 
             await using var stream = await file.OpenWriteAsync();
@@ -72,13 +73,13 @@ namespace AntennaAV.Services
                         isFirst = false; // пропускаем заголовок
                         continue;
                     }
-                    var parts = line.Split(',');
+                    var parts = line.Split(';');
                     if (parts.Length < 6) continue;
-                    if (!double.TryParse(parts[0], out var angle)) continue;
-                    if (!double.TryParse(parts[1], out var powerDbm)) continue;
-                    if (!double.TryParse(parts[2], out var voltage)) continue;
-                    if (!double.TryParse(parts[3], out var powerNorm)) continue;
-                    if (!double.TryParse(parts[4], out var voltageNorm)) continue;
+                    if (!double.TryParse(parts[0].Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out var angle)) continue;
+                    if (!double.TryParse(parts[1].Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out var powerDbm)) continue;
+                    if (!double.TryParse(parts[2].Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out var voltage)) continue;
+                    if (!double.TryParse(parts[3].Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out var powerNorm)) continue;
+                    if (!double.TryParse(parts[4].Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out var voltageNorm)) continue;
                     if (!DateTime.TryParse(parts[5], out var time)) time = DateTime.Now;
                     newRows.Add(new GridAntennaData
                     {
@@ -94,4 +95,4 @@ namespace AntennaAV.Services
             return newRows;
         }
     }
-} 
+}

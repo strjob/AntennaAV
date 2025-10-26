@@ -209,14 +209,4 @@ namespace AntennaAV.Services
         }
     }
 
-    // Результат операции нормализации данных с метриками производительности
-    public struct NormalizationResult
-    {
-        public bool PowerMaxChanged;
-        public bool VoltageMaxChanged;
-        public int ItemsProcessed;
-        public long TimeMs;
-
-        public bool HasChanges => PowerMaxChanged || VoltageMaxChanged;
-    }
 }

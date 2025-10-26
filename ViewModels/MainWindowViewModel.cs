@@ -26,6 +26,7 @@ namespace AntennaAV.ViewModels
     public partial class MainWindowViewModel : ViewModelBase
     {
         // 1. приватные поля
+        private readonly Dictionary<TabViewModel, double> _tabLastAppliedShift = new();
         private int? _firstSystick = null;
         private DateTime _lastDataReceivedTime = DateTime.MinValue;
         private readonly DispatcherTimer _uiTimer = new();
@@ -76,9 +77,12 @@ namespace AntennaAV.ViewModels
         [ObservableProperty] private string txAntennaCounterErrorStr = "";
         [ObservableProperty] private string rxAntennaCounterErrorStr = "";
         [ObservableProperty] private bool isDarkTheme;
+        [ObservableProperty] private bool shiftAllTabs;
         [ObservableProperty] private string lastEvent = "";
         [ObservableProperty] private string handModeErrorStr = "";
-        
+        [ObservableProperty] private int? lineWidth = 2;
+        [ObservableProperty] private int? markerSize = 6;
+
 
 
         // 3. Публичные свойства
@@ -117,6 +121,9 @@ namespace AntennaAV.ViewModels
         public event Action<bool>? IsPowerNormSelectedChanged;
         public event Action<bool, int?, double?>? IsAutoscaleChanged;
         public event Action<bool>? ShowLegendChanged;
+        public event Action<bool>? ShowMarkersChanged;
+        public event Action<int?>? MarkerSizeChanged;
+        public event Action<int?>? LineWidthChanged;
         public event Action<bool>? MoveToZeroOnCloseChanged;
         public event Action<double>? TransmitterAngleDegChanged; 
         public event Action<int?>? ManualScaleValueChanged;
@@ -869,6 +876,24 @@ namespace AntennaAV.ViewModels
         {
             ShowLegendChanged?.Invoke(value);
         }
+
+        partial void OnShowMarkersChanged(bool value)
+        {
+            ShowMarkersChanged?.Invoke(value);
+            if(value)
+                MarkerSizeChanged?.Invoke(MarkerSize);
+        }
+
+        partial void OnMarkerSizeChanged(int? value)
+        {
+            MarkerSizeChanged?.Invoke(value);
+        }
+
+        partial void OnLineWidthChanged(int? value)
+        {
+            LineWidthChanged?.Invoke(value);
+        }
+
         partial void OnMoveToZeroOnCloseChanged(bool value)
         {
             MoveToZeroOnCloseChanged?.Invoke(value);
@@ -934,6 +959,11 @@ namespace AntennaAV.ViewModels
             var settings = _settingsService.LoadSettings();
             IsDarkTheme = settings.IsDarkTheme;
             ShowLegend = settings.ShowLegend;
+            ShowMarkers = settings.ShowMarkers;
+            MarkerSize = settings.MarkerSize;
+            ShowAntenna = settings.ShowAntenna;
+            ShowSector = settings.ShowSector;
+            LineWidth = settings.LineWidth;
             IsAutoscale = settings.IsAutoscale;
             MoveToZeroOnClose = settings.MoveToZeroOnClose;
             ManualScaleValue = settings.ManualScaleValue;
@@ -953,6 +983,11 @@ namespace AntennaAV.ViewModels
             {
                 IsDarkTheme = IsDarkTheme,
                 ShowLegend = ShowLegend,
+                ShowMarkers = ShowMarkers,
+                ShowAntenna = ShowAntenna,
+                ShowSector = ShowSector,
+                LineWidth = LineWidth,
+                MarkerSize = MarkerSize,
                 IsAutoscale = IsAutoscale,
                 MoveToZeroOnClose = MoveToZeroOnClose,
                 ManualScaleValue = ManualScaleValue,

@@ -164,12 +164,8 @@ namespace AntennaAV.Views
                 }
             }
         }
-        //private void Header_DoubleTapped(object sender, RoutedEventArgs e)
-        //{
-        //    if (sender is TextBlock tb && tb.DataContext is TabViewModel vm)
-        //        vm.IsEditingHeader = true;
-        //}
-        private void Header_DoubleTapped(object sender, RoutedEventArgs e)
+
+        private void Header_DoubleTapped(object? sender, TappedEventArgs e)
         {
             if (sender is Control control && control.DataContext is TabViewModel vm)
             {
@@ -301,19 +297,6 @@ namespace AntennaAV.Views
             }
         }
 
-        //private void TogglePlotVisibility_Click(object? sender, RoutedEventArgs e)
-        //{
-        //    if (this.DataContext is MainWindowViewModel vm && vm.SelectedTab != null && vm.SelectedTab.Plot != null)
-        //    {
-        //        var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue : vm.ManualScaleValue;
-        //        Dispatcher.UIThread.Post(() =>
-        //        {
-        //            vm.SelectedTab.Plot.IsVisible = !vm.SelectedTab.Plot.IsVisible;
-        //            RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
-        //        });
-
-        //    }
-        //}
 
         private void TogglePlotVisibility_Click(object? sender, RoutedEventArgs e)
         {
@@ -394,7 +377,19 @@ namespace AntennaAV.Views
             });
             if (file is null)
                 return; // пользователь отменил
-            await _plotManagerMain.SaveMainPlotToPngAsync(file.Path.LocalPath, isDark);
+
+            
+            if (DataContext is MainWindowViewModel vm)
+            {
+                _plotManagerMain.IncrementLineWidth(2);
+                var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue : vm.ManualScaleValue;
+                RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
+                await _plotManagerMain.SaveMainPlotToPngAsync(file.Path.LocalPath, isDark);
+                _plotManagerMain.IncrementLineWidth(-2);
+                RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
+            }
+
+
         }
 
         private void RefreshAllPlots(IEnumerable<TabViewModel> tabs, bool isPowerNormSelected, bool isDark, double? limit)
@@ -511,6 +506,49 @@ namespace AntennaAV.Views
             vm.ShowLegendChanged += value =>
             {
                 Dispatcher.UIThread.Post(() => _plotManagerMain.SetLegendVisibility(value));
+            };
+
+            vm.ShowMarkersChanged += value =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (value)
+                        _plotManagerMain.SetMarkerSize(vm.Tabs, Constants.MainPlotMarkerSize);
+                    else
+                        _plotManagerMain.SetMarkerSize(vm.Tabs, 0);
+
+
+                    var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue : vm.ManualScaleValue;
+                    RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
+                });
+            };
+
+            vm.MarkerSizeChanged += value =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if(value != null)
+                    {
+                        _plotManagerMain.SetMarkerSize(vm.Tabs, value.Value);
+                        var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue : vm.ManualScaleValue;
+                        RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
+                    }
+
+                });
+            };
+
+            vm.LineWidthChanged += value =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (value != null)
+                    {
+                        _plotManagerMain.SetLineWidth(value.Value);
+                        var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue : vm.ManualScaleValue;
+                        RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
+                    }
+
+                });
             };
 
             vm.MoveToZeroOnCloseChanged += value =>
