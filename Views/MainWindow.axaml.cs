@@ -576,9 +576,19 @@ namespace AntennaAV.Views
                         _plotManagerMain.DrawPolarPlot(
                             vm.Tabs,
                             vm.SelectedTab,
-                            vm.SelectedTab.Header 
+                            vm.SelectedTab.Header
                         );
                     }
+                });
+            };
+
+            // New: request from VM to refresh all visible plots (recalculate global ranges)
+            vm.RequestRefreshAllPlots += () =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue : vm.ManualScaleValue;
+                    RefreshAllPlots(vm.Tabs, vm.IsPowerNormSelected, isDark, limitValue);
                 });
             };
 

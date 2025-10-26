@@ -292,7 +292,7 @@ namespace AntennaAV.Helpers
             var lineColor = ThemeColors.GetLineColor(isDark);
             var labelColor = ThemeColors.GetLabelColor(isDark);
             var circleColor = ThemeColors.GetCircleColor(isDark);
-            const double minRadius = 3;
+            const double minRadius = 5;
 
             if (isLogScale)
 

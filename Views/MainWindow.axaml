@@ -879,7 +879,7 @@
 								VerticalAlignment="Top"
                                 Margin="5,5,5,5"
                                 Content="Все вкладки"
-								ToolTip.Tip="Применять сдиг только к активной вкладке или ко всем"
+								ToolTip.Tip="Применять сдиг ко всем вкладкам, а не только к активной"
                                 IsChecked="{CompiledBinding ShiftAllTabs, Mode=TwoWay}" />
 
                             <!--<TextBlock Margin="10,14,0,0" Text="Генератор" />-->
