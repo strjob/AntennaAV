@@ -734,7 +734,7 @@
                                 Grid.Row="1"
                                 Grid.Column="0"
                                 Width="55"
-                                Margin="5"
+                                Margin="5,0,5,5"
                                 VerticalAlignment="Center"
                                 Text="Центр:" />
                             <NumericUpDown
@@ -742,7 +742,7 @@
                                 Grid.Row="1"
                                 Grid.Column="1"
                                 Width="115"
-                                Margin="5"
+                                Margin="5,0,5,5"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Center"
                                 ClipValueToMinMax="true"
@@ -757,7 +757,7 @@
                             <Button
                                 Width="185"
                                 Height="32"
-                                Margin="5"
+                                Margin="5,0,5,5"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Top"
                                 Command="{CompiledBinding ResetRxAntennaCounterCommand}"
