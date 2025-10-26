@@ -17,7 +17,7 @@ namespace AntennaAV.ViewModels
         private string header = string.Empty;
 
         [ObservableProperty]
-        private double shiftAngleValue = 10.0;
+        private double shiftAngleValue = 0.0;
 
         // Event raised when ShiftAngleValue changes (source-generated partial will call OnShiftAngleValueChanged)
         public event Action<double>? ShiftAngleValueChanged;

@@ -10,6 +10,7 @@ using HarfBuzzSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
@@ -41,6 +42,11 @@ namespace AntennaAV.ViewModels
         private readonly object _dataLock = new();
         private readonly CsvService _csvService = new CsvService();
         private readonly ISettingsService _settingsService = new SettingsService();
+
+        // local guard to avoid recursive propagation when syncing ShiftAllTabs
+        private bool _suspendShiftPropagation = false;
+        private readonly Dictionary<TabViewModel, Action<double>> _tabShiftHandlers = new();
+
 
         // 2. ObservableProperty
         [ObservableProperty] private string connectionStatus = "⏳ Не подключено";
@@ -130,6 +136,9 @@ namespace AntennaAV.ViewModels
         public event Action<double?>? AutoscaleLimitValueChanged;
         public event Action<double?>? AutoscaleMinValueChanged;
 
+        // Request full refresh of all plots (View will call RefreshAllPlots)
+        public event Action? RequestRefreshAllPlots;
+
         // 5. RelayCommand
         // Строит полярную диаграмму на основе настроек размера и центра сектора
         public void BuildRadar()
@@ -210,9 +219,30 @@ namespace AntennaAV.ViewModels
                 var newRows = await _csvService.ImportTableAsync(window);
                 if (newRows != null)
                 {
+                    // Import should NOT apply any shift and should set shift to 0 for current tab
                     SelectedTab.ClearTableData();
                     SelectedTab.AddAntennaData(newRows.ToArray());
-                    UpdatePlotFromTable(); // строим график по таблице
+
+                    // Prevent ShiftAllTabs propagation while we reset selected tab's shift to 0
+                    // (Option A: suspend propagation so other tabs are not affected)
+                    _suspendShiftPropagation = true;
+                    try
+                    {
+                        // Ensure we record last-applied shift as 0 BEFORE we set ShiftAngleValue to 0
+                        _tabLastAppliedShift[SelectedTab] = 0.0;
+                        SelectedTab.ShiftAngleValue = 0.0;
+                    }
+                    finally
+                    {
+                        _suspendShiftPropagation = false;
+                    }
+
+                    // Rebuild plot for imported table (table -> plot)
+                    UpdatePlotFromTable();
+
+                    // Global min/max might change after import — request full refresh of all plots
+                    RequestRefreshAllPlots?.Invoke();
+
                     LastEvent = $"✅ Импортировано строк: {newRows.Count}";
                 }
             }
@@ -598,7 +628,22 @@ namespace AntennaAV.ViewModels
 
                             int deltaMs = data.Systick - _firstSystick.Value;
                             DateTime timestamp = DateTime.MinValue.AddMilliseconds(deltaMs);
-                            _collector.AddPoint(data.ReceiverAngleDeg10, data.PowerDbm, timestamp);
+
+                            // Apply selected-tab shift to incoming points (only affects table/plot, not global receiver angle)
+                            int deg10ToAdd = data.ReceiverAngleDeg10;
+                            if (SelectedTab != null)
+                            {
+                                double effShift = SelectedTab.ShiftAngleValue;
+                                if (Math.Abs(effShift) > 1e-10)
+                                {
+                                    deg10ToAdd = AngleUtils.ShiftAngleDeg10(data.ReceiverAngleDeg10, effShift);
+                                }
+                                // ensure we have a baseline for deltas
+                                if (!_tabLastAppliedShift.ContainsKey(SelectedTab))
+                                    _tabLastAppliedShift[SelectedTab] = SelectedTab.ShiftAngleValue;
+                            }
+
+                            _collector.AddPoint(deg10ToAdd, data.PowerDbm, timestamp);
                         }
                         lastData = data;
                         dataReceived = true;
@@ -731,6 +776,134 @@ namespace AntennaAV.ViewModels
             }
         }
 
+        // Apply shift delta to table rows and plot arrays of a tab (UI-thread)
+        private void ApplyShiftDeltaToTab(TabViewModel tab, double delta)
+        {
+            if (tab == null || Math.Abs(delta) < 1e-10) return;
+
+            // Update table angles (GridAntennaData) and refresh collection to notify UI
+            for (int i = 0; i < tab.AntennaDataCollection.Count; i++)
+            {
+                var row = tab.AntennaDataCollection[i];
+                row.Angle = AngleUtils.ShiftAngle(row.Angle, delta);
+            }
+            // Trigger UI refresh for table (FastObservableCollection.ReplaceRange used to notify)
+            tab.AntennaDataCollection.ReplaceRange(tab.AntennaDataCollection.ToArray());
+
+            // Update plot angles array
+            if (tab.Plot?.Angles != null && tab.Plot.Angles.Length > 0)
+            {
+                var a = tab.Plot.Angles;
+                for (int i = 0; i < a.Length; i++)
+                    a[i] = AngleUtils.ShiftAngle(a[i], delta);
+                tab.Plot.Angles = a;
+            }
+        }
+
+        // Subscribe / unsubscribe helpers for per-tab shift change notifications
+        private void SubscribeToTabShift(TabViewModel tab)
+        {
+            if (tab == null)
+                return;
+
+            // If handler already registered, skip
+            if (_tabShiftHandlers.ContainsKey(tab))
+                return;
+
+            // store handler so we can unsubscribe later
+            Action<double> handler = v => OnTabShiftChanged(tab, v);
+            _tabShiftHandlers[tab] = handler;
+            tab.ShiftAngleValueChanged += handler;
+
+            // initialize baseline if missing
+            if (!_tabLastAppliedShift.ContainsKey(tab))
+                _tabLastAppliedShift[tab] = tab.ShiftAngleValue;
+        }
+
+        private void UnsubscribeTabShift(TabViewModel tab)
+        {
+            if (tab == null)
+                return;
+
+            // remove stored handler
+            if (_tabShiftHandlers.TryGetValue(tab, out var handler))
+            {
+                tab.ShiftAngleValueChanged -= handler;
+                _tabShiftHandlers.Remove(tab);
+            }
+
+            // remove baseline
+            if (_tabLastAppliedShift.ContainsKey(tab))
+                _tabLastAppliedShift.Remove(tab);
+        }
+
+        // Handler invoked when a tab's ShiftAngleValue changed
+        // Called when any tab's ShiftAngleValue changes
+        private void OnTabShiftChanged(TabViewModel tab, double newShift)
+        {
+            // if propagation suspended (we're programmatically syncing), ignore
+            if (_suspendShiftPropagation) return;
+
+            // Mutate UI collections / plots on UI thread
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (tab == null) return;
+
+                double last = _tabLastAppliedShift.TryGetValue(tab, out var l) ? l : 0.0;
+                double delta = newShift - last;
+
+                // nothing changed
+                if (Math.Abs(delta) < 1e-10)
+                {
+                    _tabLastAppliedShift[tab] = newShift;
+                    return;
+                }
+
+                // If ShiftAllTabs is on and the user changed the SelectedTab (authoritative),
+                // apply delta to every tab (so charts and tables update immediately).
+                if (ShiftAllTabs && tab == SelectedTab)
+                {
+                    _suspendShiftPropagation = true;
+                    try
+                    {
+                        double master = newShift;
+                        foreach (var t in Tabs)
+                        {
+                            double lastT = _tabLastAppliedShift.TryGetValue(t, out var lv) ? lv : 0.0;
+                            double deltaT = master - lastT;
+                            if (Math.Abs(deltaT) > 1e-10)
+                            {
+                                // apply delta to table & plot
+                                ApplyShiftDeltaToTab(t, deltaT);
+                                _tabLastAppliedShift[t] = master;
+                            }
+
+                            // ensure UI shows the same shift value (will not retrigger handler because we suspended)
+                            if (t.ShiftAngleValue != master)
+                                t.ShiftAngleValue = master;
+                        }
+                    }
+                    finally
+                    {
+                        _suspendShiftPropagation = false;
+                    }
+
+                    // request full refresh (recalculate ranges / redraw)
+                    RequestRefreshAllPlots?.Invoke();
+                    return;
+                }
+
+                // Otherwise apply delta only to the single tab
+                ApplyShiftDeltaToTab(tab, delta);
+                _tabLastAppliedShift[tab] = newShift;
+
+                // redraw single tab
+                RequestPlotRedraw?.Invoke();
+            });
+        }
+
+
+
         // 8. partial-методы
         partial void OnIsDiagramAcquisitionRunningChanged(bool value)
         {
@@ -738,6 +911,50 @@ namespace AntennaAV.ViewModels
             OnPropertyChanged(nameof(CanUseWhenHasTabs));
             OnPropertyChanged(nameof(CanRemoveTabWhenPortOpen));
         }
+
+        // partial called when ShiftAllTabs toggled
+        partial void OnShiftAllTabsChanged(bool value)
+        {
+            // when enabling, copy SelectedTab.ShiftAngleValue to all tabs (SelectedTab is authoritative)
+            if (!value || SelectedTab == null)
+                return;
+
+            // Perform UI mutations on UI thread
+            Dispatcher.UIThread.Post(() =>
+            {
+                _suspendShiftPropagation = true;
+                try
+                {
+                    double master = SelectedTab.ShiftAngleValue;
+
+                    foreach (var t in Tabs)
+                    {
+                        // compute delta from last applied shift and apply to table/plot
+                        double lastT = _tabLastAppliedShift.TryGetValue(t, out var lv) ? lv : 0.0;
+                        double deltaT = master - lastT;
+                        if (Math.Abs(deltaT) > 1e-10)
+                        {
+                            ApplyShiftDeltaToTab(t, deltaT);
+                        }
+
+                        // update baseline to the new master value
+                        _tabLastAppliedShift[t] = master;
+
+                        // update UI value without triggering handlers (they're suspended)
+                        if (t.ShiftAngleValue != master)
+                            t.ShiftAngleValue = master;
+                    }
+                }
+                finally
+                {
+                    _suspendShiftPropagation = false;
+                }
+
+                // ensure full refresh because global min/max may change
+                RequestRefreshAllPlots?.Invoke();
+            });
+        }
+
         partial void OnIsPortOpenChanged(bool value)
         {
             OnPropertyChanged(nameof(CanUseWhenPortOpen));
@@ -920,11 +1137,29 @@ namespace AntennaAV.ViewModels
             _comPortService = comPortService;
 
             // Подписка на события изменения коллекции вкладок
-            Tabs.CollectionChanged += (_, _) =>
+            Tabs.CollectionChanged += (s, e) =>
             {
                 OnPropertyChanged(nameof(HasTabs));
                 OnPropertyChanged(nameof(CanRemoveTab));
                 OnPropertyChanged(nameof(CanRemoveTabWhenPortOpen));
+
+                if (e != null)
+                {
+                    if (e.OldItems != null)
+                    {
+                        foreach (TabViewModel t in e.OldItems)
+                        {
+                            UnsubscribeTabShift(t);
+                        }
+                    }
+                    if (e.NewItems != null)
+                    {
+                        foreach (TabViewModel t in e.NewItems)
+                        {
+                            SubscribeToTabShift(t);
+                        }
+                    }
+                }
             };
 
             // Подписка на события изменения TabManager
@@ -941,6 +1176,11 @@ namespace AntennaAV.ViewModels
             };
 
             AddTab();
+
+            // subscribe existing tabs' shift events and initialize baseline
+            foreach (var t in Tabs)
+                SubscribeToTabShift(t);
+
             _ = ConnectToPortAsync();
 
             // Инициализация UI таймера
