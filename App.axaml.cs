@@ -40,8 +40,8 @@ namespace AntennaAV
 
                 Dispatcher.UIThread.Post(()  =>
                     {
-                        IComPortService comPortService = new TestComPortService();
-                        //IComPortService comPortService = new ComPortManager();
+                        //IComPortService comPortService = new TestComPortService();
+                        IComPortService comPortService = new ComPortManager();
                         var mainViewModel = new MainWindowViewModel(comPortService);
                         var mainWindow = new MainWindow
                         {

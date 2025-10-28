@@ -527,7 +527,7 @@ namespace AntennaAV.Views
             {
                 Dispatcher.UIThread.Post(() =>
                 {
-                    if(value != null)
+                    if(value != null && vm.ShowMarkers)
                     {
                         _plotManagerMain.SetMarkerSize(vm.Tabs, value.Value);
                         var limitValue = vm.IsAutoscale ? vm.AutoscaleLimitValue : vm.ManualScaleValue;
