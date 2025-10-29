@@ -364,9 +364,8 @@ FodyWeavers.xsd
 
 #Output/
 
-*.iss
 
-*.ico
+
 
 FodyWeavers.xsd
 
