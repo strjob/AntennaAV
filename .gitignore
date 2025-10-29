@@ -367,3 +367,10 @@ Output/
 *.iss
 
 *.ico
+
+FodyWeavers.xsd
+
+# Claude Code files
+.claude/
+CLAUDE.md
+sessions/
